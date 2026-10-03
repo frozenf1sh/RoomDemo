@@ -13,7 +13,7 @@ namespace Game.Tests
         [Test] public void GrowthPlantProducesPlantGrown() { Grow(); Assert.That(session.State.HasFact(DemoRules.PlantGrown)); }
         [Test] public void PlantGrownAutomaticallyDropsBook() { Grow(); Assert.That(session.State.HasFact(DemoRules.BookFallen)); }
         [Test] public void TwoExistingStatesAutomaticallyProduceWind()
-        { Grow(); session.Inspect(DemoRules.Book); var e = session.Interpret(DemoRules.Far, DemoRules.Window); Assert.That(session.State.HasFact(DemoRules.WindEntering)); Assert.That(e.OfType<ReactionTriggered>().Single().Id, Is.EqualTo("wind-enters-room")); }
+        { Grow(); session.Inspect(DemoRules.Book); var e = session.Interpret(DemoRules.Far, DemoRules.Window); Assert.That(session.State.HasFact(DemoRules.WindEntering)); Assert.That(e.OfType<ReactionTriggered>().Select(x => x.Id), Is.EquivalentTo(new[] { "wind-enters-room", "wind-reveals-paper" })); }
         [Test] public void ReactionsFireOnlyOnce()
         { Grow(); var e = session.Interpret(DemoRules.Growth, DemoRules.Plant); Assert.That(e.OfType<ReactionTriggered>(), Is.Empty); Assert.That(session.State.FiredReactions.Count, Is.EqualTo(2)); }
         [Test] public void InvalidInterpretationCannotChangeFacts()

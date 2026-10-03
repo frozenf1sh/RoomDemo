@@ -25,12 +25,18 @@ namespace Game.Domain
             },
             new[] {
                 new SemanticRecipe("recipe.plant.growth", new[] { Clue("plant"), Clue("growth") }, None, new[] { PlantGrown }),
-                new SemanticRecipe("recipe.window.far", new[] { Clue("window"), Clue("far") }, None, new[] { WindowFar })
+                new SemanticRecipe("recipe.window.far", new[] { Clue("window"), Clue("far") }, None, new[] { WindowFar }),
+                new SemanticRecipe("recipe.painting.sea", new[] { Clue("painting"), Clue("sea") }, None, new[] { PaintingSea })
             },
             new[] {
                 new ReactionRule("plant-knocks-book", new[] { PlantGrown }, new[] { BookFallen }),
                 new ReactionRule("book-becomes-inspectable", new[] { BookFallen }, new[] { BookInspectable }),
-                new ReactionRule("wind-enters-room", new[] { PlantGrown, WindowFar }, new[] { WindEntering })
+                new ReactionRule("wind-enters-room", new[] { PlantGrown, WindowFar }, new[] { WindEntering }),
+                new ReactionRule("wind-reveals-paper", new[] { WindEntering }, new[] { PaperRevealed }),
+                new ReactionRule("painting-leaks-water", new[] { PaintingSea }, new[] { WaterPresent }),
+                new ReactionRule("plant-becomes-aquatic", new[] { WaterPresent, PlantGrown }, new[] { PlantAquatic }),
+                new ReactionRule("window-becomes-ocean", new[] { WaterPresent, WindowFar }, new[] { WindowOcean }),
+                new ReactionRule("room-remembers", new[] { PlantAquatic, WindowOcean, PaintingSea }, new[] { Complete })
             });
     }
 }
