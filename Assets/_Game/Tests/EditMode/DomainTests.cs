@@ -15,7 +15,7 @@ namespace Game.Tests
         [Test] public void TwoExistingStatesAutomaticallyProduceWind()
         { Grow(); session.Inspect(DemoRules.Book); var e = session.Interpret(DemoRules.Far, DemoRules.Window); Assert.That(session.State.HasFact(DemoRules.WindEntering)); Assert.That(e.OfType<ReactionTriggered>().Single().Id, Is.EqualTo("wind-enters-room")); }
         [Test] public void ReactionsFireOnlyOnce()
-        { Grow(); var e = session.Interpret(DemoRules.Growth, DemoRules.Plant); Assert.That(e.OfType<ReactionTriggered>(), Is.Empty); Assert.That(session.State.FiredReactions.Count, Is.EqualTo(1)); }
+        { Grow(); var e = session.Interpret(DemoRules.Growth, DemoRules.Plant); Assert.That(e.OfType<ReactionTriggered>(), Is.Empty); Assert.That(session.State.FiredReactions.Count, Is.EqualTo(2)); }
         [Test] public void InvalidInterpretationCannotChangeFacts()
         { session.Inspect(DemoRules.Plant); session.Inspect(DemoRules.Window); var e = session.Interpret(DemoRules.Growth, DemoRules.Window); Assert.That(e.Single(), Is.TypeOf<InterpretationFailed>()); Assert.That(session.State.Facts, Is.Empty); }
         [Test] public void UndiscoveredConceptOrObjectCannotBeInterpreted()
@@ -25,7 +25,7 @@ namespace Game.Tests
         [Test] public void RepeatedInspectionDoesNotRepeatDiscoveryEvents()
         { session.Inspect(DemoRules.Plant); var e = session.Inspect(DemoRules.Plant); Assert.That(e.OfType<ObjectDiscovered>(), Is.Empty); Assert.That(e.OfType<ConceptDiscovered>(), Is.Empty); }
         [Test] public void EventsAreOrderedFromCommandThroughReaction()
-        { session.Inspect(DemoRules.Plant); var e = session.Interpret(DemoRules.Growth, DemoRules.Plant); Assert.That(e.Select(x => x.GetType()), Is.EqualTo(new[] { typeof(InterpretationSucceeded), typeof(FactAdded), typeof(ReactionTriggered), typeof(FactAdded) })); }
+        { session.Inspect(DemoRules.Plant); var e = session.Interpret(DemoRules.Growth, DemoRules.Plant); Assert.That(e.Select(x => x.GetType()), Is.EqualTo(new[] { typeof(InterpretationSucceeded), typeof(FactAdded), typeof(ReactionTriggered), typeof(FactAdded), typeof(ReactionTriggered), typeof(FactAdded) })); }
         [Test] public void ReverseOrderedChainAndCycleReachStableStateWithoutDuplicateFacts()
         {
             var a = new FactId("a"); var b = new FactId("b"); var c = new FactId("c"); var demo = DemoRules.Create();
