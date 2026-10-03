@@ -67,10 +67,32 @@ def batch(editor, stage, args, tests=False):
     print(f'{stage}: passed', flush=True)
 
 
+def compile_live():
+    # A domain reload can close the recompile HTTP response; confirm actual status afterwards.
+    subprocess.run(['unity', 'recompile', '--project-path', str(ROOT), '--format', 'json'], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=180)
+    deadline = time.monotonic() + 120
+    while True:
+        try: result = live('recompile_status')
+        except RuntimeError:
+            if time.monotonic() >= deadline: raise
+            time.sleep(2); continue
+        if result.get('status') in ('completed', 'up_to_date'): break
+        if time.monotonic() >= deadline: raise TimeoutError('Compilation timed out.')
+        time.sleep(2)
+    # Confirm the post-compilation server has survived domain reload before tests.
+    for _ in range(3):
+        time.sleep(1)
+        ready = live('editor_status')
+        if ready.get('compiling') or ready.get('domainReloadInProgress'): raise RuntimeError('Editor is still reloading; tests not started.')
+    print("Compile: passed", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--headless', action='store_true', help='Require the Editor to be closed and verify with batch mode.')
     parser.add_argument('--editor', type=Path, default=Path(f'/Applications/Unity/Hub/Editor/{VERSION}/Unity.app/Contents/MacOS/Unity'))
+    parser.add_argument('--domain-only', action='store_true', help='Compile and run EditMode tests without changing scenes or building.')
+    parser.add_argument('--regenerate-scene', action='store_true', help='Explicitly rebuild the greybox scene and generated prefabs.')
     args = parser.parse_args()
     status = subprocess.run(['unity', 'status', '--format', 'json'], cwd=ROOT, capture_output=True, text=True)
     connected = status.returncode == 0 and any(x.get('project') == str(ROOT) and x.get('state') == 'ready' for x in json.loads(status.stdout)['data']['instances'])
@@ -78,24 +100,11 @@ def main():
         raise RuntimeError('Close this project in the Editor before using --headless (project lock).')
     if connected:
         print('Reusing connected Unity Editor.', flush=True)
-        # A domain reload can close the recompile HTTP response; confirm actual status afterwards.
-        subprocess.run(['unity', 'recompile', '--project-path', str(ROOT), '--format', 'json'], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=180)
-        deadline = time.monotonic() + 120
-        while True:
-            try: result = live('recompile_status')
-            except RuntimeError:
-                if time.monotonic() >= deadline: raise
-                time.sleep(2); continue
-            if result.get('status') in ('completed', 'up_to_date'): break
-            if time.monotonic() >= deadline: raise TimeoutError('Compilation timed out.')
-            time.sleep(2)
-        # Confirm the post-compilation server has survived domain reload before tests.
-        for _ in range(3):
-            time.sleep(1)
-            ready = live('editor_status')
-            if ready.get('compiling') or ready.get('domainReloadInProgress'): raise RuntimeError('Editor is still reloading; tests not started.')
+        compile_live()
         test_live('editor')
-        live('eval', 'Game.Editor.DemoSceneBuilder.Build();')
+        if args.domain_only: return
+        if args.regenerate_scene:
+            live('eval', 'Game.Editor.DemoSceneBuilder.Build();')
         live('eval', 'UnityEditor.AssetDatabase.SaveAssets(); var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(Game.Editor.DemoSceneBuilder.ScenePath); if (scene.isLoaded) UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);')
         test_live('playmode')
         live('eval', 'Game.Editor.CliBuild.ValidateScene();')
@@ -111,7 +120,9 @@ def main():
         if not args.editor.is_file(): raise FileNotFoundError(args.editor)
         batch(args.editor, 'compile', [])
         batch(args.editor, 'EditMode', ['-runTests', '-testPlatform', 'EditMode', '-testResults', str(LOGS / 'EditMode.xml')], tests=True)
-        batch(args.editor, 'scene', ['-executeMethod', 'Game.Editor.DemoSceneBuilder.Build'])
+        if args.domain_only: return
+        if args.regenerate_scene:
+            batch(args.editor, 'scene', ['-executeMethod', 'Game.Editor.DemoSceneBuilder.Build'])
         batch(args.editor, 'PlayMode', ['-runTests', '-testPlatform', 'PlayMode', '-testResults', str(LOGS / 'PlayMode.xml')], tests=True)
         batch(args.editor, 'validate', ['-executeMethod', 'Game.Editor.CliBuild.ValidateScene'])
         batch(args.editor, 'build', ['-executeMethod', 'Game.Editor.CliBuild.BuildDemo', '-buildTarget', 'StandaloneOSX'])

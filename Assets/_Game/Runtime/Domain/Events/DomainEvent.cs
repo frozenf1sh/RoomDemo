@@ -1,5 +1,23 @@
 namespace Game.Domain
 {
+    public sealed class ClueDiscovered : DomainEvent
+    {
+        public ClueId Clue { get; }
+        public ClueDiscovered(ClueId clue) { Clue = clue; }
+        public override string ToString() => $"[DISCOVERY] clue={Clue}";
+    }
+    public sealed class CombinationSucceeded : DomainEvent
+    {
+        public string RecipeId { get; }
+        public CombinationSucceeded(string id) { RecipeId = id; }
+        public override string ToString() => $"[RECIPE] recipe={RecipeId} SUCCESS";
+    }
+    public sealed class CombinationFailed : DomainEvent
+    {
+        public string Reason { get; }
+        public CombinationFailed(string reason) { Reason = reason; }
+        public override string ToString() => $"[RECIPE] FAILED {Reason}";
+    }
     public abstract class DomainEvent { }
     public sealed class ObjectDiscovered : DomainEvent
     {

@@ -49,22 +49,4 @@ namespace Game.Domain
             Id = id; Requires = Array.AsReadOnly((FactId[])requires.Clone()); Produces = Array.AsReadOnly((FactId[])produces.Clone());
         }
     }
-    public sealed class RuleSet
-    {
-        public IReadOnlyList<ObjectDefinition> Objects { get; }
-        public IReadOnlyList<ConceptDefinition> Concepts { get; }
-        public IReadOnlyList<InterpretationRule> Interpretations { get; }
-        public IReadOnlyList<ReactionRule> Reactions { get; }
-        public RuleSet(ObjectDefinition[] objects, ConceptDefinition[] concepts, InterpretationRule[] interpretations, ReactionRule[] reactions)
-        {
-            if (objects.Select(x => x.Id).Distinct().Count() != objects.Length || concepts.Select(x => x.Id).Distinct().Count() != concepts.Length ||
-                reactions.Select(x => x.Id).Distinct().Count() != reactions.Length || interpretations.Select(x => (x.Concept, x.Target)).Distinct().Count() != interpretations.Length)
-                throw new ArgumentException("Rule IDs and interpretation pairs must be unique.");
-            if (interpretations.Any(x => !objects.Any(o => o.Id == x.Target) || !concepts.Any(c => c.Id == x.Concept)) ||
-                objects.Any(x => x.Concepts.Any(c => !concepts.Any(d => d.Id == c)) || x.RevealsObjects.Any(o => !objects.Any(d => d.Id == o))))
-                throw new ArgumentException("Rules contain unknown object or concept IDs.");
-            Objects = Array.AsReadOnly((ObjectDefinition[])objects.Clone()); Concepts = Array.AsReadOnly((ConceptDefinition[])concepts.Clone());
-            Interpretations = Array.AsReadOnly((InterpretationRule[])interpretations.Clone()); Reactions = Array.AsReadOnly((ReactionRule[])reactions.Clone());
-        }
-    }
 }

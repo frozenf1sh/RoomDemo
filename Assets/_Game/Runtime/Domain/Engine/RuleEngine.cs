@@ -13,6 +13,7 @@ namespace Game.Domain
             var events = new List<DomainEvent>();
             bool accepted;
             if (command is InspectObject inspect) accepted = Inspect(state, inspect, events);
+            else if (command is Combine combine) accepted = Combine(state, combine.Clues, events);
             else if (command is Interpret interpret) accepted = Interpret(state, interpret, events);
             else throw new ArgumentException("Unsupported command.", nameof(command));
             if (accepted) EvaluateReactions(state, events);
@@ -20,30 +21,41 @@ namespace Game.Domain
         }
         private bool Inspect(GameState state, InspectObject command, List<DomainEvent> events)
         {
-            var definition = rules.Objects.FirstOrDefault(x => x.Id == command.Object);
+            var definition = rules.Discoveries.FirstOrDefault(x => x.Source == command.Object);
             if (definition == null || !definition.Requires.All(state.HasFact))
+            { events.Add(new InspectionFailed(command.Object, definition == null ? "Unknown object." : definition.LockedDescription)); return false; }
+            foreach (var clue in definition.Grants)
             {
-                events.Add(new InspectionFailed(command.Object, definition == null ? "Unknown object." : "The book is out of reach. Let the world change first."));
-                return false;
+                if (!state.Discover(clue)) continue;
+                events.Add(new ClueDiscovered(clue));
+                var category = rules.Clues.Single(x => x.Id == clue).Category;
+                if (category == ClueCategory.Object) events.Add(new ObjectDiscovered(new ObjectId(clue.Value)));
+                if (category == ClueCategory.Concept) events.Add(new ConceptDiscovered(new ConceptId(clue.Value)));
             }
-            Discover(command.Object, state, events);
-            foreach (var id in definition.RevealsObjects) Discover(id, state, events);
-            foreach (var id in definition.Concepts) if (state.Discover(id)) events.Add(new ConceptDiscovered(id));
             events.Add(new ObjectInspected(command.Object, definition.Description));
             return true;
         }
-        private static void Discover(ObjectId id, GameState state, List<DomainEvent> events)
-        { if (state.Discover(id)) events.Add(new ObjectDiscovered(id)); }
         private bool Interpret(GameState state, Interpret command, List<DomainEvent> events)
         {
-            var rule = rules.Interpretations.FirstOrDefault(x => x.Concept == command.Concept && x.Target == command.Target);
-            string reason = !state.Knows(command.Concept) || !state.Knows(command.Target) ? "Inspect objects to discover the concept and target first."
-                : rule == null ? "This interpretation has no meaning here."
-                : !rule.Requires.All(state.HasFact) ? "Required world facts are missing."
-                : rule.Produces.All(state.HasFact) ? "This interpretation is already present in the world." : null;
-            if (reason != null) { events.Add(new InterpretationFailed(command.Concept, command.Target, reason)); return false; }
-            events.Add(new InterpretationSucceeded(command.Concept, command.Target));
-            AddFacts(state, rule.Produces, events);
+            var modern = new List<DomainEvent>();
+            bool accepted = Combine(state, new[] { new ClueId(command.Concept.Value), new ClueId(command.Target.Value) }, modern);
+            if (!accepted) events.Add(new InterpretationFailed(command.Concept, command.Target, ((CombinationFailed)modern[0]).Reason));
+            else
+            {
+                events.Add(new InterpretationSucceeded(command.Concept, command.Target));
+                events.AddRange(modern.Skip(1));
+            }
+            return accepted;
+        }
+        private bool Combine(GameState state, IReadOnlyList<ClueId> clues, List<DomainEvent> events)
+        {
+            var recipe = rules.Recipes.SingleOrDefault(x => x.Matches(clues));
+            string reason = clues.Any(x => !state.Knows(x)) ? "Inspect the room to collect these clues first."
+                : recipe == null ? "No new interpretation forms."
+                : !recipe.Requires.All(state.HasFact) ? "Required world facts are missing."
+                : state.HasCompleted(recipe.Id) ? "This interpretation already belongs to the room." : null;
+            if (reason != null) { events.Add(new CombinationFailed(reason)); return false; }
+            state.Complete(recipe.Id); events.Add(new CombinationSucceeded(recipe.Id)); AddFacts(state, recipe.Produces, events);
             return true;
         }
         private void EvaluateReactions(GameState state, List<DomainEvent> events)

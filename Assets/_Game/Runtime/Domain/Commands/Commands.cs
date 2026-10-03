@@ -1,5 +1,10 @@
 namespace Game.Domain
 {
+    public sealed class Combine : ICommand
+    {
+        public System.Collections.Generic.IReadOnlyList<ClueId> Clues { get; }
+        public Combine(System.Collections.Generic.IReadOnlyList<ClueId> clues) { Clues = System.Array.AsReadOnly(System.Linq.Enumerable.ToArray(clues)); }
+    }
     public interface ICommand { }
     public readonly struct InspectObject : ICommand
     {
