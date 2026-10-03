@@ -426,24 +426,47 @@ namespace Game.Editor
         {
             var canvas = Canvas("DebugCanvas", parent, 0);
             var header = Box("Header", canvas, new Vector2(0, 1), Vector2.one, new Vector2(0, -90), Vector2.zero, new Color(.07f, .12f, .14f, .92f));
-            Text("Title", header, "ROOM / A SMALL WORLD OF MEANINGS", 22, Paper, Vector2.zero, Vector2.one, new Vector2(25, 40), new Vector2(-200, 0));
-            var objective = Text("Objective", header, "Observe the Plant", 17, new Color(.91f, .72f, .36f), Vector2.zero, Vector2.one, new Vector2(25, 0), new Vector2(-200, -40));
+            Text("Title", header, "ROOM / A WORLD OF MEANINGS", 22, Paper, Vector2.zero, Vector2.one, new Vector2(25, 40), new Vector2(-200, 0));
+            var objective = Text("Objective", header, "Observe the Plant", 17, new Color(.91f, .72f, .36f), Vector2.zero, Vector2.one, new Vector2(25, 0), new Vector2(-345, -40));
             var open = Button("OpenNotebook", header, "NOTEBOOK [N]", new Vector2(1, 0), Vector2.one, new Vector2(-195, 21), new Vector2(-20, -21));
+            var restart = Button("Restart", header, "RESTART", new Vector2(1, 0), Vector2.one, new Vector2(-335, 21), new Vector2(-210, -21));
             notebook.ConfigureControls(open, notebook.transform.Find("NotebookPanel/Notebook/CloseNotebook").GetComponent<Button>());
             var footer = Box("Footer", canvas, Vector2.zero, new Vector2(1, 0), Vector2.zero, new Vector2(0, 44), new Color(.07f, .12f, .14f, .90f));
-            Text("Controls", footer, "Left click: observe    Right drag: look    N / Tab: notebook    Home: reset view    F3: debug", 15, Paper, Vector2.zero, Vector2.one, new Vector2(25, 0), new Vector2(-10, 0));
+            Text("Controls", footer, "Left click: observe    Right drag: look    N / Tab: notebook    Home: reset view    H: hint    F3: debug", 14, Paper, Vector2.zero, Vector2.one, new Vector2(25, 0), new Vector2(-10, 0));
             hover = Text("Hover", canvas, "", 18, Paper, new Vector2(0, 0), new Vector2(1, 0), new Vector2(30, 58), new Vector2(-30, 92));
             hover.alignment = TextAnchor.MiddleCenter;
-            var panel = Box("DebugPanel", canvas, new Vector2(1, .16f), new Vector2(1, .84f), new Vector2(-325, 0), new Vector2(-15, 0), new Color(.05f, .10f, .12f, .88f));
-            panel.GetComponent<Image>().raycastTarget = false;
-            var state = Text("State", panel, "", 14, Paper, new Vector2(0, .35f), Vector2.one, new Vector2(16, 0), new Vector2(-16, -10)); state.alignment = TextAnchor.UpperLeft;
-            var events = Text("Events", panel, "", 12, new Color(.68f, .81f, .77f), Vector2.zero, new Vector2(1, .34f), new Vector2(16, 10), new Vector2(-16, 0)); events.alignment = TextAnchor.UpperLeft;
+            var observation = Text("Observation", canvas, "", 17, Paper, new Vector2(0, .09f), new Vector2(.48f, .22f), new Vector2(26, 0), new Vector2(-15, 0));
+            observation.gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, .8f); observation.alignment = TextAnchor.LowerLeft;
+            var panel = Box("DebugPanel", canvas, new Vector2(1, .07f), new Vector2(1, .90f), new Vector2(-410, 0), new Vector2(-15, 0), new Color(.04f, .09f, .12f, .97f));
+            Text("DebugTitle", panel, "DOMAIN DEBUG  /  scroll state", 16, Paper, new Vector2(0, .94f), Vector2.one, new Vector2(15, 0), new Vector2(-15, 0));
+            var viewport = Box("StateViewport", panel, new Vector2(0, .34f), new Vector2(1, .93f), new Vector2(15, 0), new Vector2(-15, 0), new Color(0, 0, 0, 0));
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var state = Text("State", viewport, "", 13, Paper, new Vector2(0, 1), Vector2.one, Vector2.zero, Vector2.zero); state.alignment = TextAnchor.UpperLeft;
+            state.rectTransform.pivot = new Vector2(.5f, 1);
+            state.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>(); scroll.viewport = viewport; scroll.content = state.rectTransform; scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
+            var events = Text("Events", panel, "", 10, new Color(.68f, .81f, .77f), new Vector2(0, .22f), new Vector2(1, .33f), new Vector2(15, 0), new Vector2(-15, 0)); events.alignment = TextAnchor.UpperLeft;
+            var reset = Button("DebugReset", panel, "Reset", new Vector2(0, .16f), new Vector2(.30f, .21f), new Vector2(15, 0), new Vector2(-4, 0));
+            var grant = Button("GrantAll", panel, "Grant all clues", new Vector2(.30f, .16f), new Vector2(1, .21f), new Vector2(4, 0), new Vector2(-15, 0));
+            var factRect = Box("FactInput", panel, new Vector2(0, .10f), new Vector2(.69f, .15f), new Vector2(15, 0), new Vector2(-4, 0), Paper);
+            var factInput = factRect.gameObject.AddComponent<InputField>();
+            var inputText = Text("Text", factRect, "", 14, Ink, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, 0));
+            factInput.textComponent = inputText; factInput.text = "painting.sea"; factInput.characterLimit = 70;
+            var add = Button("AddFact", panel, "Add Fact", new Vector2(.69f, .10f), new Vector2(1, .15f), new Vector2(4, 0), new Vector2(-15, 0));
+            var presetButtons = new Button[4];
+            for (int i = 0; i < presetButtons.Length; i++)
+            {
+                int row = i / 2, column = i % 2;
+                presetButtons[i] = Button("Preset" + i, panel, DebugPresets.All[i].Id, new Vector2(column * .5f, .045f - row * .042f), new Vector2((column + 1) * .5f, .085f - row * .042f), new Vector2(15, 0), new Vector2(-6, 0));
+                presetButtons[i].GetComponentInChildren<Text>().fontSize = 14;
+            }
             var ending = Box("Ending", canvas, new Vector2(.30f, .09f), new Vector2(.70f, .22f), Vector2.zero, Vector2.zero, new Color(.05f, .14f, .18f, .9f));
             ending.GetComponent<Image>().raycastTarget = false;
             var endTitle = Text("EndingTitle", ending, "The room remembers.", 29, Paper, new Vector2(0, .35f), Vector2.one, new Vector2(15, 0), new Vector2(-15, 0)); endTitle.alignment = TextAnchor.MiddleCenter;
             var endDetail = Text("EndingDetail", ending, "You gave the painting a sea. The plant and window answered.", 14, new Color(.68f, .87f, .89f), Vector2.zero, new Vector2(1, .4f), new Vector2(15, 0), new Vector2(-15, 0)); endDetail.alignment = TextAnchor.MiddleCenter;
             ending.gameObject.SetActive(false);
             var debug = canvas.gameObject.AddComponent<DebugView>(); debug.Configure(panel.gameObject, state, events, objective);
+            debug.ConfigureTools(observation, restart, reset, grant, add, factInput, presetButtons);
             panel.gameObject.SetActive(false); return debug;
         }
     }

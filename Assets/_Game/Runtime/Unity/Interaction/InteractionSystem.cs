@@ -31,7 +31,7 @@ namespace Game.Unity
             if (Mouse.current == null || session == null) return;
             bool blocked = notebook.IsOpen || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
-            hoverText.text = target == null ? "" : "CLICK TO OBSERVE  /  " + session.Rules.Objects.First(x => x.Id == target.Entity.Id).Label.ToUpperInvariant();
+            hoverText.text = target == null ? "" : (session.IsInspectable(target.Entity.Id) ? "CLICK TO OBSERVE  /  " : "OUT OF REACH  /  ") + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName.ToUpperInvariant();
             if (!blocked && Mouse.current.leftButton.wasPressedThisFrame) InspectAt(Mouse.current.position.ReadValue());
         }
     }

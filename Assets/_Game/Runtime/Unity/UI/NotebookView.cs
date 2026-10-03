@@ -87,7 +87,7 @@ namespace Game.Unity
         { var row = Instantiate(rowTemplate, list); row.name = name; row.gameObject.SetActive(true); row.GetComponentInChildren<Text>().text = label; row.onClick.AddListener(select); }
         private void RenderSelection()
         {
-            selectionText.text = "COMBINATION  /  2–3 clues · unordered"; selectionText.color = new Color(.1f, .15f, .19f);
+            selectionText.text = "COMBINE COLLECTED MEANINGS"; selectionText.color = new Color(.1f, .15f, .19f);
             for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) + "  ×" : i == 2 ? "+ optional clue" : "+ choose a clue";
             interpretButton.interactable = SelectedClues.Count >= 2;
         }
@@ -95,6 +95,8 @@ namespace Game.Unity
         {
             if (closeAt > 0 && Time.unscaledTime >= closeAt) { closeAt = -1; SetOpen(false); ClearSelection(); RenderSelection(); }
             var keyboard = Keyboard.current; if (keyboard == null) return;
+            var focused = UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject;
+            if (focused != null && focused.TryGetComponent<InputField>(out var input) && input.isFocused) return;
             if (keyboard.nKey.wasPressedThisFrame || keyboard.tabKey.wasPressedThisFrame) Toggle();
             if (keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
         }

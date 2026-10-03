@@ -15,11 +15,16 @@ namespace Game.Unity
         { presenters = views; notebook = notebookView; debugView = debug; interaction = input; }
         private void Awake()
         {
-            Session = new GameSession(DemoRules.Create());
-            foreach (var presenter in presenters) presenter.Bind(Session);
-            notebook.Bind(Session); debugView.Bind(Session); interaction.Bind(Session, notebook);
-            UnityEngine.Application.targetFrameRate = 60;
-            UnityEngine.Application.runInBackground = true;
+            Restart(); UnityEngine.Application.targetFrameRate = 60; UnityEngine.Application.runInBackground = true;
+        }
+        public void Restart() => Bind(new GameSession(DemoRules.Create()));
+        public void JumpTo(DebugPreset preset) => Bind(GameSession.FromPreset(DemoRules.Create(), preset));
+        public void AddDebugFact(FactId fact) { Session.DebugAddFact(fact); foreach (var view in presenters) view.ApplyState(Session.State, false); }
+        private void Bind(GameSession session)
+        {
+            Session = session;
+            foreach (var view in presenters) view.Bind(Session);
+            notebook.Bind(Session); debugView.Bind(Session, Restart, JumpTo, AddDebugFact); interaction.Bind(Session, notebook);
         }
     }
 }

@@ -19,6 +19,30 @@ namespace Game.Domain
             if (accepted) EvaluateReactions(state, events);
             return events.AsReadOnly();
         }
+        public IReadOnlyList<DomainEvent> DebugGrantClues(GameState state, IReadOnlyList<ClueId> clues)
+        {
+            if (clues.Any(c => !rules.Clues.Any(d => d.Id == c))) throw new ArgumentException("Unknown debug clue.");
+            var events = new List<DomainEvent>(); foreach (var clue in clues) if (state.Discover(clue)) events.Add(new ClueDiscovered(clue)); return events.AsReadOnly();
+        }
+        public IReadOnlyList<DomainEvent> DebugAddFacts(GameState state, IReadOnlyList<FactId> facts)
+        {
+            var known = rules.Recipes.SelectMany(x => x.Produces.Concat(x.Requires)).Concat(rules.Reactions.SelectMany(x => x.Produces.Concat(x.Requires))).Concat(rules.Discoveries.SelectMany(x => x.Requires)).ToHashSet();
+            if (facts.Any(f => !known.Contains(f))) throw new ArgumentException("Unknown debug fact.");
+            var events = new List<DomainEvent>(); AddFacts(state, facts, events); EvaluateReactions(state, events); return events.AsReadOnly();
+        }
+        public void RestorePreset(GameState state, DebugPreset preset)
+        {
+            if (state.KnownClues.Count > 0 || state.Facts.Count > 0) throw new InvalidOperationException("Restore a preset into a fresh session.");
+            if (preset.CompletedRecipes.Any(id => !rules.Recipes.Any(r => r.Id == id))) throw new ArgumentException("Unknown preset recipe.");
+            // Seed facts through the same closure as play. Restore emits no transition events.
+            DebugGrantClues(state, preset.Known); DebugAddFacts(state, preset.Facts);
+            foreach (var id in preset.CompletedRecipes)
+            {
+                var recipe = rules.Recipes.Single(r => r.Id == id);
+                if (!recipe.Produces.All(state.HasFact)) throw new ArgumentException("Preset recipes must agree with their produced facts.");
+                state.Complete(id);
+            }
+        }
         private bool Inspect(GameState state, InspectObject command, List<DomainEvent> events)
         {
             var definition = rules.Discoveries.FirstOrDefault(x => x.Source == command.Object);

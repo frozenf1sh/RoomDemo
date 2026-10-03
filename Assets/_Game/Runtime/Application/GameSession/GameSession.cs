@@ -14,11 +14,16 @@ namespace Game.Application
         public IReadOnlyList<DomainEvent> Interpret(ConceptId concept, ObjectId target) => Dispatch(new Interpret(concept, target));
         public IReadOnlyList<DomainEvent> Combine(IReadOnlyList<ClueId> clues) => Dispatch(new Combine(clues));
         public bool IsInspectable(ObjectId id) => Rules.IsInspectable(State, id);
+        public IReadOnlyList<DomainEvent> DebugGrantAllClues() => Publish(engine.DebugGrantClues(State, System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(Rules.Clues, x => x.Id))));
+        public IReadOnlyList<DomainEvent> DebugAddFact(FactId fact) => Publish(engine.DebugAddFacts(State, new[] { fact }));
+        public static GameSession FromPreset(RuleSet rules, DebugPreset preset)
+        { var session = new GameSession(rules); session.engine.RestorePreset(session.State, preset); return session; }
+        private IReadOnlyList<DomainEvent> Publish(IReadOnlyList<DomainEvent> events)
+        { foreach (var e in events) EventRaised?.Invoke(e); return events; }
         private IReadOnlyList<DomainEvent> Dispatch(ICommand command)
         {
             var events = engine.Execute(State, command);
-            foreach (var e in events) EventRaised?.Invoke(e);
-            return events;
+            return Publish(events);
         }
     }
 }

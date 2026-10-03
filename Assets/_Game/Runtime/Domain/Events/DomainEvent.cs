@@ -64,12 +64,12 @@ namespace Game.Domain
     {
         public FactId Fact { get; }
         public FactAdded(FactId fact) { Fact = fact; }
-        public override string ToString() => $"FactAdded({Fact})";
+        public override string ToString() => $"[FACT] +{Fact}";
     }
     public sealed class ReactionTriggered : DomainEvent
     {
         public string Id { get; }
         public ReactionTriggered(string id) { Id = id; }
-        public override string ToString() => $"ReactionTriggered({Id})";
+        public override string ToString() => $"[REACTION] {Id}";
     }
 }

@@ -63,6 +63,8 @@ namespace Game.Tests
             var wind = Object.FindFirstObjectByType<WindPresenter>();
             Assert.That(Object.FindFirstObjectByType<WindowPresenter>().FarBackground.activeSelf);
             Assert.That(wind.IsWindVisible); Assert.That(wind.WindAudio.isPlaying);
+            Assert.That(Object.FindFirstObjectByType<DebugView>().Objective, Does.Contain("paper"));
+            Assert.That(Object.FindFirstObjectByType<EndingPresenter>().EndingPanel.activeSelf, Is.False);
             Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(6));
             var rotation = plant.Visual.localRotation;
             float maxAngle = 0;
@@ -92,6 +94,49 @@ namespace Game.Tests
             Assert.That(notebook, Is.Not.Null); Assert.That(input, Is.Not.Null);
             Assert.That(ClickObject(DemoRules.Book)); Assert.That(bootstrap.Session.State.Knows(DemoRules.Book), Is.False);
             yield return null;
+        }
+        [UnityTest] public IEnumerator DebugPresetsRestoreFinalPosesAndRestartRestoresInitialWorld()
+        {
+            var plant = Object.FindFirstObjectByType<PlantPresenter>(); var initialScale = plant.Visual.localScale;
+            var book = Object.FindFirstObjectByType<BookPresenter>(); var shelfPosition = book.transform.localPosition;
+            var paper = Object.FindFirstObjectByType<PaperPresenter>(); var hidden = paper.Sheet.localPosition;
+            bootstrap.JumpTo(DebugPresets.Emergence);
+            Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.Visual.localScale.y, Is.GreaterThan(2.3f));
+            Assert.That(book.transform.localPosition, Is.EqualTo(book.FallenPosition));
+            Assert.That(Object.FindFirstObjectByType<WindowPresenter>().OceanBackground.transform.localScale.y, Is.EqualTo(1));
+            Assert.That(Object.FindFirstObjectByType<WaterPresenter>().Puddle.transform.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(Object.FindFirstObjectByType<EndingPresenter>().EndingPanel.activeSelf);
+            FindButton("Restart").onClick.Invoke(); yield return null;
+            Assert.That(bootstrap.Session.State.Facts, Is.Empty); Assert.That(bootstrap.Session.State.KnownClues, Is.Empty);
+            Assert.That(plant.Visual.localScale, Is.EqualTo(initialScale)); Assert.That(plant.AquaticVisual.activeSelf, Is.False);
+            Assert.That(book.transform.localPosition, Is.EqualTo(shelfPosition)); Assert.That(paper.Sheet.localPosition, Is.EqualTo(hidden));
+            Assert.That(Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None).Any(x => x.isPlaying), Is.False);
+            Assert.That(Object.FindFirstObjectByType<EndingPresenter>().EndingPanel.activeSelf, Is.False);
+            FindButton("Restart").onClick.Invoke(); ClickObject(DemoRules.Plant);
+            FindButton("OpenNotebook").onClick.Invoke(); yield return null;
+            FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
+            var events = new System.Collections.Generic.List<DomainEvent>(); bootstrap.Session.EventRaised += events.Add;
+            FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(1.4f);
+            Assert.That(events.OfType<CombinationSucceeded>().Count(), Is.EqualTo(1)); Assert.That(plant.Visual.localScale.x, Is.GreaterThan(1.7f));
+        }
+        [UnityTest] public IEnumerator DebugButtonsGrantCluesAndJumpToBeforeSeaThenAddFact()
+        {
+            var debug = Object.FindFirstObjectByType<DebugView>(); debug.transform.Find("DebugPanel").gameObject.SetActive(true);
+            FindButton("GrantAll").onClick.Invoke(); Assert.That(bootstrap.Session.State.KnownClues.Count, Is.EqualTo(7)); Assert.That(bootstrap.Session.State.Facts, Is.Empty);
+            FindButton("Preset2").onClick.Invoke(); Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(6)); Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete), Is.False);
+            var field = Object.FindFirstObjectByType<InputField>(); field.text = "plant.gorwn"; FindButton("AddFact").onClick.Invoke(); Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(6));
+            field.text = "painting.sea"; FindButton("AddFact").onClick.Invoke();
+            Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(Object.FindFirstObjectByType<PlantPresenter>().Visual.localScale.y, Is.GreaterThan(2.3f));
+            FindButton("DebugReset").onClick.Invoke(); yield return null; Assert.That(bootstrap.Session.State.Facts, Is.Empty);
+        }
+        [UnityTest] public IEnumerator ThirdNotebookSlotRejectsExtraClueWithoutConsumingIt()
+        {
+            bootstrap.Session.DebugGrantAllClues(); FindButton("OpenNotebook").onClick.Invoke(); yield return null;
+            FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke(); FindButton("Concept_sea").onClick.Invoke();
+            Assert.That(notebook.SelectedClues.Count, Is.EqualTo(3)); FindButton("Interpret").onClick.Invoke(); yield return null;
+            Assert.That(bootstrap.Session.State.Facts, Is.Empty); Assert.That(bootstrap.Session.State.KnownClues.Count, Is.EqualTo(7)); Assert.That(notebook.IsOpen);
+            FindButton("Slot2").onClick.Invoke(); FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(.8f);
+            Assert.That(bootstrap.Session.State.HasFact(DemoRules.PlantGrown)); Assert.That(notebook.IsOpen, Is.False);
         }
         [UnityTest] public IEnumerator InvalidUiInterpretationLeavesWorldUnchanged()
         {
