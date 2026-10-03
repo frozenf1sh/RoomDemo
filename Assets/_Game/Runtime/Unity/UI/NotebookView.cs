@@ -26,10 +26,20 @@ namespace Game.Unity
         [SerializeField] private Text feedbackText;
         [SerializeField] private Button[] slotButtons;
         [SerializeField] private Text completedText;
+        [SerializeField] private GameObject discoveryPanel;
+        [SerializeField] private Text discoveryText;
         // 仅保存临时界面选择，KnownClues 与配方历史从 Session 读取。
         private readonly ClueId?[] selected = new ClueId?[3];
         private GameSession session;
         private float closeAt = -1;
+        // 获取通知和未读提醒仅属于 UI，不作为任何世界规则的输入。
+        private readonly List<ClueId> recentDiscoveries = new List<ClueId>();
+        private float discoveryUntil = -1;
+        private float blinkStartedAt;
+        private ColorBlock originalButtonColors;
+        private bool buttonColorsCaptured;
+        /// <summary>是否有尚未打开笔记本查看的新发现；不代表任何领域事实。</summary>
+        public bool HasUnreadDiscoveries { get; private set; }
         /// <summary>笔记本界面开关，仅为临时输入状态。</summary>
         public bool IsOpen => panel.activeSelf;
         /// <summary>本次界面选择的输入快照，不代表已完成配方。</summary>
@@ -41,6 +51,12 @@ namespace Game.Unity
         public void ConfigureSlots(Button[] slots, Text history) { slotButtons = slots; completedText = history; }
         /// <summary>注入面板外的打开按钮与面板内关闭按钮。</summary>
         public void ConfigureControls(Button open, Button close) { openButton = open; closeButton = close; }
+        /// <summary>注入画面上方的获取通知，与观察描述分开显示。</summary>
+        public void ConfigureDiscoveryFeedback(GameObject notice, Text text)
+        {
+            discoveryPanel = notice;
+            discoveryText = text;
+        }
         /// <summary>重绑会话与按钮，清空临时选择并重新建立只读视图。</summary>
         /// <param name="game">新的应用层会话；可以是初始会话或已经恢复的调试会话。</param>
         /// <remarks>本组件拥有这些按钮的监听；重绑必须先移除旧监听与旧会话订阅。</remarks>
@@ -49,6 +65,17 @@ namespace Game.Unity
             // 重开或预设跳转时先解绑旧会话，避免旧事件修改新界面。
             if (session != null) session.EventRaised -= OnEvent;
             session = game; session.EventRaised += OnEvent; closeAt = -1; ClearSelection(); SetOpen(false);
+            // 只缓存一次原始按钮样式；重开时不能把上一会话的闪烁颜色当作初始颜色。
+            if (!buttonColorsCaptured)
+            {
+                originalButtonColors = openButton.colors;
+                buttonColorsCaptured = true;
+            }
+            recentDiscoveries.Clear();
+            discoveryUntil = -1;
+            discoveryText.text = "";
+            discoveryPanel.SetActive(false);
+            ClearDiscoveryReminder();
             interpretButton.onClick.RemoveAllListeners(); interpretButton.onClick.AddListener(InterpretSelected);
             openButton.onClick.RemoveAllListeners(); openButton.onClick.AddListener(Toggle);
             closeButton.onClick.RemoveAllListeners(); closeButton.onClick.AddListener(() => SetOpen(false));
@@ -56,7 +83,12 @@ namespace Game.Unity
             feedbackText.text = "点击已收集的碎片，填入最多三个组合槽；点击已填槽位可清除选择。"; Render();
         }
         /// <summary>只修改笔记本界面开关。</summary>
-        public void SetOpen(bool open) { panel.SetActive(open); }
+        public void SetOpen(bool open)
+        {
+            panel.SetActive(open);
+            // 打开即可确认已看到新收集的条目；关闭笔记本不会凭空产生未读提醒。
+            if (open) ClearDiscoveryReminder();
+        }
         /// <summary>切换界面开关，不改变游戏事实。</summary>
         public void Toggle() { SetOpen(!IsOpen); }
         /// <summary>旧物体选择入口，适配为统一碎片选择。</summary>
@@ -86,7 +118,11 @@ namespace Game.Unity
         /// <summary>处理发现与组合反馈；成功后短暂强调并自动收起。</summary>
         private void OnEvent(DomainEvent e)
         {
-            if (e is ClueDiscovered) Render();
+            if (e is ClueDiscovered discovered)
+            {
+                Render();
+                ShowDiscovery(discovered.Clue);
+            }
             if (e is ObjectInspected inspected) feedbackText.text = inspected.Description;
             if (e is InspectionFailed inspectFailed) feedbackText.text = inspectFailed.Reason;
             if (e is CombinationFailed failed) { feedbackText.text = failed.Reason; selectionText.color = new Color(.62f, .25f, .21f); closeAt = -1; }
@@ -97,6 +133,49 @@ namespace Game.Unity
                 selectionText.text = string.Join("  ─  ", SelectedClues.Select(Label)); selectionText.color = new Color(.75f, .43f, .10f);
                 closeAt = Time.unscaledTime + .65f; RenderHistory();
             }
+        }
+        /// <summary>聚合同一轮新发现，显示中文名称并启动未读闪烁。</summary>
+        /// <param name="clue">领域首次发现事件中的碎片；兼容事件和重复观察不调用此方法。</param>
+        private void ShowDiscovery(ClueId clue)
+        {
+            // 连续发现共享一张通知，避免盆栽与生长在同一命令中互相覆盖。
+            if (Time.unscaledTime >= discoveryUntil) recentDiscoveries.Clear();
+            recentDiscoveries.Add(clue);
+            discoveryText.text = "新发现\n" + string.Join("、", recentDiscoveries.Select(Label)) + "\n已记入笔记本 · 按 N 查看";
+            discoveryUntil = Time.unscaledTime + 5f;
+            discoveryPanel.SetActive(true);
+            if (!IsOpen)
+            {
+                if (!HasUnreadDiscoveries) blinkStartedAt = Time.unscaledTime;
+                HasUnreadDiscoveries = true;
+                openButton.GetComponentInChildren<Text>().text = "新发现 [N]";
+            }
+        }
+        /// <summary>恢复按钮样式并清除未读标记，供打开与重开共用。</summary>
+        private void ClearDiscoveryReminder()
+        {
+            HasUnreadDiscoveries = false;
+            if (buttonColorsCaptured) openButton.colors = originalButtonColors;
+            openButton.GetComponentInChildren<Text>().text = "笔记本 [N]";
+        }
+        /// <summary>用非缩放时间更新通知期限和按钮脉冲，不检查世界规则。</summary>
+        private void UpdateDiscoveryFeedback()
+        {
+            if (discoveryUntil > 0 && Time.unscaledTime >= discoveryUntil)
+            {
+                discoveryUntil = -1;
+                discoveryPanel.SetActive(false);
+                recentDiscoveries.Clear();
+            }
+            // 通知五秒后收起，但未读按钮持续闪烁，直到玩家打开笔记本。
+            if (!HasUnreadDiscoveries) return;
+            float pulse = .5f + .5f * Mathf.Sin((Time.unscaledTime - blinkStartedAt) * Mathf.PI * 3f);
+            var colors = originalButtonColors;
+            colors.normalColor = Color.Lerp(originalButtonColors.normalColor, new Color(2.5f, 1.7f, .3f), pulse);
+            colors.highlightedColor = colors.normalColor;
+            colors.selectedColor = colors.normalColor;
+            colors.fadeDuration = 0f;
+            openButton.colors = colors;
         }
         /// <summary>根据 KnownClues 重建分类列表和解释历史。</summary>
         private void Render()
@@ -130,6 +209,7 @@ namespace Game.Unity
         /// <summary>处理面板按键与成功后收起；输入框编辑时不抢占键盘。</summary>
         private void Update()
         {
+            UpdateDiscoveryFeedback();
             if (closeAt > 0 && Time.unscaledTime >= closeAt) { closeAt = -1; SetOpen(false); ClearSelection(); RenderSelection(); }
             var keyboard = Keyboard.current; if (keyboard == null) return;
             var focused = UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject;

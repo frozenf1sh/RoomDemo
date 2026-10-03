@@ -79,8 +79,10 @@ namespace Game.Unity
             if (UnityEngine.Application.isEditor || Debug.isDebugBuild)
                 stateText.text += "\n\n当前可用的配方\n" + string.Join("\n", session.Rules.AvailableRecipes(s).Select(RecipeName));
             objectiveText.text = s.HasFact(DemoRules.Complete) ? "房间记得。三次解释，一个开始回应的世界。"
+                : s.Knows(DemoRules.Sea) && !s.Knows(DemoRules.Painting) ? "已收集海。请先点击观察墙上的画。"
                 : s.Knows(DemoRules.Sea) ? (showHint ? "提示：在笔记本中组合「海 + 画」。" : "纸上有一片海。什么能够容纳它？")
                 : s.HasFact(DemoRules.PaperRevealed) ? "风吹出了一张纸。调查地毯上的纸张。"
+                : s.Knows(DemoRules.Far) && !s.Knows(DemoRules.Window) ? "已收集远方。请先点击观察窗户。"
                 : s.Knows(DemoRules.Far) ? (showHint ? "提示：在笔记本中组合「远方 + 窗户」。" : "旅行书描绘着远方。看看房间之外。")
                 : s.HasFact(DemoRules.BookFallen) ? "有东西落下了。调查地面上的红色书本。"
                 : s.Knows(DemoRules.Growth) ? (showHint ? "提示：在笔记本中组合「盆栽 + 生长」。" : "已收集两个意义。按 N 打开笔记本，试着组合。")

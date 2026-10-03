@@ -29,10 +29,11 @@ namespace Game.Domain
             new[] {
                 // 调查条件决定新探索机会：书落下、纸张显露后才开放核心线索。
                 new DiscoveryRule("inspect.plant", Plant, "盆栽", "小盆栽向书架倾斜，新叶尚未完全舒展。\n生长，是成为更多的可能。已收集：盆栽、生长。", None, new[] { Clue("plant"), Clue("growth") }),
-                new DiscoveryRule("inspect.book", Book, "书", "落下的旅行书翻开，描绘着没有边界的地平线。\n远方，是房间容不下的距离。铅笔箭头指向窗户。已收集：书、远方、窗户。", new[] { BookInspectable }, new[] { Clue("book"), Clue("far"), Clue("window") }, "书卡在书架上方，够不到。或许有什么能把它碰下来。"),
+                // 描述可以引导观察其他物体，但不能代替玩家点击并授予那个物体。
+                new DiscoveryRule("inspect.book", Book, "书", "落下的旅行书翻开，描绘着没有边界的地平线。\n远方，是房间容不下的距离。铅笔箭头指向窗户。已收集：书、远方。请亲自观察窗户。", new[] { BookInspectable }, new[] { Clue("book"), Clue("far") }, "书卡在书架上方，够不到。或许有什么能把它碰下来。"),
                 new DiscoveryRule("inspect.window", Window, "窗户", "玻璃朦胧。房间止步于此，景色却未必如此。\n已收集：窗户。什么意义能打开它？", None, new[] { Clue("window") }),
                 new DiscoveryRule("inspect.painting", Painting, "画", "一幅干燥而寂静的画，色带被木框圈住。\n已收集：画。画面下沿似乎还没有完成。", None, new[] { Clue("painting") }),
-                new DiscoveryRule("inspect.paper", Paper, "纸张", "风吹出了画框后的习作：潮汐、盐，以及不停流动的辽阔水面。\n海，是不愿被边界束缚的水。已收集：海、画。", new[] { PaperRevealed }, new[] { Clue("sea"), Clue("painting") }, "纸张压在画框后面，现在还看不清。")
+                new DiscoveryRule("inspect.paper", Paper, "纸张", "风吹出了画框后的习作：潮汐、盐，以及不停流动的辽阔水面。\n海，是不愿被边界束缚的水。已收集：海。请亲自观察画。", new[] { PaperRevealed }, new[] { Clue("sea") }, "纸张压在画框后面，现在还看不清。")
             },
             new[] {
                 // 玩家只建立三个解释；后续风、水和跨物体改变均交给自动反应。

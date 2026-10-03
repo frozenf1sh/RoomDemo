@@ -24,7 +24,7 @@ namespace Game.Tests
         [Test] public void PlantGrownAutomaticallyDropsBook() { Grow(); Assert.That(session.State.HasFact(DemoRules.BookFallen)); }
         /// <summary>旧植物状态与新窗景共同触发风及纸张显露。</summary>
         [Test] public void TwoExistingStatesAutomaticallyProduceWind()
-        { Grow(); session.Inspect(DemoRules.Book); var e = session.Interpret(DemoRules.Far, DemoRules.Window); Assert.That(session.State.HasFact(DemoRules.WindEntering)); Assert.That(e.OfType<ReactionTriggered>().Select(x => x.Id), Is.EquivalentTo(new[] { "wind-enters-room", "wind-reveals-paper" })); }
+        { Grow(); session.Inspect(DemoRules.Book); session.Inspect(DemoRules.Window); var e = session.Interpret(DemoRules.Far, DemoRules.Window); Assert.That(session.State.HasFact(DemoRules.WindEntering)); Assert.That(e.OfType<ReactionTriggered>().Select(x => x.Id), Is.EquivalentTo(new[] { "wind-enters-room", "wind-reveals-paper" })); }
         /// <summary>重复解释不会重复触发反应。</summary>
         [Test] public void ReactionsFireOnlyOnce()
         { Grow(); var e = session.Interpret(DemoRules.Growth, DemoRules.Plant); Assert.That(e.OfType<ReactionTriggered>(), Is.Empty); Assert.That(session.State.FiredReactions.Count, Is.EqualTo(2)); }
@@ -36,7 +36,7 @@ namespace Game.Tests
         { Assert.That(session.Interpret(DemoRules.Growth, DemoRules.Plant).Single(), Is.TypeOf<InterpretationFailed>()); Assert.That(session.State.Facts, Is.Empty); }
         /// <summary>书的核心线索被事实门槛保护。</summary>
         [Test] public void BookIsGatedUntilItFalls()
-        { Assert.That(session.Inspect(DemoRules.Book).Single(), Is.TypeOf<InspectionFailed>()); Assert.That(session.State.KnownConcepts, Is.Empty); Grow(); session.Inspect(DemoRules.Book); Assert.That(session.State.Knows(DemoRules.Far)); Assert.That(session.State.Knows(DemoRules.Window)); }
+        { Assert.That(session.Inspect(DemoRules.Book).Single(), Is.TypeOf<InspectionFailed>()); Assert.That(session.State.KnownConcepts, Is.Empty); Grow(); session.Inspect(DemoRules.Book); Assert.That(session.State.Knows(DemoRules.Far)); Assert.That(session.State.Knows(DemoRules.Window), Is.False); }
         /// <summary>重复观察不重复发放发现事件。</summary>
         [Test] public void RepeatedInspectionDoesNotRepeatDiscoveryEvents()
         { session.Inspect(DemoRules.Plant); var e = session.Inspect(DemoRules.Plant); Assert.That(e.OfType<ObjectDiscovered>(), Is.Empty); Assert.That(e.OfType<ConceptDiscovered>(), Is.Empty); }

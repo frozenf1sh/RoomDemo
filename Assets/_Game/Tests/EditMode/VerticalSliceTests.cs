@@ -18,7 +18,7 @@ namespace Game.Tests
         /// <summary>执行植物、书、窗户路径，到达海之前的正式状态。</summary>
         private static void BeforeSea(GameSession s)
         {
-            s.Inspect(DemoRules.Plant); Pair(s, "plant", "growth"); s.Inspect(DemoRules.Book); Pair(s, "far", "window");
+            s.Inspect(DemoRules.Plant); Pair(s, "plant", "growth"); s.Inspect(DemoRules.Book); s.Inspect(DemoRules.Window); Pair(s, "far", "window");
         }
         /// <summary>只需三次玩家组合即可自动达到完整涌现。</summary>
         [Test] public void CompletePlaythroughNeedsOnlyThreePlayerRecipes()
@@ -26,14 +26,15 @@ namespace Game.Tests
             var s = new GameSession(DemoRules.Create()); BeforeSea(s);
             // 以下断言检查可观察结果；测试不依赖场景或规则实现的内部字段。
             Assert.That(s.State.HasFact(DemoRules.PaperRevealed)); Assert.That(s.State.HasFact(DemoRules.WaterPresent), Is.False);
-            s.Inspect(DemoRules.Paper); Assert.That(s.State.Knows(DemoRules.Sea)); Assert.That(s.State.Knows(DemoRules.Painting));
+            s.Inspect(DemoRules.Paper); Assert.That(s.State.Knows(DemoRules.Sea)); Assert.That(s.State.Knows(DemoRules.Painting), Is.False);
+            s.Inspect(DemoRules.Painting);
             var events = s.Combine(new[] { DemoRules.Clue("painting"), DemoRules.Clue("sea") });
             Assert.That(events.OfType<CombinationSucceeded>().Single().RecipeId, Is.EqualTo("recipe.painting.sea"));
             Assert.That(events.OfType<ReactionTriggered>().Select(x => x.Id), Is.EquivalentTo(new[] { "painting-leaks-water", "plant-becomes-aquatic", "window-becomes-ocean", "room-remembers" }));
             Assert.That(s.State.Facts.Count, Is.EqualTo(11)); Assert.That(s.State.HasFact(DemoRules.Complete));
             Assert.That(s.State.CompletedRecipes.Count, Is.EqualTo(3)); Assert.That(s.State.FiredReactions.Count, Is.EqualTo(8));
         }
-        /// <summary>提前知道画后观察纸张只新增海。</summary>
+        /// <summary>提前亲自观察画后，纸张仍然只提供海。</summary>
         [Test] public void PreviouslyKnownPaintingIsNotRediscoveredByPaper()
         {
             var s = new GameSession(DemoRules.Create()); s.Inspect(DemoRules.Painting); BeforeSea(s);
@@ -54,7 +55,7 @@ namespace Game.Tests
         {
             var d = DemoRules.Create(); var normal = new GameSession(d);
             var shuffled = new GameSession(new RuleSet(d.Clues.ToArray(), d.Discoveries.ToArray(), d.Recipes.ToArray(), d.Reactions.OrderBy(x => x.Id).Reverse().ToArray()));
-            foreach (var s in new[] { normal, shuffled }) { BeforeSea(s); s.Inspect(DemoRules.Paper); Pair(s, "painting", "sea"); }
+            foreach (var s in new[] { normal, shuffled }) { BeforeSea(s); s.Inspect(DemoRules.Paper); s.Inspect(DemoRules.Painting); Pair(s, "painting", "sea"); }
             Assert.That(shuffled.State.Facts, Is.EquivalentTo(normal.State.Facts)); Assert.That(shuffled.State.FiredReactions, Is.EquivalentTo(normal.State.FiredReactions));
         }
         /// <summary>两个互相产生事实的反应不会无限循环。</summary>

@@ -49,6 +49,50 @@ namespace Game.Tests
             var center = entity.GetComponent<Collider>().bounds.center;
             return input.InspectAt(Camera.main.WorldToScreenPoint(center));
         }
+        /// <summary>首次获取有完整通知与实际按钮闪烁，打开即确认，重复观察不重新提醒。</summary>
+        [UnityTest] public IEnumerator DiscoveryNoticeBlinksUntilReadAndRestartClearsIt()
+        {
+            var open = FindButton("OpenNotebook");
+            var original = open.colors;
+            var notice = Object.FindObjectsByType<Text>(FindObjectsInactive.Include).Single(x => x.name == "DiscoveryNoticeText");
+            Assert.That(notice.gameObject.activeInHierarchy, Is.False);
+            Assert.That(ClickObject(DemoRules.Plant));
+            yield return null;
+            Assert.That(notice.gameObject.activeInHierarchy, Is.True);
+            Assert.That(notice.text, Does.Contain("新发现").And.Contain("盆栽").And.Contain("生长"));
+            Canvas.ForceUpdateCanvases();
+            Assert.That(notice.preferredHeight, Is.LessThanOrEqualTo(notice.rectTransform.rect.height + .1f));
+            Assert.That(notebook.HasUnreadDiscoveries, Is.True);
+            // Selectable 把颜色过渡写入 CanvasRenderer，Image.color 本身是固定底色。
+            var firstColor = open.targetGraphic.canvasRenderer.GetColor();
+            yield return new WaitForSecondsRealtime(.17f);
+            Assert.That(open.targetGraphic.canvasRenderer.GetColor(), Is.Not.EqualTo(firstColor));
+            // 短通知消失后仍提醒；重复观察不能刷新五秒期限。
+            Assert.That(ClickObject(DemoRules.Plant));
+            yield return new WaitForSecondsRealtime(5f);
+            Assert.That(notice.gameObject.activeInHierarchy, Is.False);
+            Assert.That(notebook.HasUnreadDiscoveries, Is.True);
+            open.onClick.Invoke();
+            yield return null;
+            Assert.That(notebook.HasUnreadDiscoveries, Is.False);
+            Assert.That(open.colors.normalColor, Is.EqualTo(original.normalColor));
+            Assert.That(open.GetComponentInChildren<Text>().text, Is.EqualTo("笔记本 [N]"));
+            notebook.SetOpen(false);
+            Assert.That(ClickObject(DemoRules.Plant));
+            yield return null;
+            Assert.That(notebook.HasUnreadDiscoveries, Is.False);
+            Assert.That(notice.gameObject.activeInHierarchy, Is.False);
+            // 新的独立物体会再提醒，重开同时清除通知和按钮动画。
+            Assert.That(ClickObject(DemoRules.Window));
+            yield return null;
+            Assert.That(notebook.HasUnreadDiscoveries, Is.True);
+            Assert.That(notice.text, Does.Contain("窗户"));
+            FindButton("Restart").onClick.Invoke();
+            yield return null;
+            Assert.That(notice.gameObject.activeInHierarchy, Is.False);
+            Assert.That(notebook.HasUnreadDiscoveries, Is.False);
+            Assert.That(open.colors.normalColor, Is.EqualTo(original.normalColor));
+        }
         /// <summary>从新会话完成三次组合，确认视觉、声音状态和涌现链一致。</summary>
         [UnityTest] public IEnumerator FullLoopThroughSceneRaycastsAndNotebookButtons()
         {
@@ -68,6 +112,8 @@ namespace Game.Tests
             notebook.SetOpen(false); yield return null;
             Assert.That(ClickObject(DemoRules.Book));
             Assert.That(bootstrap.Session.State.Knows(DemoRules.Far));
+            Assert.That(bootstrap.Session.State.Knows(DemoRules.Window), Is.False);
+            Assert.That(ClickObject(DemoRules.Window));
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_window").onClick.Invoke(); FindButton("Concept_far").onClick.Invoke();
             FindButton("Interpret").onClick.Invoke(); yield return null;
@@ -86,6 +132,8 @@ namespace Game.Tests
             yield return new WaitForSeconds(2.2f);
             Assert.That(notebook.IsOpen, Is.False);
             Assert.That(ClickObject(DemoRules.Paper)); Assert.That(bootstrap.Session.State.Knows(DemoRules.Sea));
+            Assert.That(bootstrap.Session.State.Knows(DemoRules.Painting), Is.False);
+            Assert.That(ClickObject(DemoRules.Painting));
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Concept_sea").onClick.Invoke(); FindButton("Object_painting").onClick.Invoke();
             FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(3.2f);

@@ -500,6 +500,13 @@ namespace Game.Editor
             var open = Button("OpenNotebook", header, "笔记本 [N]", new Vector2(1, 0), Vector2.one, new Vector2(-195, 21), new Vector2(-20, -21));
             var restart = Button("Restart", header, "重新开始", new Vector2(1, 0), Vector2.one, new Vector2(-335, 21), new Vector2(-210, -21));
             notebook.ConfigureControls(open, notebook.transform.Find("NotebookPanel/Notebook/CloseNotebook").GetComponent<Button>());
+            // 醒目获取通知独立于长观察文案；不遮挡点击，也不自动打开笔记本。
+            var notice = Box("DiscoveryNotice", canvas, new Vector2(.30f, .72f), new Vector2(.70f, .87f), Vector2.zero, Vector2.zero, new Color(.10f, .16f, .18f, .97f));
+            notice.GetComponent<Image>().raycastTarget = false;
+            var noticeText = Text("DiscoveryNoticeText", notice, "", 20, new Color(1f, .84f, .40f), Vector2.zero, Vector2.one, new Vector2(12, 8), new Vector2(-12, -8));
+            noticeText.alignment = TextAnchor.MiddleCenter;
+            notebook.ConfigureDiscoveryFeedback(notice.gameObject, noticeText);
+            notice.gameObject.SetActive(false);
             var footer = Box("Footer", canvas, Vector2.zero, new Vector2(1, 0), Vector2.zero, new Vector2(0, 44), new Color(.07f, .12f, .14f, .90f));
             Text("Controls", footer, "左键：观察  右键拖动：转头  N / Tab：笔记本  Home：复位视角  H：提示  F3：调试", 14, Paper, Vector2.zero, Vector2.one, new Vector2(25, 0), new Vector2(-10, 0));
             hover = Text("Hover", canvas, "", 18, Paper, new Vector2(0, 0), new Vector2(1, 0), new Vector2(30, 58), new Vector2(-30, 92));
