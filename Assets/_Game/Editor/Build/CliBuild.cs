@@ -14,22 +14,26 @@ namespace Game.Editor
     public static class CliBuild
     {
         public static void ValidateScene() => DemoSceneValidator.ValidateScene();
-        // A live Pipeline request has a short server deadline. Queue the build on the next
-        // Editor update and let the CLI poll the file; batch executeMethod calls BuildDemo directly.
+        // Pipeline's HTTP request has a short main-thread deadline. Run once on the
+        // next update: unlike delayCall, update also runs while the Editor is in background.
+        private static bool queued;
         public static void QueueBuild()
         {
             ValidateScene();
-            Directory.CreateDirectory("Logs");
+            if (queued || BuildPipeline.isBuildingPlayer) throw new InvalidOperationException("A build is already queued or running.");
+            queued = true; Directory.CreateDirectory("Logs");
             File.WriteAllText("Logs/build-summary.json", "{\"result\":\"Queued\"}");
-            EditorApplication.delayCall += () =>
+            EditorApplication.update += RunQueuedBuild;
+        }
+        private static void RunQueuedBuild()
+        {
+            EditorApplication.update -= RunQueuedBuild; queued = false;
+            try { BuildDemo(); }
+            catch (Exception error)
             {
-                try { BuildDemo(); }
-                catch (Exception error)
-                {
-                    File.WriteAllText("Logs/build-summary.json", JsonUtility.ToJson(new BuildSummaryData { result = "Failed", output = error.Message }, true));
-                    Debug.LogException(error);
-                }
-            };
+                File.WriteAllText("Logs/build-summary.json", JsonUtility.ToJson(new BuildSummaryData { result = "Failed", output = error.Message }, true));
+                Debug.LogException(error);
+            }
         }
         [MenuItem("Game/Build Demo (CLI settings)")]
         public static void BuildDemo()

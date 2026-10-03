@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fail-fast Unity demo pipeline; reuse an open Editor or run official batch CLI."""
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -135,6 +136,21 @@ def main():
         batch(args.editor, 'build', ['-executeMethod', 'Game.Editor.CliBuild.BuildDemo', '-buildTarget', 'StandaloneOSX'])
     summary = json.loads((ROOT / 'Logs/build-summary.json').read_text())
     if summary['result'] != 'Succeeded' or not Path(summary['output']).exists(): raise RuntimeError(summary)
+    tests = {}
+    for mode, stage in [('editor', 'EditMode'), ('playmode', 'PlayMode')]:
+        if connected:
+            payload = json.loads((LOGS / f'{mode}-results.json').read_text())
+            counts = payload.get('summary', payload.get('Summary', {}))
+            tests[stage] = {name: counts.get(name.lower(), counts.get(name.title(), 0)) for name in ['total', 'passed', 'failed']}
+        else:
+            xml = ET.parse(LOGS / f'{stage}.xml').getroot()
+            tests[stage] = {name: int(xml.get(name, '0')) for name in ['total', 'passed', 'failed']}
+    (ROOT / 'Logs/verification-summary.json').write_text(json.dumps({
+        'verified_at': datetime.now(timezone.utc).isoformat(), 'unity': VERSION,
+        'compile': 'Passed', 'scene_validation': 'Passed', 'tests': tests, 'build': summary,
+        'scene_regenerated': args.regenerate_scene,
+        'human_first_play_duration': 'Not yet verified'
+    }, indent=2))
     print(f'DONE: {summary["output"]}', flush=True)
 
 
