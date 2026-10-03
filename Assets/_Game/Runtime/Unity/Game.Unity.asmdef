@@ -1,0 +1,12 @@
+{
+  "name": "Game.Unity",
+  "rootNamespace": "Game.Unity",
+  "references": [
+    "Game.Domain",
+    "Game.Application",
+    "Unity.InputSystem",
+    "Unity.ugui"
+  ],
+  "includePlatforms": [],
+  "noEngineReferences": false
+}

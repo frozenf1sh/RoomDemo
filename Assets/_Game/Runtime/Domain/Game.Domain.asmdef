@@ -1,0 +1,7 @@
+{
+  "name": "Game.Domain",
+  "rootNamespace": "Game.Domain",
+  "references": [],
+  "includePlatforms": [],
+  "noEngineReferences": true
+}

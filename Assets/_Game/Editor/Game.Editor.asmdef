@@ -1,0 +1,15 @@
+{
+  "name": "Game.Editor",
+  "rootNamespace": "Game.Editor",
+  "references": [
+    "Game.Domain",
+    "Game.Application",
+    "Game.Unity",
+    "Unity.InputSystem",
+    "Unity.ugui"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "noEngineReferences": false
+}
