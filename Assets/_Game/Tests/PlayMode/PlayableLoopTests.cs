@@ -54,7 +54,7 @@ namespace Game.Tests
             var book = Object.FindFirstObjectByType<BookPresenter>();
             Assert.That(Vector3.Distance(book.transform.localPosition, book.FallenPosition), Is.LessThan(.01f));
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.WindEntering), Is.False);
-            FindButton("CloseNotebook").onClick.Invoke(); yield return null;
+            notebook.SetOpen(false); yield return null;
             Assert.That(ClickObject(DemoRules.Book));
             Assert.That(bootstrap.Session.State.Knows(DemoRules.Far));
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
@@ -63,13 +63,35 @@ namespace Game.Tests
             var wind = Object.FindFirstObjectByType<WindPresenter>();
             Assert.That(Object.FindFirstObjectByType<WindowPresenter>().FarBackground.activeSelf);
             Assert.That(wind.IsWindVisible); Assert.That(wind.WindAudio.isPlaying);
-            Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(4));
+            Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(6));
             var rotation = plant.Visual.localRotation;
             float maxAngle = 0;
             for (int i = 0; i < 15; i++)
             { yield return new WaitForSeconds(.04f); maxAngle = Mathf.Max(maxAngle, Quaternion.Angle(rotation, plant.Visual.localRotation)); }
             Assert.That(maxAngle, Is.GreaterThan(.5f));
-            Assert.That(bootstrap.Session.State.FiredReactions.Count, Is.EqualTo(2));
+            Assert.That(bootstrap.Session.State.FiredReactions.Count, Is.EqualTo(4));
+            yield return new WaitForSeconds(2.2f);
+            Assert.That(notebook.IsOpen, Is.False);
+            Assert.That(ClickObject(DemoRules.Paper)); Assert.That(bootstrap.Session.State.Knows(DemoRules.Sea));
+            FindButton("OpenNotebook").onClick.Invoke(); yield return null;
+            FindButton("Concept_sea").onClick.Invoke(); FindButton("Object_painting").onClick.Invoke();
+            FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(3.2f);
+            Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(bootstrap.Session.State.CompletedRecipes.Count, Is.EqualTo(3));
+            Assert.That(bootstrap.Session.State.FiredReactions.Count, Is.EqualTo(8));
+            Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.Visual.localScale.y, Is.GreaterThan(2.3f));
+            Assert.That(Object.FindFirstObjectByType<WindowPresenter>().OceanBackground.activeSelf);
+            var painting = Object.FindFirstObjectByType<PaintingPresenter>(); Assert.That(painting.SeaPainting.activeSelf); Assert.That(painting.SeaAudio.isPlaying);
+            Assert.That(Object.FindFirstObjectByType<WaterPresenter>().Puddle.activeSelf);
+            Assert.That(Object.FindFirstObjectByType<EndingPresenter>().EndingPanel.activeSelf);
+            Assert.That(notebook.IsOpen, Is.False);
+        }
+        [UnityTest] public IEnumerator SceneBootstrapsAllFiveEntitiesAndEightPresenters()
+        {
+            Assert.That(Object.FindObjectsByType<SceneEntity>(FindObjectsSortMode.None).Length, Is.EqualTo(5));
+            Assert.That(Object.FindObjectsByType<WorldPresenter>(FindObjectsSortMode.None).Length, Is.EqualTo(8));
+            Assert.That(notebook, Is.Not.Null); Assert.That(input, Is.Not.Null);
+            Assert.That(ClickObject(DemoRules.Book)); Assert.That(bootstrap.Session.State.Knows(DemoRules.Book), Is.False);
+            yield return null;
         }
         [UnityTest] public IEnumerator InvalidUiInterpretationLeavesWorldUnchanged()
         {

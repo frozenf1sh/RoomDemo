@@ -23,6 +23,9 @@ namespace Game.Editor
         private static readonly Color Ink = new Color(.10f, .15f, .19f);
         private static readonly Color Paper = new Color(.94f, .92f, .85f);
 
+        public static void BuildGreyboxScene() => Build();
+        public static void ValidateScene() => DemoSceneValidator.ValidateScene();
+
         [MenuItem("Game/Generate Demo Room")]
         public static void Build()
         {
@@ -38,10 +41,13 @@ namespace Game.Editor
             var interactables = Group("Interactables", root);
             var effects = Group("Effects", root);
             var ui = Group("UI", root);
-            Room(environment); Shelf(environment); Table(environment); Chair(environment); Easel(environment);
+            Room(environment); Shelf(environment); Table(environment); Chair(environment);
             var plant = Plant(interactables);
             var fallenBook = Book(interactables);
             var window = Window(interactables);
+            var painting = Painting(interactables);
+            var paper = PaperObject(interactables);
+            var water = Water(effects);
             var papers = Papers(effects);
             var audioRoot = Group("AudioSystem", systems);
             var audio = audioRoot.gameObject.AddComponent<AudioSource>();
@@ -76,8 +82,11 @@ namespace Game.Editor
             notebook = ui.GetComponentInChildren<NotebookView>(); debug = ui.GetComponentInChildren<DebugView>();
             hover = ui.Find("DebugCanvas/Hover").GetComponent<Text>();
             input.Configure(camera, hover); look.Configure(notebook);
+            var endingPanel = ui.Find("DebugCanvas/Ending").gameObject;
+            var ending = Group("Ending", effects).gameObject.AddComponent<EndingPresenter>();
+            ending.Configure(endingPanel, light, Sound(audioRoot, "Ambience", true, .2f));
             var bootstrap = bootstrapRoot.gameObject.AddComponent<GameBootstrap>();
-            bootstrap.Configure(new WorldPresenter[] { plant, fallenBook, window, wind }, notebook, debug, input);
+            bootstrap.Configure(new WorldPresenter[] { plant, fallenBook, window, wind, painting, paper, water, ending }, notebook, debug, input);
             Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
             AssetDatabase.SaveAssets();
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -200,7 +209,16 @@ namespace Game.Editor
                 l.localRotation = Quaternion.Euler(20, i * 51, -20);
             }
             Label(visual, "PLANT", new Vector3(0, .43f, -.34f));
-            plant.gameObject.AddComponent<PlantPresenter>().Configure(foliage);
+            var branch = Shape("ReachingBranch", foliage, PrimitiveType.Sphere, new Vector3(-.34f, .56f, 0), new Vector3(.8f, .09f, .17f), leaf);
+            branch.localRotation = Quaternion.Euler(0, 0, -24);
+            var aquatic = Group("AquaticVisual", foliage);
+            for (int i = 0; i < 6; i++)
+            {
+                var kelp = Shape("Kelp" + i, aquatic, PrimitiveType.Capsule, new Vector3((i - 2.5f) * .10f, .6f + i * .025f, -.15f), new Vector3(.055f, .48f, .07f), Mat("AquaticKelp", new Color(.06f, .65f, .62f)));
+                kelp.localRotation = Quaternion.Euler(0, 0, (i - 2.5f) * -10);
+            }
+            aquatic.gameObject.SetActive(false);
+            plant.gameObject.AddComponent<PlantPresenter>().Configure(foliage, aquatic.gameObject, Sound(plant, "Grow", false, .25f));
             return SavePrefab(plant, "Interactables", "Plant").GetComponent<PlantPresenter>();
         }
         private static BookPresenter Book(Transform parent)
@@ -213,7 +231,7 @@ namespace Game.Editor
             Cube("CoverTop", visual, new Vector3(0, .065f, 0), new Vector3(.60f, .025f, .40f), book);
             Cube("CoverBottom", visual, new Vector3(0, -.065f, 0), new Vector3(.60f, .025f, .40f), book);
             Cube("Spine", visual, new Vector3(-.285f, 0, 0), new Vector3(.03f, .14f, .40f), book);
-            b.gameObject.AddComponent<BookPresenter>().Configure(new Vector3(-1.65f, .12f, .65f));
+            b.gameObject.AddComponent<BookPresenter>().Configure(new Vector3(-1.65f, .12f, .65f), Sound(b, "Fall", false, .4f));
             return SavePrefab(b, "Interactables", "Book").GetComponent<BookPresenter>();
         }
         private static WindowPresenter Window(Transform parent)
@@ -236,8 +254,65 @@ namespace Game.Editor
             Label(visual, "WINDOW", new Vector3(0, -1.32f, -.12f));
             var farAsset = SavePrefab(far, "Effects", "WindowFarBackground");
             farAsset.gameObject.SetActive(false);
-            window.gameObject.AddComponent<WindowPresenter>().Configure(near.gameObject, farAsset.gameObject);
+            window.gameObject.AddComponent<WindowPresenter>().Configure(near.gameObject, farAsset.gameObject, Ocean(visual).gameObject);
             return SavePrefab(window, "Interactables", "Window").GetComponent<WindowPresenter>();
+        }
+        private static Material SeaMaterial()
+        {
+            string path = Content + "Art/Materials/SeaSurface.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null) { material = new Material(Shader.Find("RoomDemo/SeaSurface")); AssetDatabase.CreateAsset(material, path); }
+            return material;
+        }
+        private static Transform Ocean(Transform parent)
+        {
+            var ocean = Group("OceanBackground", parent);
+            Cube("OceanSky", ocean, new Vector3(0, 0, .26f), new Vector3(2.65f, 2.16f, .04f), Mat("OceanSky", new Color(.64f, .80f, .83f)));
+            Cube("Sea", ocean, new Vector3(0, -.63f, .19f), new Vector3(2.65f, .93f, .04f), SeaMaterial());
+            Cube("Horizon", ocean, new Vector3(0, -.16f, .16f), new Vector3(2.65f, .025f, .03f), cream);
+            Shape("DistantMoon", ocean, PrimitiveType.Sphere, new Vector3(-.66f, .53f, .19f), new Vector3(.36f, .36f, .03f), cream);
+            return ocean;
+        }
+        private static PaintingPresenter Painting(Transform parent)
+        {
+            var painting = Group("Painting", parent); painting.localPosition = new Vector3(2.72f, 1.85f, 1.3f);
+            Entity(painting, DemoRules.Painting, Vector3.zero, new Vector3(1.18f, 1.44f, .18f));
+            var visual = Group("Visual", painting);
+            Cube("FrameLeft", visual, new Vector3(-.58f, 0, 0), new Vector3(.1f, 1.44f, .18f), darkWood);
+            Cube("FrameRight", visual, new Vector3(.58f, 0, 0), new Vector3(.1f, 1.44f, .18f), darkWood);
+            Cube("FrameTop", visual, new Vector3(0, .67f, 0), new Vector3(1.26f, .1f, .18f), wood);
+            Cube("FrameBottom", visual, new Vector3(0, -.67f, 0), new Vector3(1.26f, .1f, .18f), wood);
+            Cube("EaselLeg", visual, new Vector3(0, -1.2f, .1f), new Vector3(.12f, 1.2f, .12f), wood);
+            var ordinary = Group("OrdinaryPainting", visual);
+            Cube("DryCanvas", ordinary, new Vector3(0, 0, .02f), new Vector3(1.10f, 1.27f, .06f), cream);
+            Cube("PigmentBand", ordinary, new Vector3(0, -.14f, -.025f), new Vector3(1.1f, .21f, .02f), pot);
+            Shape("StillSun", ordinary, PrimitiveType.Sphere, new Vector3(-.22f, .23f, -.025f), new Vector3(.34f, .34f, .015f), accent);
+            var sea = Group("SeaPainting", visual);
+            Cube("MovingSea", sea, new Vector3(0, 0, .02f), new Vector3(1.10f, 1.27f, .06f), SeaMaterial()); sea.gameObject.SetActive(false);
+            Label(visual, "PAINTING", new Vector3(0, -.85f, -.14f));
+            painting.gameObject.AddComponent<PaintingPresenter>().Configure(ordinary.gameObject, sea.gameObject, Sound(painting, "Sea", true, .23f));
+            return SavePrefab(painting, "Interactables", "Painting").GetComponent<PaintingPresenter>();
+        }
+        private static PaperPresenter PaperObject(Transform parent)
+        {
+            var paper = Group("Paper", parent); paper.localPosition = new Vector3(2.72f, 1.78f, 1.43f);
+            Entity(paper, DemoRules.Paper, Vector3.zero, new Vector3(.60f, .05f, .75f));
+            var visual = Group("Visual", paper);
+            Cube("Sheet", visual, Vector3.zero, new Vector3(.60f, .014f, .75f), cream);
+            for (int i = 0; i < 4; i++) Cube("InkWave" + i, visual, new Vector3(0, .012f, -.2f + i * .12f), new Vector3(.40f, .006f, .025f), sky);
+            var label = Group("PaperLabel", visual); label.localRotation = Quaternion.Euler(90, 0, 0); Label(label, "SEA?", new Vector3(0, 0, -.12f));
+            paper.gameObject.AddComponent<PaperPresenter>().Configure(paper, new Vector3(1.20f, .13f, -.10f), new Vector3(-15, 0, -8));
+            return SavePrefab(paper, "Interactables", "Paper").GetComponent<PaperPresenter>();
+        }
+        private static WaterPresenter Water(Transform parent)
+        {
+            var water = Group("Water", parent); water.localPosition = new Vector3(2.72f, 0, 1.30f);
+            var puddle = Group("Puddle", water);
+            Shape("WaterStain", puddle, PrimitiveType.Cylinder, new Vector3(0, .018f, -.1f), new Vector3(1.15f, .008f, .75f), SeaMaterial());
+            var drops = new Transform[5];
+            for (int i = 0; i < drops.Length; i++) drops[i] = Shape("Drop" + i, water, PrimitiveType.Sphere, new Vector3(-.43f + i * .21f, 1.22f, -.14f), new Vector3(.035f, .09f, .035f), Mat("WaterDrop", new Color(.35f, .76f, .83f)));
+            water.gameObject.AddComponent<WaterPresenter>().Configure(puddle.gameObject, drops, Sound(water, "Water", true, .13f));
+            return SavePrefab(water, "Effects", "Water").GetComponent<WaterPresenter>();
         }
         private static Transform[] Papers(Transform parent)
         {
@@ -246,6 +321,32 @@ namespace Game.Editor
             { var p = Cube("Paper" + i, r, new Vector3(-.45f + i * .4f, i * .008f, .05f * i), new Vector3(.32f, .008f, .45f), cream); p.localRotation = Quaternion.Euler(0, i * 18, 0); }
             var saved = SavePrefab(r, "Effects", "WindPaper");
             return Enumerable.Range(0, 3).Select(i => saved.Find("Paper" + i)).ToArray();
+        }
+        private static AudioSource Sound(Transform parent, string kind, bool loop, float volume)
+        {
+            string path = Content + "Audio/" + kind + ".wav";
+            const int rate = 22050;
+            int count = rate * (loop ? 6 : 1); var random = new System.Random(31); float smooth = 0;
+            using (var stream = new BinaryWriter(File.Create(path)))
+            {
+                stream.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); stream.Write(36 + count * 2);
+                stream.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt ")); stream.Write(16); stream.Write((short)1); stream.Write((short)1);
+                stream.Write(rate); stream.Write(rate * 2); stream.Write((short)2); stream.Write((short)16);
+                stream.Write(System.Text.Encoding.ASCII.GetBytes("data")); stream.Write(count * 2);
+                for (int i = 0; i < count; i++)
+                {
+                    float t = (float)i / rate, phase = (float)i / count;
+                    smooth += ((float)random.NextDouble() * 2 - 1 - smooth) * .16f;
+                    float envelope = loop ? Mathf.Sin(phase * Mathf.PI) : Mathf.Exp(-t * (kind == "Fall" ? 14 : 4));
+                    float signal = kind == "Fall" ? smooth * .6f + Mathf.Sin(t * 240) * .4f : kind == "Grow" ? Mathf.Sin(t * (440 + t * 150)) * .15f + smooth * .3f :
+                        kind == "Ambience" ? Mathf.Sin(t * Mathf.PI * 2 * 110) * .15f + Mathf.Sin(t * Mathf.PI * 2 * 164.81f) * .1f :
+                        kind == "Water" ? Mathf.Sin(t * 1800 + Mathf.Sin(t * 23) * 30) * .12f + smooth * .25f : smooth * (.4f + Mathf.Sin(t * 1.5f) * .25f);
+                    stream.Write((short)(signal * envelope * 23000));
+                }
+            }
+            AssetDatabase.ImportAsset(path);
+            var audio = Group(kind + "Audio", parent).gameObject.AddComponent<AudioSource>(); audio.clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+            audio.loop = loop; audio.playOnAwake = false; audio.volume = volume; audio.spatialBlend = 0; return audio;
         }
         private static AudioClip CreateWindClip()
         {
@@ -310,9 +411,14 @@ namespace Game.Editor
             { var layout = list.gameObject.AddComponent<VerticalLayoutGroup>(); layout.spacing = 8; layout.childControlWidth = true; layout.childControlHeight = true; layout.childForceExpandHeight = false; }
             var template = Button("RowTemplate", canvas, "Entry", Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(200, 42));
             template.gameObject.AddComponent<LayoutElement>().preferredHeight = 42; template.gameObject.SetActive(false);
-            var selection = Text("Selection", body, "Select a concept  →  Select an object", 23, Ink, new Vector2(0, .30f), new Vector2(1, .40f), new Vector2(30, 0), new Vector2(-30, 0));
+            var selection = Text("Selection", body, "COMBINATION", 16, Ink, new Vector2(0, .36f), new Vector2(1, .42f), new Vector2(30, 0), new Vector2(-30, 0));
             var interpret = Button("Interpret", body, "INTERPRET", new Vector2(1, .19f), new Vector2(1, .29f), new Vector2(-210, 0), new Vector2(-30, 0));
-            var feedback = Text("Feedback", body, "Observe an object to collect a concept. Then select one of each.", 17, Ink, Vector2.zero, new Vector2(1, .18f), new Vector2(30, 15), new Vector2(-30, 0));
+            var feedback = Text("Feedback", body, "Select collected clues.", 14, Ink, Vector2.zero, new Vector2(1, .11f), new Vector2(30, 15), new Vector2(-30, 0));
+            var slots = new Button[3];
+            for (int i = 0; i < 3; i++) slots[i] = Button("Slot" + i, body, "+ choose a clue", new Vector2(i / 3f, .28f), new Vector2((i + 1) / 3f, .36f), new Vector2(30, 0), new Vector2(-15, 0));
+            var history = Text("CompletedRecipes", body, "", 16, Ink, new Vector2(0, .12f), new Vector2(.65f, .26f), new Vector2(30, 0), new Vector2(0, 0));
+            history.alignment = TextAnchor.UpperLeft;
+            notebook.ConfigureSlots(slots, history);
             notebook.Configure(shade.gameObject, objects, concepts, template, interpret, selection, feedback);
             shade.gameObject.SetActive(false); return notebook;
         }
@@ -332,6 +438,11 @@ namespace Game.Editor
             panel.GetComponent<Image>().raycastTarget = false;
             var state = Text("State", panel, "", 14, Paper, new Vector2(0, .35f), Vector2.one, new Vector2(16, 0), new Vector2(-16, -10)); state.alignment = TextAnchor.UpperLeft;
             var events = Text("Events", panel, "", 12, new Color(.68f, .81f, .77f), Vector2.zero, new Vector2(1, .34f), new Vector2(16, 10), new Vector2(-16, 0)); events.alignment = TextAnchor.UpperLeft;
+            var ending = Box("Ending", canvas, new Vector2(.30f, .09f), new Vector2(.70f, .22f), Vector2.zero, Vector2.zero, new Color(.05f, .14f, .18f, .9f));
+            ending.GetComponent<Image>().raycastTarget = false;
+            var endTitle = Text("EndingTitle", ending, "The room remembers.", 29, Paper, new Vector2(0, .35f), Vector2.one, new Vector2(15, 0), new Vector2(-15, 0)); endTitle.alignment = TextAnchor.MiddleCenter;
+            var endDetail = Text("EndingDetail", ending, "You gave the painting a sea. The plant and window answered.", 14, new Color(.68f, .87f, .89f), Vector2.zero, new Vector2(1, .4f), new Vector2(15, 0), new Vector2(-15, 0)); endDetail.alignment = TextAnchor.MiddleCenter;
+            ending.gameObject.SetActive(false);
             var debug = canvas.gameObject.AddComponent<DebugView>(); debug.Configure(panel.gameObject, state, events, objective);
             panel.gameObject.SetActive(false); return debug;
         }

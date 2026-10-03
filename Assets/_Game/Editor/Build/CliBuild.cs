@@ -13,44 +13,7 @@ namespace Game.Editor
 {
     public static class CliBuild
     {
-        public static void ValidateScene()
-        {
-            if (EditorApplication.isPlaying) throw new InvalidOperationException("Stop Play Mode before validating/building.");
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DemoSceneBuilder.ScenePath) == null)
-                throw new FileNotFoundException("Generate DemoRoom with DemoSceneBuilder.Build first.");
-            var scene = SceneManager.GetSceneByPath(DemoSceneBuilder.ScenePath);
-            bool opened = !scene.isLoaded;
-            if (opened) scene = EditorSceneManager.OpenScene(DemoSceneBuilder.ScenePath, OpenSceneMode.Additive);
-            try
-            {
-                var root = scene.GetRootGameObjects().Single(x => x.name == "DemoRoom");
-                foreach (var name in new[] { "_Bootstrap", "_Systems", "CameraRig", "Environment", "Interactables", "Effects", "UI" })
-                    if (root.transform.Find(name) == null) throw new InvalidOperationException("Missing scene group: " + name);
-                if (root.GetComponentsInChildren<GameBootstrap>(true).Length != 1 || root.GetComponentsInChildren<NotebookView>(true).Length != 1 ||
-                    root.GetComponentsInChildren<InteractionSystem>(true).Length != 1 || root.GetComponentsInChildren<Camera>(true).Length != 1)
-                    throw new InvalidOperationException("Scene systems are missing or duplicated.");
-                var entities = root.GetComponentsInChildren<SceneEntity>(true);
-                if (entities.Length != 3 || entities.Select(x => x.Id).Distinct().Count() != 3 ||
-                    DemoRules.Create().Objects.Any(x => !entities.Any(e => e.Id == x.Id)))
-                    throw new InvalidOperationException("Expected exactly Plant, Book, Window.");
-                foreach (var entity in entities)
-                    if (entity.GetComponent<Collider>() == null || entity.GetComponent<Clickable>() == null || entity.transform.parent.Find("Visual") == null)
-                        throw new InvalidOperationException("Invalid Logic/Visual composition: " + entity.Id);
-                foreach (var component in root.GetComponentsInChildren<MonoBehaviour>(true))
-                {
-                    if (component == null) throw new InvalidOperationException("Scene contains a missing script.");
-                    var serialized = new SerializedObject(component); var property = serialized.GetIterator();
-                    while (property.NextVisible(true))
-                        if (property.propertyType == SerializedPropertyType.ObjectReference && property.name != "m_Script" && property.objectReferenceValue == null &&
-                            component.GetType().Namespace == "Game.Unity")
-                            throw new InvalidOperationException($"Missing reference: {component.name}/{component.GetType().Name}.{property.propertyPath}");
-                }
-                var audio = root.GetComponentInChildren<WindPresenter>(true);
-                if (audio.WindAudio.clip == null) throw new InvalidOperationException("Wind audio missing.");
-                Debug.Log("CliBuild: scene validation passed.");
-            }
-            finally { if (opened) EditorSceneManager.CloseScene(scene, true); }
-        }
+        public static void ValidateScene() => DemoSceneValidator.ValidateScene();
         // A live Pipeline request has a short server deadline. Queue the build on the next
         // Editor update and let the CLI poll the file; batch executeMethod calls BuildDemo directly.
         public static void QueueBuild()

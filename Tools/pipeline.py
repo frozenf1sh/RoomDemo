@@ -79,11 +79,18 @@ def compile_live():
         if result.get('status') in ('completed', 'up_to_date'): break
         if time.monotonic() >= deadline: raise TimeoutError('Compilation timed out.')
         time.sleep(2)
-    # Confirm the post-compilation server has survived domain reload before tests.
-    for _ in range(3):
+    # Asset import may trigger a second reload after the first compile reports complete.
+    # Require three consecutive ready responses, tolerating only bounded transport gaps.
+    stable = 0
+    while stable < 3:
+        if time.monotonic() >= deadline: raise TimeoutError('Editor did not stabilize after compilation.')
         time.sleep(1)
-        ready = live('editor_status')
-        if ready.get('compiling') or ready.get('domainReloadInProgress'): raise RuntimeError('Editor is still reloading; tests not started.')
+        try:
+            ready = live('editor_status')
+            stable = stable + 1 if not ready.get('compiling') and not ready.get('domainReloadInProgress') else 0
+        except RuntimeError:
+            stable = 0
+    live('recompile_status')
     print("Compile: passed", flush=True)
 
 
@@ -105,9 +112,9 @@ def main():
         if args.domain_only: return
         if args.regenerate_scene:
             live('eval', 'Game.Editor.DemoSceneBuilder.Build();')
-        live('eval', 'UnityEditor.AssetDatabase.SaveAssets(); var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(Game.Editor.DemoSceneBuilder.ScenePath); if (scene.isLoaded) UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);')
+            live('eval', 'UnityEditor.AssetDatabase.SaveAssets(); var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(Game.Editor.DemoSceneBuilder.ScenePath); if (scene.isLoaded) UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);')
+        live('eval', 'Game.Editor.DemoSceneValidator.ValidateScene();')
         test_live('playmode')
-        live('eval', 'Game.Editor.CliBuild.ValidateScene();')
         print('Building macOS executable...', flush=True)
         live('eval', 'Game.Editor.CliBuild.QueueBuild();')
         deadline = time.monotonic() + 900
@@ -123,8 +130,8 @@ def main():
         if args.domain_only: return
         if args.regenerate_scene:
             batch(args.editor, 'scene', ['-executeMethod', 'Game.Editor.DemoSceneBuilder.Build'])
+        batch(args.editor, 'validate', ['-executeMethod', 'Game.Editor.DemoSceneValidator.ValidateScene'])
         batch(args.editor, 'PlayMode', ['-runTests', '-testPlatform', 'PlayMode', '-testResults', str(LOGS / 'PlayMode.xml')], tests=True)
-        batch(args.editor, 'validate', ['-executeMethod', 'Game.Editor.CliBuild.ValidateScene'])
         batch(args.editor, 'build', ['-executeMethod', 'Game.Editor.CliBuild.BuildDemo', '-buildTarget', 'StandaloneOSX'])
     summary = json.loads((ROOT / 'Logs/build-summary.json').read_text())
     if summary['result'] != 'Succeeded' or not Path(summary['output']).exists(): raise RuntimeError(summary)

@@ -20,11 +20,17 @@ namespace Game.Unity
             paperOrigins = new Vector3[papers.Length]; paperRotations = new Quaternion[papers.Length];
             for (int i = 0; i < papers.Length; i++) { paperOrigins[i] = papers[i].localPosition; paperRotations[i] = papers[i].localRotation; }
         }
-        protected override void Refresh()
+        protected override void OnFact(FactId fact) { if (fact == DemoRules.WindEntering) ApplyState(Session.State, true); }
+        public override void ApplyState(GameState state, bool animate)
         {
-            activeWind = Session.State.HasFact(DemoRules.WindEntering);
+            activeWind = state.HasFact(DemoRules.WindEntering);
             if (activeWind && !windAudio.isPlaying) windAudio.Play();
             if (!activeWind) windAudio.Stop();
+            if (!animate)
+            {
+                plantVisual.localRotation = plantRotation;
+                for (int i = 0; i < papers.Length; i++) { papers[i].localPosition = paperOrigins[i]; papers[i].localRotation = paperRotations[i]; }
+            }
         }
         private void Update()
         {
