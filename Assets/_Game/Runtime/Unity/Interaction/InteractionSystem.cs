@@ -1,3 +1,8 @@
+// =============================================================================
+// 文件：InteractionSystem.cs
+// 职责：通过相机射线寻找交互实体，提交调查并显示中文悬停反馈。
+// 边界：UI 遮挡时不调查场景；是否可获得内容由 Session 查询决定。
+// =============================================================================
 using System.Linq;
 using Game.Application;
 using UnityEngine;
@@ -6,32 +11,41 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 namespace Game.Unity
 {
+    /// <summary>通过相机射线寻找交互实体，提交调查并显示中文悬停反馈。</summary>
     public sealed class InteractionSystem : MonoBehaviour
     {
         [SerializeField] private Camera viewCamera;
         [SerializeField] private Text hoverText;
         private GameSession session;
         private NotebookView notebook;
+        /// <summary>注入射线相机与悬停文本。</summary>
         public void Configure(Camera camera, Text hover) { viewCamera = camera; hoverText = hover; }
+        /// <summary>绑定当前会话及笔记本遮挡状态。</summary>
         public void Bind(GameSession game, NotebookView view) { session = game; notebook = view; }
+        /// <summary>查询射线首先命中的 Collider 上的交互组件。</summary>
         public Clickable FindClickable(Vector2 screenPoint)
         {
+            // 射线只查询第一个命中，墙和装饰 Collider 可遮挡交互。
             if (Physics.Raycast(viewCamera.ScreenPointToRay(screenPoint), out var hit, 30f))
                 return hit.collider.GetComponent<Clickable>();
             return null;
         }
+        /// <summary>把屏幕坐标的交互命中提交为调查命令。</summary>
         public bool InspectAt(Vector2 screenPoint)
         {
             var target = FindClickable(screenPoint);
             if (target == null) return false;
             target.Inspect(session); return true;
         }
+        /// <summary>处理鼠标与 UI 遮挡，显示领域查询得到的中文反馈。</summary>
         private void Update()
         {
             if (Mouse.current == null || session == null) return;
+            // 统一判断 UI 遮挡，避免点击按钮同时调查其后的世界物体。
             bool blocked = notebook.IsOpen || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
-            hoverText.text = target == null ? "" : (session.IsInspectable(target.Entity.Id) ? "CLICK TO OBSERVE  /  " : "OUT OF REACH  /  ") + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName.ToUpperInvariant();
+            // 中文显示来源于内容定义；业务许可来源于状态查询。
+            hoverText.text = target == null ? "" : (session.IsInspectable(target.Entity.Id) ? "点击观察 / " : "暂时无法调查 / ") + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName.ToUpperInvariant();
             if (!blocked && Mouse.current.leftButton.wasPressedThisFrame) InspectAt(Mouse.current.position.ReadValue());
         }
     }

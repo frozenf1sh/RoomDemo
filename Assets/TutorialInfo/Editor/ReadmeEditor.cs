@@ -1,10 +1,16 @@
-﻿using UnityEngine;
+// =============================================================================
+// 文件：ReadmeEditor.cs
+// 职责：绘制模板说明页并提供说明资产清理入口。
+// 边界：中文界面改动不改变原有确认与清理流程。
+// =============================================================================
+using UnityEngine;
 using UnityEditor;
 using System.IO;
 using UnityEngine.UIElements;
 
 [CustomEditor(typeof(Readme))]
 [InitializeOnLoad]
+/// <summary>绘制模板说明页并提供说明资产清理入口。</summary>
 sealed class ReadmeEditor : Editor
 {
     static readonly string k_ShowedReadmeSessionStateName = "ReadmeEditor.showedReadme";
@@ -13,8 +19,10 @@ sealed class ReadmeEditor : Editor
     static ReadmeEditor()
         => EditorApplication.delayCall += SelectReadmeAutomatically;
 
+    /// <summary>每个 Editor 会话至多自动选择一次说明页。</summary>
     static void SelectReadmeAutomatically()
     {
+        // 仅控制说明页首次选择，不与游戏状态共享任何全局数据。
         if (!SessionState.GetBool(k_ShowedReadmeSessionStateName, false))
         {
             var readme = SelectReadme();
@@ -28,12 +36,13 @@ sealed class ReadmeEditor : Editor
         }
     }
 
+    /// <summary>寻找唯一说明资产并在 Inspector 中选中。</summary>
     static Readme SelectReadme()
     {
         var ids = AssetDatabase.FindAssets("Readme t:Readme");
         if (ids.Length != 1)
         {
-            Debug.Log("Couldn't find a readme");
+            Debug.Log("未找到唯一的项目说明资产。");
             return null;
         }
 
@@ -42,13 +51,15 @@ sealed class ReadmeEditor : Editor
         return (Readme)readmeObject;
     }
     
+    /// <summary>保留确认对话框后再清理模板说明资产。</summary>
     void RemoveTutorial()
     {
-        if (EditorUtility.DisplayDialog("Remove Readme Assets",
+        // 删除模板资源仍保留原有确认步骤，本次翻译不会自动触发删除。
+        if (EditorUtility.DisplayDialog("移除说明资源",
             
-            $"All contents under {k_ReadmeSourceDirectory} will be removed, are you sure you want to proceed?",
-            "Proceed",
-            "Cancel"))
+            $"将移除 {k_ReadmeSourceDirectory} 下的全部说明资源。确认继续吗？",
+            "继续",
+            "取消"))
         {
             if (Directory.Exists(k_ReadmeSourceDirectory))
             {
@@ -57,7 +68,7 @@ sealed class ReadmeEditor : Editor
             }
             else
             {
-                Debug.Log($"Could not find the Readme folder at {k_ReadmeSourceDirectory}");
+                Debug.Log($"未找到说明目录：{k_ReadmeSourceDirectory}");
             }
 
             var readmeAsset = SelectReadme();
@@ -73,9 +84,12 @@ sealed class ReadmeEditor : Editor
     }
 
     //Remove ImGUI
+    /// <summary>隐藏模板说明的默认 Inspector 标题。</summary>
     protected sealed override void OnHeaderGUI() { }
+    /// <summary>禁用默认 IMGUI 内容，改用下面的 UI Toolkit 视图。</summary>
     public sealed override void OnInspectorGUI() { }
 
+    /// <summary>以中文标题、正文、链接与按钮绘制说明面板。</summary>
     public override VisualElement CreateInspectorGUI()
     {
         var readme = (Readme)target;
@@ -119,7 +133,7 @@ sealed class ReadmeEditor : Editor
             root.Add(part);
         }
 
-        var button = new Button(RemoveTutorial) { text = "Remove Readme Assets" };
+        var button = new Button(RemoveTutorial) { text = "移除说明资源" };
         button.AddToClassList("remove-readme-button");
         root.Add(button);
 

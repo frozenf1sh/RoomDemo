@@ -16,22 +16,18 @@ MonoBehaviour:
   darkStyle: {fileID: 7433441132597879392, guid: 1f902e57f049a7f47986618de93f5ee1, type: 3}
   lightStyle: {fileID: 7433441132597879392, guid: 69e7ab73923f93149821ac3a88b84856, type: 3}
   icon: {fileID: 2800000, guid: 727a75301c3d24613a3ebcec4a24c2c8, type: 3}
-  title: URP Empty Template
+  title: "\u623F\u95F4\uFF1A\u610F\u4E49\u6784\u6210\u7684\u4E16\u754C"
   sections:
-  - heading: Welcome to the Universal Render Pipeline
-    text: This template includes the settings and assets you need to start creating with the Universal Render Pipeline.
+  - heading: "\u5F00\u59CB\u8BD5\u73A9"
+    text: "\u6253\u5F00 Assets/_Game/Content/Scenes/DemoRoom.unity \u540E\u8FDB\u5165\u8FD0\u884C\u6A21\u5F0F\u3002\u5DE6\u952E\u89C2\u5BDF\uFF0C\u53F3\u952E\u62D6\u52A8\u89C6\u89D2\uFF0CN \u6253\u5F00\u7B14\u8BB0\u672C\uFF0CH \u67E5\u770B\u63D0\u793A\u3002"
     linkText: 
-    url:
-  - heading: URP Documentation
-    text:
-    linkText: Read more about URP
-    url: https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest
-  - heading: Forums
-    text:
-    linkText: Get answers and support
-    url: https://forum.unity.com/forums/universal-render-pipeline.383/
-  - heading: Report bugs
-    text:
-    linkText: Submit a report
-    url: https://unity3d.com/unity/qa/bug-reporting
+    url: 
+  - heading: "\u672C\u9636\u6BB5\u5185\u5BB9"
+    text: "\u901A\u8FC7\u76C6\u683D\u3001\u751F\u957F\u3001\u7A97\u6237\u3001\u8FDC\u65B9\u3001\u753B\u4E0E\u6D77\u7684\u4E09\u6B21\u7EC4\u5408\uFF0C\u4F53\u9A8C\u65E7\u89E3\u91CA\u4E4B\u95F4\u81EA\u52A8\u53D1\u751F\u7684\u8054\u7CFB\u3002\u8BE6\u7EC6\u64CD\u4F5C\u3001\u89C4\u5219\u4E0E\u9A8C\u8BC1\u7ED3\u679C\u89C1\u9879\u76EE\u6839\u76EE\u5F55 README.md\u3002"
+    linkText: 
+    url: 
+  - heading: "\u4E2D\u6587\u5F00\u53D1\u89C4\u8303"
+    text: "\u9879\u76EE\u6587\u6863\u3001\u6CE8\u91CA\u4E0E\u6E38\u620F\u6587\u5B57\u7EDF\u4E00\u4F7F\u7528\u7B80\u4F53\u4E2D\u6587\u3002\u4FDD\u6301\u7A33\u5B9A\u82F1\u6587 ID \u4E0E API \u547D\u540D\uFF0C\u4F7F\u7528\u5D4C\u5165\u4E2D\u6587\u5B57\u4F53\u3002\u65B0\u589E\u5185\u5BB9\u524D\u9605\u8BFB\u6839\u76EE\u5F55 AGENTS.md\u3002"
+    linkText: 
+    url: 
   loadedLayout: 1
