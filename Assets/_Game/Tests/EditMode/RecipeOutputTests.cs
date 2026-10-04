@@ -73,5 +73,21 @@ namespace Game.Domain.Tests
             Assert.That(legacy.ProducesClues, Is.Empty);
             Assert.That(legacy.ProducesFacts.Single(), Is.EqualTo(Inspired));
         }
+        /// <summary>输出概念合法，但不能用新配方代替玩家认识一个场景物体。</summary>
+        [Test] public void RecipeCannotGrantAnObjectClue()
+        {
+            var painting = new ClueId("painting");
+            Assert.Throws<ArgumentException>(() => new RuleSet(new[] {
+                new ClueDefinition(Sprout, "新芽", ClueCategory.Observation), new ClueDefinition(Light, "向光", ClueCategory.Observation), new ClueDefinition(painting, "画", ClueCategory.Object) },
+                Array.Empty<DiscoveryRule>(), new[] { new SemanticRecipe("bad.object", new[] { Sprout, Light }, Array.Empty<FactId>(), new[] { painting }, Array.Empty<FactId>()) }, Array.Empty<ReactionRule>()));
+        }
+        /// <summary>发现表也拒绝跨物体授予，保护后续策划数据不重现旧问题。</summary>
+        [Test] public void DiscoveryCannotNameAnotherObject()
+        {
+            var window = new ClueId("window");
+            Assert.Throws<ArgumentException>(() => new RuleSet(new[] { new ClueDefinition(window, "窗", ClueCategory.Object) },
+                new[] { new DiscoveryRule("bad.source", new ObjectId("book"), "书", "书", Array.Empty<FactId>(), new[] { window }) },
+                Array.Empty<SemanticRecipe>(), Array.Empty<ReactionRule>()));
+        }
     }
 }

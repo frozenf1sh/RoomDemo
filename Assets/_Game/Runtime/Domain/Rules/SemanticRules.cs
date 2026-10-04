@@ -129,6 +129,10 @@ namespace Game.Domain
             // 配方输入和发现产出都必须指向已定义的碎片。
             if (recipes.Any(x => x.Inputs.Concat(x.ProducesClues).Any(c => !clues.Any(d => d.Id == c))) || discoveries.Any(x => x.Grants.Any(c => !clues.Any(d => d.Id == c))))
                 throw new ArgumentException("内容引用了未知碎片。");
+            // 物体只能由亲点其自身认识，新增配方输出能力不能绕开这个发现约束。
+            if (recipes.Any(x => x.ProducesClues.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object)) ||
+                discoveries.Any(x => x.Grants.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object && c.Value != x.Source.Value)))
+                throw new ArgumentException("物体碎片必须来自玩家观察该物体，配方或其他来源不得代替授予。");
             // 细节只能来自已定义的物体，不允许用观察产出偷偷认识另一个物体。
             if (observations.Select(x => x.Source.Value + "/" + x.DetailId).Distinct().Count() != observations.Length ||
                 observations.Any(x => !discoveries.Any(d => d.Source == x.Source) || x.Grants.Any(c => !clues.Any(d => d.Id == c) || clues.Single(d => d.Id == c).Category == ClueCategory.Object)))

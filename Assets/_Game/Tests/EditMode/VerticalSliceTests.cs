@@ -43,9 +43,8 @@ namespace Game.Tests
         /// <summary>海不会伪造未建立的旧解释，旧解释稍后建立仍可发生交叉。</summary>
         [Test] public void SeaDoesNotInventAbsentOlderInterpretations()
         {
-            var d = DemoRules.Create(); var grant = new DiscoveryRule("test", DemoRules.Paper, "测试纸张", "", Array.Empty<FactId>(), d.Clues.Select(x => x.Id).ToArray());
-            var s = new GameSession(new RuleSet(d.Clues.ToArray(), new[] { grant }, d.Recipes.ToArray(), d.Reactions.ToArray()));
-            s.Inspect(DemoRules.Paper); Pair(s, "sea", "painting");
+            // 测试要隔离“只有海画解释”的情形，准备数据必须走明确调试入口，不能让纸张授予其他物体。
+            var s = new GameSession(DemoRules.Create()); s.DebugGrantAllClues(); Pair(s, "sea", "painting");
             Assert.That(s.State.HasFact(DemoRules.WaterPresent)); Assert.That(s.State.HasFact(DemoRules.PlantAquatic), Is.False); Assert.That(s.State.HasFact(DemoRules.WindowOcean), Is.False);
             Pair(s, "plant", "growth"); Assert.That(s.State.HasFact(DemoRules.PlantAquatic)); Assert.That(s.State.HasFact(DemoRules.Complete), Is.False);
             Pair(s, "far", "window"); Assert.That(s.State.HasFact(DemoRules.Complete));
