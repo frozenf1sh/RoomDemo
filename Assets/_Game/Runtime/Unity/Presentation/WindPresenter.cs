@@ -37,7 +37,7 @@ namespace Game.Unity
         public void SetAudioDuck(float level, bool immediate = false)
         {
             targetDuck = Mathf.Clamp01(level);
-            if (immediate) { duck = targetDuck; windAudio.volume = originalVolume * duck; }
+            if (immediate) { duck = targetDuck; if (windAudio != null) windAudio.volume = originalVolume * duck; }
         }
         /// <summary>仅接收风进入事实。</summary>
         protected override void OnFact(FactId fact) { if (fact == DemoRules.WindEntering) ApplyState(Session.State, true); }

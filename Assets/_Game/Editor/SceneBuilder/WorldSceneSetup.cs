@@ -144,6 +144,25 @@ namespace Game.Editor
             profile.Ambience = AudioArtPass.Clip("Night", true); EditorUtility.SetDirty(profile);
             PresentationArtPass.Save(room);
         }
+        /// <summary>增量绑定一个具体世界导演；不重建家具、玩法实体或人工摆放。</summary>
+        public static void InstallStarrySequence()
+        {
+            var root = PresentationArtPass.Room(); var world = root.GetComponentInChildren<WorldExterior>(true);
+            var node = PresentationArtPass.Ensure(root.Find("Presentation/Sequences"), "StarryWorldSequence");
+            var sequence = node.GetComponent<StarryWorldSequence>(); if (sequence == null) sequence = node.gameObject.AddComponent<StarryWorldSequence>();
+            var canvas = root.Find("UI/DebugCanvas");
+            var caption = canvas.Find("StarryCaption"); if (caption != null) Object.DestroyImmediate(caption.gameObject);
+            var text = ExplorationSceneSetup.Label("StarryCaption", canvas, "", new Vector2(.24f, .10f), new Vector2(.76f, .20f), 25);
+            text.alignment = TextAnchor.MiddleCenter; text.color = new Color(.91f, .85f, .66f); text.raycastTarget = false;
+            var window = root.GetComponentsInChildren<SceneEntity>(true).Single(x => x.Id == Game.Domain.DemoRules.Window);
+            var opening = AudioArtPass.Source(node, "Paper", false, .28f); opening.pitch = .60f; opening.transform.localPosition = Vector3.up * 4;
+            var outside = AudioArtPass.Source(node, "Ocean", false, .24f); outside.pitch = .72f;
+            sequence.Configure(root.GetComponentInChildren<RoomModules>(true), world, world.GetComponent<WorldMutation>(), world.GetComponent<VisualThemeController>(),
+                AssetDatabase.LoadAssetAtPath<VisualThemeProfile>("Assets/_Game/Content/Art/WorldExterior/Themes/StarryWorld.asset"), root.GetComponentInChildren<EndingPresenter>(true),
+                root.GetComponentInChildren<WindPresenter>(true), root.GetComponentInChildren<Camera>(true), window.GetComponent<Collider>(), opening, outside, text);
+            root.GetComponentInChildren<GameBootstrap>(true).ConfigureStarrySequence(sequence);
+            PresentationArtPass.Save(root);
+        }
         private static void Unpack(GameObject node)
         {
             if (PrefabUtility.IsPartOfPrefabInstance(node))

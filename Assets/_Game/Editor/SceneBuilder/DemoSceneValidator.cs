@@ -41,6 +41,25 @@ namespace Game.Editor
                     throw new InvalidOperationException("演出导演、音频监听器或必要灯光缺失／重复。");
                 if (new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true)).FindProperty("sequence").objectReferenceValue != sequences[0])
                     throw new InvalidOperationException("启动组件未绑定唯一的海画演出导演。");
+                // 第四阶段技术对象必须完整绑定；开墙不能靠缺失节点或随机场景查找实现。
+                var starry = root.GetComponentsInChildren<StarryWorldSequence>(true);
+                if (starry.Length != 1 || root.GetComponentsInChildren<RoomModules>(true).Length != 1 ||
+                    root.GetComponentsInChildren<WorldExterior>(true).Length != 1 || root.GetComponentsInChildren<WorldMutation>(true).Length != 1 ||
+                    root.GetComponentsInChildren<VisualThemeController>(true).Length != 1 || root.GetComponentsInChildren<InspectionController>(true).Length != 1 ||
+                    root.GetComponentsInChildren<DayTransitionController>(true).Length != 1)
+                    throw new InvalidOperationException("检视、跨日、建筑模块、外景或星空导演缺失／重复。");
+                var gameBindings = new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true));
+                if (!gameBindings.FindProperty("explorationEnabled").boolValue || gameBindings.FindProperty("starrySequence").objectReferenceValue != starry[0])
+                    throw new InvalidOperationException("主场景必须启用探索内容并绑定星空导演。");
+                float starryDuration = new SerializedObject(starry[0]).FindProperty("duration").floatValue;
+                if (!float.IsFinite(starryDuration) || starryDuration < 13.5f || starryDuration > 20)
+                    throw new InvalidOperationException("星空演出应为 13.5～20 秒，且最后保留主题过渡时间。");
+                foreach (var shaderName in new[] { "Game/StarrySky", "RoomDemo/PaintingSea" })
+                {
+                    var shader = Shader.Find(shaderName);
+                    if (shader == null || ShaderUtil.GetShaderMessages(shader).Any(x => x.severity.ToString() == "Error"))
+                        throw new InvalidOperationException("专用 Shader 缺失或编译失败：" + shaderName);
+                }
                 var timing = new SerializedObject(sequences[0]); float previous = 0;
                 foreach (var field in new[] { "anomalyAt", "seaAt", "waterAt", "plantAt", "windowAt", "atmosphereAt", "finishAt" })
                 {
@@ -66,6 +85,11 @@ namespace Game.Editor
                 foreach (var entity in entities)
                     if (entity.GetComponent<Collider>() == null || entity.GetComponent<Clickable>() == null || entity.transform.parent.Find("Visual") == null)
                         throw new InvalidOperationException("交互逻辑与视觉结构不完整：" + entity.Id);
+                var inspectables = root.GetComponentsInChildren<InspectableObject>(true);
+                if (inspectables.Length != 2 || inspectables.Any(x => x.InspectVisual == null || x.InspectVisual.GetComponent<InspectionView>() == null ||
+                    x.InspectVisual.GetComponentsInChildren<InspectionHotspot>(true).Length == 0) ||
+                    !inspectables.Any(x => x.Entity.Id == DemoRules.Plant) || !inspectables.Any(x => x.Entity.Id == DemoRules.Book))
+                    throw new InvalidOperationException("盆栽与书必须绑定独立检视 Prefab、状态视觉与热点。");
                 foreach (var component in root.GetComponentsInChildren<MonoBehaviour>(true))
                 {
                     if (component == null) throw new InvalidOperationException("场景包含缺失的脚本。");

@@ -22,6 +22,7 @@ namespace Game.Unity
         [SerializeField] private InspectionController inspection;
         [SerializeField] private bool explorationEnabled;
         [SerializeField] private DayTransitionController dayTransition;
+        [SerializeField] private StarryWorldSequence starrySequence;
         private bool legacyRegression;
         /// <summary>技术回归入口使用旧内容表；玩家的重开仍默认使用探索内容。</summary>
         public void RestartLegacyForRegression() { legacyRegression = true; Restart(); }
@@ -38,11 +39,15 @@ namespace Game.Unity
         public void ConfigureInspection(InspectionController controller) { inspection = controller; }
         /// <summary>绑定结束当天的输入与视觉过渡，不把延迟规则放进场景。</summary>
         public void ConfigureDayTransition(DayTransitionController controller) { dayTransition = controller; }
+        /// <summary>注入只消费世界事实的具体星空导演。</summary>
+        public void ConfigureStarrySequence(StarryWorldSequence director) { starrySequence = director; }
         /// <summary>以当前事实直接恢复所有表现，用于黑屏后的次日回归。</summary>
         public void RestorePresenters()
         {
+            if (starrySequence != null) starrySequence.Cancel();
             if (sequence != null) sequence.ApplyFinalStateImmediately();
             else foreach (var view in presenters) view.ApplyState(Session.State, false);
+            if (starrySequence != null) starrySequence.ApplyFinalStateImmediately();
         }
         /// <summary>在表现组件缓存初始姿态后创建会话，并设置帧率。</summary>
         private void Awake()
@@ -62,23 +67,31 @@ namespace Game.Unity
         {
             Session.DebugAddFact(fact);
             // 调试添加事实明确要求即时恢复；已启动的演出必须先取消。
-            if (sequence != null) sequence.ApplyFinalStateImmediately();
-            else foreach (var view in presenters) view.ApplyState(Session.State, false);
+            RestorePresenters();
         }
         /// <summary>独立世界样板的应用层入口：提交明确的调试事实，让演出消费者自行响应。</summary>
         /// <remarks>区别于跳转预设，这个入口保留过渡事件；导演本身不能调用它。</remarks>
-        public void PlayStarryBenchmark() { Session.DebugAddFact(ExplorationRules.WorldStarry); }
+        public void PlayStarryBenchmark()
+        {
+            if (inspection != null) inspection.Exit(false);
+            notebook.SetOpen(false);
+            // 同一个房间只有一个整体导演持有光照；先结清海画，再开始世界重构。
+            if (sequence != null && sequence.IsPlaying) sequence.ApplyFinalStateImmediately();
+            Session.DebugAddFact(ExplorationRules.WorldStarry);
+        }
         /// <summary>统一重绑 Presenter、笔记本、调试面板与输入。</summary>
         private void Bind(GameSession session)
         {
             if (dayTransition != null) dayTransition.Cancel();
             if (inspection != null) inspection.Exit(false);
+            if (starrySequence != null) starrySequence.Cancel();
             if (sequence != null) sequence.Cancel();
             Session = session;
             // 所有表现消费同一 Session；不让 Prefab 直接调用其他 Prefab。
             Func<FactId, bool> filter = fact => (dayTransition == null || !dayTransition.IsTransitioning) && (sequence == null || sequence.ShouldPresentImmediately(fact));
             foreach (var view in presenters) view.Bind(Session, filter);
             if (sequence != null) sequence.Bind(Session, presenters);
+            if (starrySequence != null) starrySequence.Bind(Session);
             notebook.Bind(Session);
             if (inspection != null) inspection.Bind(Session, notebook);
             if (dayTransition != null) dayTransition.Bind(Session, notebook, RestorePresenters);

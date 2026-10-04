@@ -75,6 +75,9 @@ namespace Game.Editor
                         case "Paper": sample = mid * .5f * envelope * (.5f + .5f * Mathf.Sin(t * 55)); break;
                         case "Ink": sample = (Mathf.Sin(t * Mathf.PI * 2 * 523) + Mathf.Sin(t * Mathf.PI * 2 * 784)) * .055f * envelope + mid * .10f * envelope; break;
                         case "Scratch": sample = mid * .22f * envelope; break;
+                        // 星空样板使用安静虫鸣与低火声；仍是原创占位声音，方便后续替换录音。
+                        case "Night": sample = low * .20f + Mathf.Sin(t * 7900) * .07f * Mathf.Pow(Mathf.Max(0, Mathf.Sin(t * 19)), 8) * (.5f + .5f * Mathf.Sin(t * .8f)); break;
+                        case "Fire": sample = low * .55f + mid * .16f + (noise > .997f ? noise * .35f : 0); break;
                         default: sample = mid * .15f * envelope; break;
                     }
                     stream.Write((short)(Mathf.Clamp(sample * (loop ? envelope : 1), -1, 1) * 28000));
