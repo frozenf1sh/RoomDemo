@@ -15,6 +15,9 @@ namespace Game.Unity
         private static readonly Dictionary<string, string> Facts = new Dictionary<string, string>
         {
             ["plant.grown"] = "盆栽已生长",
+            ["plant.starts_growing"] = "盆栽开始舒展",
+            ["plant.overgrown"] = "盆栽次日繁茂",
+            ["world.starry"] = "房间成为星空世界",
             ["book.fallen"] = "书已落下",
             ["book.inspectable"] = "书可以调查",
             ["window.far"] = "窗户通向远方",

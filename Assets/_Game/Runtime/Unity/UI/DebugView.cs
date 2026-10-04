@@ -82,6 +82,15 @@ namespace Game.Unity
                 "\n\n已触发的反应\n" + string.Join("\n", s.FiredReactions.OrderBy(x => x).Select(x => DemoText.Reaction(x) + "（" + x + "）"));
             if (UnityEngine.Application.isEditor || Debug.isDebugBuild)
                 stateText.text += "\n\n当前可用的配方\n" + string.Join("\n", session.Rules.AvailableRecipes(s).Select(RecipeName));
+            if (session.Rules.Observations.Count > 0 && !s.HasFact(DemoRules.BookFallen))
+            {
+                objectiveText.text = s.HasFact(ExplorationRules.PlantStartsGrowing) ? "解释已留下。今天先到这里，明天再看看它。"
+                    : s.Knows(DemoRules.Growth) ? "你想到了生长。用这个意义，重新看待盆栽。"
+                    : s.Knows(ExplorationRules.Sprout) && s.Knows(ExplorationRules.TowardLight) ? "土边的新芽，书中的向光。按 N 将细节联系起来。"
+                    : s.Knows(DemoRules.Plant) ? "旋转盆栽看看土边；旧书中也有值得细读的短句。"
+                    : "选择一件事物，拿近看看。按 H 查看提示。";
+                return;
+            }
             objectiveText.text = presentation != null && presentation.IsBenchmarkPending ? "你将海赋予画。房间正在回应。"
                 : s.HasFact(DemoRules.Complete) ? "房间记得。三次解释，一个开始回应的世界。"
                 : s.Knows(DemoRules.Sea) && !s.Knows(DemoRules.Painting) ? "已收集海。请先点击观察墙上的画。"

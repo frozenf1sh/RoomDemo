@@ -80,6 +80,17 @@ namespace Game.Tests
             notebook.SelectClue(Game.Domain.DemoRules.Clue("growth")); notebook.SelectClue(Game.Domain.DemoRules.Clue("plant"));
             Assert.That(notebook.SelectedClues.Count, Is.EqualTo(2));
         }
+        [UnityTest] public IEnumerator GrowthInterpretationHasSmallImmediateChangeAndBookStaysOnShelf()
+        {
+            bootstrap.JumpTo(Game.Domain.ExplorationPresets.GrowthUnlocked);
+            var plant = Object.FindAnyObjectByType<PlantPresenter>(); var scale = plant.Visual.localScale;
+            notebook.SetOpen(true); notebook.SelectClue(Game.Domain.DemoRules.Clue("growth")); notebook.SelectClue(Game.Domain.DemoRules.Clue("plant")); notebook.InterpretSelected();
+            yield return new WaitForSecondsRealtime(1.5f);
+            Assert.That(bootstrap.Session.State.HasFact(Game.Domain.ExplorationRules.PlantStartsGrowing), Is.True);
+            Assert.That(plant.Visual.localScale.x, Is.GreaterThan(scale.x * 1.15f).And.LessThan(scale.x * 1.3f));
+            Assert.That(bootstrap.Session.State.HasFact(Game.Domain.DemoRules.BookFallen), Is.False);
+            Assert.That(notebook.IsOpen, Is.False);
+        }
         [UnityTest] public IEnumerator RestartDuringInspectionReleasesOldCopyAndInputLock()
         {
             inspection.InspectDebugCube(); yield return null; var copy = inspection.CurrentVisual;

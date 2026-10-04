@@ -52,7 +52,11 @@ namespace Game.Unity
         /// <summary>两个事实各自启动对应变化，不判断任何前置组合。</summary>
         protected override void OnFact(FactId fact)
         {
-            if (fact == DemoRules.PlantGrown) { SetVisual(true, false, true); growAudio.Play(); }
+            if (fact == ExplorationRules.PlantStartsGrowing) { SetStarting(true); growAudio.Play(); }
+            if (fact == DemoRules.PlantGrown || fact == ExplorationRules.PlantOvergrown)
+            {
+                bool first = !shownGrown; SetVisual(true, false, true); if (first) growAudio.Play();
+            }
             if (fact == DemoRules.PlantAquatic) PlayAquaticTransition();
         }
         /// <summary>演出导演或调试入口启动水生形态，不改变会话。</summary>
@@ -79,7 +83,18 @@ namespace Game.Unity
         }
         /// <summary>只读取既有事实，恢复不等待任何演出回调。</summary>
         public override void ApplyState(GameState state, bool animate)
-        { SetVisual(state.HasFact(DemoRules.PlantGrown), state.HasFact(DemoRules.PlantAquatic), animate); }
+        {
+            bool mature = state.HasFact(DemoRules.PlantGrown) || state.HasFact(ExplorationRules.PlantOvergrown);
+            SetVisual(mature, state.HasFact(DemoRules.PlantAquatic), animate);
+            if (!mature && state.HasFact(ExplorationRules.PlantStartsGrowing)) SetStarting(animate);
+        }
+        /// <summary>当天只舒展一点；巨大生长与书落下仍由次日事实决定。</summary>
+        private void SetStarting(bool animate)
+        {
+            SetVisual(false, false, animate);
+            targetScale = initialScale * 1.18f;
+            if (!animate) visual.localScale = targetScale;
+        }
         /// <summary>推进形态和湿润参数，水生叶片轻摆与原来的风摆相互独立。</summary>
         private void Update()
         {
