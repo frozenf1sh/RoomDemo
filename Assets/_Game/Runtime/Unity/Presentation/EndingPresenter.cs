@@ -17,6 +17,9 @@ namespace Game.Unity
         [SerializeField] private Light warmFill;
         [SerializeField] private Light windowLight;
         [SerializeField] private Light seaLight;
+        private bool lightingBorrowed;
+        /// <summary>具体世界导演借用整体光照，避免两个表现消费者每帧互相覆盖。</summary>
+        public void SetLightingOverride(bool borrowed) { lightingBorrowed = borrowed; }
         private float far, sea, finale, targetFar, targetSea, targetFinale;
         /// <summary>临时结束面板，只在最终氛围节拍显示。</summary>
         public GameObject EndingPanel => endingPanel;
@@ -79,6 +82,7 @@ namespace Game.Unity
         /// <summary>具体颜色脚本：低饱和暖灰 → 自然光 → 局部海光 → 开放海色。</summary>
         private void SetLighting()
         {
+            if (lightingBorrowed) return;
             roomLight.color = Color.Lerp(new Color(1, .81f, .62f), new Color(.65f, .89f, .94f), finale);
             roomLight.intensity = .65f + far * .50f + finale * .35f;
             // 灰盒兼容模式允许尚未注入局部灯；正式美术场景由验证器要求全部绑定。

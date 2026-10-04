@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e245d333206b04f81bbd3fe8d090af8e, type: 3}
+  m_Name: StarryWorld
+  m_EditorClassIdentifier: Game.Unity::Game.Unity.VisualThemeProfile
+  Ambient: {r: 0.18, g: 0.23, b: 0.34, a: 1}
+  Fog: {r: 0.07, g: 0.11, b: 0.19, a: 1}
+  Sun: {r: 0.55, g: 0.66, b: 0.89, a: 1}
+  Fill: {r: 0.92, g: 0.56, b: 0.31, a: 1}
+  FogDensity: 0.006
+  SunIntensity: 0.85
+  FillIntensity: 1.1
+  WindowIntensity: 0.15
+  SeaIntensity: 0
+  StyleBlend: 1
+  Ambience: {fileID: 8300000, guid: 224c4d5111e3e4c549ff99e36e7563d6, type: 3}

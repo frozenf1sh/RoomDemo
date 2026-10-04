@@ -128,6 +128,22 @@ namespace Game.Editor
             var previous = parent.Find(name); if (previous != null) Object.DestroyImmediate(previous.gameObject);
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab); instance.name = name; instance.transform.SetParent(parent, false); instance.transform.localPosition = position; instance.transform.localRotation = Quaternion.Euler(0, yaw, 0);
         }
+        /// <summary>建立薄主题数据和直接表现操作；不替换已有海画导演。</summary>
+        public static void InstallMutationTools()
+        {
+            var room = PresentationArtPass.Room(); var world = room.GetComponentInChildren<WorldExterior>(true).transform;
+            Directory.CreateDirectory("Assets/_Game/Content/Art/WorldExterior/Themes");
+            var theme = world.GetComponent<VisualThemeController>(); if (theme == null) theme = world.gameObject.AddComponent<VisualThemeController>();
+            var ending = new SerializedObject(room.GetComponentInChildren<EndingPresenter>(true));
+            theme.Configure((Light)ending.FindProperty("roomLight").objectReferenceValue, (Light)ending.FindProperty("warmFill").objectReferenceValue,
+                (Light)ending.FindProperty("windowLight").objectReferenceValue, (Light)ending.FindProperty("seaLight").objectReferenceValue, AudioArtPass.Source(world, "Night", true, .23f, false));
+            var mutation = world.GetComponent<WorldMutation>(); if (mutation == null) mutation = world.gameObject.AddComponent<WorldMutation>(); mutation.Configure(theme);
+            const string path = "Assets/_Game/Content/Art/WorldExterior/Themes/StarryWorld.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<VisualThemeProfile>(path);
+            if (profile == null) { profile = ScriptableObject.CreateInstance<VisualThemeProfile>(); AssetDatabase.CreateAsset(profile, path); }
+            profile.Ambience = AudioArtPass.Clip("Night", true); EditorUtility.SetDirty(profile);
+            PresentationArtPass.Save(room);
+        }
         private static void Unpack(GameObject node)
         {
             if (PrefabUtility.IsPartOfPrefabInstance(node))

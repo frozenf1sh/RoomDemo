@@ -19,6 +19,8 @@ namespace Game.Domain
         private readonly Dictionary<string, PendingDeferredEffect> pending = new Dictionary<string, PendingDeferredEffect>();
         /// <summary>显式游戏日序，初始为第一天，不与真实时间关联。</summary>
         public int DayIndex { get; private set; } = 1;
+        /// <summary>无分配的等待查询，UI 许可不必创建队列快照。</summary>
+        public bool HasPendingDeferredEffects => pending.Count > 0;
         /// <summary>已登记但尚未到日的效果快照，外部不能修改队列。</summary>
         public IReadOnlyCollection<PendingDeferredEffect> PendingDeferredEffects => pending.Values.OrderBy(x => x.DueDay).ThenBy(x => x.ReactionId).ToList().AsReadOnly();
         /// <summary>建立碎片类别索引，供旧物体与概念查询派生视图。</summary>
