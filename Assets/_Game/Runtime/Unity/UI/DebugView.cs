@@ -80,6 +80,7 @@ namespace Game.Unity
                 "\n\n世界事实\n" + string.Join("\n", s.Facts.OrderBy(x => x.Value).Select(x => DemoText.Fact(x) + "（" + x.Value + "）")) +
                 "\n\n已完成的配方\n" + string.Join("\n", session.Rules.Recipes.Where(x => s.HasCompleted(x.Id)).Select(x => RecipeName(x) + "（" + x.Id + "）")) +
                 "\n\n已触发的反应\n" + string.Join("\n", s.FiredReactions.OrderBy(x => x).Select(x => DemoText.Reaction(x) + "（" + x + "）"));
+            stateText.text += "\n\n日序：第 " + s.DayIndex + " 天\n等待次日\n" + string.Join("\n", s.PendingDeferredEffects.Select(x => DemoText.Reaction(x.ReactionId) + " → 第 " + x.DueDay + " 天"));
             if (UnityEngine.Application.isEditor || Debug.isDebugBuild)
                 stateText.text += "\n\n当前可用的配方\n" + string.Join("\n", session.Rules.AvailableRecipes(s).Select(RecipeName));
             if (session.Rules.Observations.Count > 0 && !s.HasFact(DemoRules.BookFallen))

@@ -33,6 +33,8 @@ namespace Game.Unity
         // 反应名称与事实名称分开：前者表示发生的联系，后者表示已经成立的状态。
         private static readonly Dictionary<string, string> Reactions = new Dictionary<string, string>
         {
+            ["growth-continues-next-day"] = "解释在次日继续生长",
+            ["overgrowth-is-grown"] = "繁茂承接既有生长联系",
             ["plant-knocks-book"] = "盆栽碰落书本",
             ["book-becomes-inspectable"] = "书本开放调查",
             ["wind-enters-room"] = "旧解释引风入室",

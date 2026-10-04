@@ -147,6 +147,25 @@ namespace Game.Editor
             notebook.ConfigureExploration(observations, word);
             PresentationArtPass.Save(root);
         }
+        /// <summary>创建显式结束当天的按钮与黑屏；不重绑核心发现或演出配方。</summary>
+        public static void InstallDayTransition()
+        {
+            var root = PresentationArtPass.Room(); var hud = root.Find("UI/DebugCanvas");
+            var button = Button("EndDay", hud, "结束今天", new Vector2(.74f, .10f), new Vector2(.95f, .17f));
+            var day = Label("Day", hud, "第 1 天", new Vector2(.04f, .80f), new Vector2(.18f, .85f), 20);
+            var canvasNode = PresentationArtPass.Ensure(root.Find("UI"), "DayCanvas");
+            var canvas = canvasNode.GetComponent<Canvas>(); if (canvas == null) canvas = canvasNode.gameObject.AddComponent<Canvas>(); canvasNode = canvas.transform;
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay; canvas.sortingOrder = 40;
+            var fade = Rect("DayCurtain", canvasNode, Vector2.zero, Vector2.one);
+            var image = fade.GetComponent<Image>(); if (image == null) image = fade.gameObject.AddComponent<Image>(); image.color = Color.black; image.raycastTarget = true;
+            var group = fade.GetComponent<CanvasGroup>(); if (group == null) group = fade.gameObject.AddComponent<CanvasGroup>();
+            var label = Label("NextDay", fade, "", new Vector2(.2f, .35f), new Vector2(.8f, .65f), 26); label.alignment = TextAnchor.MiddleCenter;
+            var system = PresentationArtPass.Ensure(root.Find("Presentation/Sequences"), "DayTransition");
+            var controller = system.GetComponent<DayTransitionController>(); if (controller == null) controller = system.gameObject.AddComponent<DayTransitionController>();
+            controller.Configure(button, day, label, fade.gameObject, group, AudioArtPass.Source(system, "GrowthNight", false, .19f, false));
+            root.GetComponentInChildren<GameBootstrap>(true).ConfigureDayTransition(controller);
+            fade.gameObject.SetActive(false); PresentationArtPass.Save(root);
+        }
         private static GameObject CubePrefab()
         {
             var node = new GameObject("PF_InspectionCube");
