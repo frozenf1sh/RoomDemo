@@ -92,7 +92,9 @@ namespace Game.Tests
             notebook.SetOpen(true); notebook.SelectClue(Game.Domain.DemoRules.Clue("growth")); notebook.SelectClue(Game.Domain.DemoRules.Clue("plant")); notebook.InterpretSelected();
             yield return new WaitForSecondsRealtime(1.5f);
             Assert.That(bootstrap.Session.State.HasFact(Game.Domain.ExplorationRules.PlantStartsGrowing), Is.True);
-            Assert.That(plant.Visual.localScale.x, Is.GreaterThan(scale.x * 1.15f).And.LessThan(scale.x * 1.3f));
+            Assert.That(plant.Visual.localScale, Is.EqualTo(scale));
+            Assert.That(plant.GrowthProgress, Is.GreaterThan(0).And.LessThan(.53f));
+            Assert.That(plant.GrownVisual.activeSelf, Is.True);
             Assert.That(bootstrap.Session.State.HasFact(Game.Domain.DemoRules.BookFallen), Is.False);
             Assert.That(notebook.IsOpen, Is.False);
         }
@@ -103,9 +105,9 @@ namespace Game.Tests
             var book = Object.FindAnyObjectByType<BookPresenter>(); var shelf = book.transform.localPosition;
             day.Begin(); Assert.That(bootstrap.Session.State.DayIndex, Is.EqualTo(2)); Assert.That(bootstrap.Session.State.HasFact(Game.Domain.DemoRules.BookFallen), Is.True);
             Assert.That(book.transform.localPosition, Is.EqualTo(shelf));
-            yield return new WaitForSecondsRealtime(2.7f);
+            yield return new WaitForSecondsRealtime(3.1f);
             Assert.That(day.IsTransitioning || notebook.ExternalInputBlocked, Is.False);
-            Assert.That(plant.Visual.localScale.x, Is.GreaterThan(scale.x * 1.5f));
+            Assert.That(plant.Visual.localScale, Is.EqualTo(scale)); Assert.That(plant.GrowthProgress, Is.EqualTo(1));
             Assert.That(Vector3.Distance(book.transform.localPosition, book.FallenPosition), Is.LessThan(.001f));
             bootstrap.JumpTo(Game.Domain.ExplorationPresets.AfterGrowthDay); yield return null;
             Assert.That(day.IsTransitioning, Is.False); Assert.That(book.transform.localPosition, Is.EqualTo(book.FallenPosition));
@@ -135,7 +137,7 @@ namespace Game.Tests
             notebook.SetOpen(true); notebook.SelectClue(Game.Domain.ExplorationRules.Sprout); notebook.SelectClue(Game.Domain.ExplorationRules.TowardLight); notebook.InterpretSelected();
             yield return new WaitForSecondsRealtime(1.8f); notebook.SelectClue(Game.Domain.DemoRules.Clue("growth")); notebook.SelectClue(Game.Domain.DemoRules.Clue("plant")); notebook.InterpretSelected();
             yield return new WaitForSecondsRealtime(1.5f); Assert.That(bootstrap.Session.State.HasFact(Game.Domain.DemoRules.BookFallen), Is.False);
-            Object.FindAnyObjectByType<DayTransitionController>().Begin(); yield return new WaitForSecondsRealtime(2.7f);
+            Object.FindAnyObjectByType<DayTransitionController>().Begin(); yield return new WaitForSecondsRealtime(3.1f);
             Assert.That(bootstrap.Session.State.DayIndex, Is.EqualTo(2)); Assert.That(bootstrap.Session.State.HasFact(Game.Domain.DemoRules.BookFallen), Is.True);
             Assert.That(bootstrap.Session.State.KnownClues.Count, Is.EqualTo(5));
         }
@@ -161,10 +163,11 @@ namespace Game.Tests
             hud.Find("WorldTools/WorldAction7").GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); yield return null;
             Assert.That(inspection.IsOpen, Is.True); Assert.That(inspection.Model.State, Is.EqualTo("closed"));
             Assert.That(hud.Find("Header/Title").gameObject.activeSelf, Is.False);
-            Assert.That(hud.Find("Header/OpenNotebook").gameObject.activeInHierarchy, Is.True);
+            Assert.That(hud.Find("Header/OpenNotebook").gameObject.activeInHierarchy, Is.False);
+            Assert.That(hud.Find("OpenNotebook").gameObject.activeInHierarchy, Is.True);
             inspection.Exit(); bootstrap.SetDevelopmentMode(false); yield return null;
             Assert.That(Object.FindObjectsByType<TextMesh>().Length, Is.Zero);
-            Assert.That(hud.Find("Header/Title").gameObject.activeSelf, Is.True);
+            Assert.That(hud.Find("Header/Title").gameObject.activeSelf, Is.False);
         }
         /// <summary>近景字形要位于纸面内；验证几何尺寸，不进行 Shader 像素比对。</summary>
         [UnityTest] public IEnumerator BookTextAndNotebookColumnsFitTheirActualSurfaces()

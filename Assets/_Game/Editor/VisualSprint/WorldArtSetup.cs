@@ -58,7 +58,11 @@ namespace Game.Editor.VisualSprint
 
         private static WorldBoundaryDissolve InstallBoundary(Transform group, Transform vfxRoot, string name, float rate)
         {
-            var renderers = group.GetComponentsInChildren<Renderer>(true);
+            // 开发标签仍使用字体自己的透明材质，不能参与建筑表面的溶解替换。
+            foreach (var label in group.GetComponentsInChildren<TextMesh>(true))
+                label.GetComponent<Renderer>().sharedMaterial = label.font.material;
+            var renderers = group.GetComponentsInChildren<Renderer>(true)
+                .Where(x => x.GetComponent<TextMesh>() == null && !(x is ParticleSystemRenderer)).ToArray();
             if (name == "WindowStars")
             {
                 // 海与远方的背景保留专用 Shader，窗边界只借用实体窗框和帘布的表面。

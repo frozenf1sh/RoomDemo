@@ -42,7 +42,17 @@ namespace Game.Tests
             Assert.That(bootstrap.Session, Is.Not.Null);
         }
         /// <summary>按稳定结构名称找到当前可交互按钮，不依赖中文显示文案。</summary>
-        private Button FindButton(string name) => Object.FindObjectsByType<Button>(FindObjectsInactive.Include).First(x => x.name == name && x.gameObject.activeInHierarchy);
+        private Button FindButton(string name)
+        {
+            // 小提醒平时隐藏，但按钮入口仍须可验证；其他操作只从实际打开的面板取。
+            if (name == "OpenNotebook") return notebook.transform.parent.Find("DebugCanvas/OpenNotebook").GetComponent<Button>();
+            return Object.FindObjectsByType<Button>(FindObjectsInactive.Include).First(x => x.name == name && x.gameObject.activeInHierarchy);
+        }
+        private void RestartFromPause()
+        {
+            Object.FindAnyObjectByType<PlayerHudView>().SetPaused(true);
+            FindButton("Restart").onClick.Invoke();
+        }
         /// <summary>通过实体 Collider 的屏幕投影提交真实相机射线调查。</summary>
         private bool ClickObject(ObjectId id)
         {
@@ -50,9 +60,10 @@ namespace Game.Tests
             var center = entity.GetComponent<Collider>().bounds.center;
             return input.InspectAt(Camera.main.WorldToScreenPoint(center));
         }
-        /// <summary>真实布局必须给标题按钮的中文留足行高，防止缩小栏后文字变空白。</summary>
-        [UnityTest] public IEnumerator HeaderButtonLabelsFitTheirActualRects()
+        /// <summary>暂停菜单和小型笔记提醒的中文必须有足够行高，正式画面没有标题栏。</summary>
+        [UnityTest] public IEnumerator PauseAndReminderLabelsFitTheirActualRects()
         {
+            Object.FindAnyObjectByType<PlayerHudView>().SetPaused(true);
             Canvas.ForceUpdateCanvases(); yield return null;
             foreach (var name in new[] { "OpenNotebook", "Restart" })
             {
@@ -88,7 +99,7 @@ namespace Game.Tests
             yield return null;
             Assert.That(notebook.HasUnreadDiscoveries, Is.False);
             Assert.That(open.colors.normalColor, Is.EqualTo(original.normalColor));
-            Assert.That(open.GetComponentInChildren<Text>().text, Is.EqualTo("笔记本 [N]"));
+            Assert.That(open.GetComponentInChildren<Text>().text, Is.EqualTo("笔记 · N"));
             notebook.SetOpen(false);
             Assert.That(ClickObject(DemoRules.Plant));
             yield return null;
@@ -99,7 +110,7 @@ namespace Game.Tests
             yield return null;
             Assert.That(notebook.HasUnreadDiscoveries, Is.True);
             Assert.That(notice.text, Does.Contain("窗户"));
-            FindButton("Restart").onClick.Invoke();
+            RestartFromPause();
             yield return null;
             Assert.That(notice.gameObject.activeInHierarchy, Is.False);
             Assert.That(notebook.HasUnreadDiscoveries, Is.False);
@@ -117,7 +128,7 @@ namespace Game.Tests
             FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
             FindButton("Interpret").onClick.Invoke();
             yield return new WaitForSeconds(1.4f);
-            Assert.That(plant.Visual.localScale.x, Is.GreaterThan(initialScale.x * 1.7f));
+            Assert.That(plant.GrowthProgress, Is.GreaterThan(0)); Assert.That(plant.Visual.localScale, Is.EqualTo(initialScale));
             var book = Object.FindAnyObjectByType<BookPresenter>();
             Assert.That(Vector3.Distance(book.transform.localPosition, book.FallenPosition), Is.LessThan(.01f));
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.WindEntering), Is.False);
@@ -151,7 +162,7 @@ namespace Game.Tests
             FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(Object.FindAnyObjectByType<PaintingSeaSequence>().Duration + .2f);
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(bootstrap.Session.State.CompletedRecipes.Count, Is.EqualTo(3));
             Assert.That(bootstrap.Session.State.FiredReactions.Count, Is.EqualTo(8));
-            Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.Visual.localScale.y, Is.GreaterThan(2.3f));
+            Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.AquaticProgress, Is.EqualTo(1));
             Assert.That(Object.FindAnyObjectByType<WindowPresenter>().OceanBackground.activeSelf);
             var painting = Object.FindAnyObjectByType<PaintingPresenter>(); Assert.That(painting.SeaPainting.activeSelf); Assert.That(painting.SeaAudio.isPlaying);
             Assert.That(Object.FindAnyObjectByType<WaterPresenter>().Puddle.activeSelf);
@@ -174,23 +185,23 @@ namespace Game.Tests
             var book = Object.FindAnyObjectByType<BookPresenter>(); var shelfPosition = book.transform.localPosition;
             var paper = Object.FindAnyObjectByType<PaperPresenter>(); var hidden = paper.Sheet.localPosition;
             bootstrap.JumpTo(DebugPresets.Emergence);
-            Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.Visual.localScale.y, Is.GreaterThan(2.3f));
+            Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.AquaticProgress, Is.EqualTo(1));
             Assert.That(book.transform.localPosition, Is.EqualTo(book.FallenPosition));
             Assert.That(Object.FindAnyObjectByType<WindowPresenter>().OceanBackground.transform.localScale.y, Is.EqualTo(1));
             Assert.That(Object.FindAnyObjectByType<WaterPresenter>().Puddle.transform.localScale, Is.EqualTo(Vector3.one));
             Assert.That(Object.FindAnyObjectByType<EndingPresenter>().EndingPanel.activeSelf);
-            FindButton("Restart").onClick.Invoke(); yield return null;
+            RestartFromPause(); yield return null;
             Assert.That(bootstrap.Session.State.Facts, Is.Empty); Assert.That(bootstrap.Session.State.KnownClues, Is.Empty);
             Assert.That(plant.Visual.localScale, Is.EqualTo(initialScale)); Assert.That(plant.AquaticVisual.activeSelf, Is.False);
             Assert.That(book.transform.localPosition, Is.EqualTo(shelfPosition)); Assert.That(paper.Sheet.localPosition, Is.EqualTo(hidden));
             Assert.That(Object.FindObjectsByType<AudioSource>().Any(x => x.isPlaying), Is.False);
             Assert.That(Object.FindAnyObjectByType<EndingPresenter>().EndingPanel.activeSelf, Is.False);
-            FindButton("Restart").onClick.Invoke(); ClickObject(DemoRules.Plant);
+            RestartFromPause(); ClickObject(DemoRules.Plant);
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
             var events = new System.Collections.Generic.List<DomainEvent>(); bootstrap.Session.EventRaised += events.Add;
             FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(1.4f);
-            Assert.That(events.OfType<CombinationSucceeded>().Count(), Is.EqualTo(1)); Assert.That(plant.Visual.localScale.x, Is.GreaterThan(1.7f));
+            Assert.That(events.OfType<CombinationSucceeded>().Count(), Is.EqualTo(1)); Assert.That(plant.GrowthProgress, Is.GreaterThan(0));
         }
         /// <summary>使用实际调试按钮验证授予、跳转、非法事实与重置。</summary>
         [UnityTest] public IEnumerator DebugButtonsGrantCluesAndJumpToBeforeSeaThenAddFact()
@@ -200,7 +211,7 @@ namespace Game.Tests
             FindButton("Preset2").onClick.Invoke(); Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(6)); Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete), Is.False);
             var field = Object.FindAnyObjectByType<InputField>(); field.text = "plant.gorwn"; FindButton("AddFact").onClick.Invoke(); Assert.That(bootstrap.Session.State.Facts.Count, Is.EqualTo(6));
             field.text = "painting.sea"; FindButton("AddFact").onClick.Invoke();
-            Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(Object.FindAnyObjectByType<PlantPresenter>().Visual.localScale.y, Is.GreaterThan(2.3f));
+            Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(Object.FindAnyObjectByType<PlantPresenter>().AquaticProgress, Is.EqualTo(1));
             FindButton("DebugReset").onClick.Invoke(); yield return null; Assert.That(bootstrap.Session.State.Facts, Is.Empty);
         }
         /// <summary>多余第三槽不能误命中二元配方，清除后正常完成。</summary>
