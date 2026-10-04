@@ -44,10 +44,10 @@ namespace Game.Editor
             var root = PresentationArtPass.Room();
             var water = root.GetComponentInChildren<WaterPresenter>(true);
             var wet = SurfaceArtPass.Material("Effects", "M_WetSurface", new Color(.06f, .09f, .075f, .55f), .94f);
-            wet.SetFloat("_Surface", 1); wet.SetFloat("_Blend", 0); wet.SetFloat("_SrcBlend", 5); wet.SetFloat("_DstBlend", 10);
-            wet.SetFloat("_ZWrite", 0); wet.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); wet.renderQueue = 3000;
-            wet.SetFloat("_Metallic", 0); wet.SetFloat("_EnvironmentReflections", 0);
-            wet.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+            wet.shader = Shader.Find("RoomDemo/WetSurface");
+            // 专用薄湿痕表面只保留两个参数，不沿用通用 Lit 的透明与反射变体。
+            wet.shaderKeywords = System.Array.Empty<string>(); wet.renderQueue = 3000;
+            wet.SetColor("_BaseColor", new Color(.06f, .09f, .075f, .55f)); wet.SetFloat("_Smoothness", .94f);
             water.Puddle.GetComponentInChildren<Renderer>(true).sharedMaterial = wet;
             // 从画框向盆栽方向逐渐扩散的细湿痕，加强两者之间的空间因果。
             for (int i = 0; i < 6; i++)

@@ -73,6 +73,14 @@ namespace Game.Unity
         /// <summary>每轮从正式预设开始，经 Notebook 提交配方，等待真实演出完成。</summary>
         private IEnumerator Run(bool capture)
         {
+            if (capture)
+            {
+                // 独立命令行取样从新游戏启动，因此先留一张真正的初始画面，再跳调试预设。
+                // F10 手动入口记录的是按键当时的画面，不能把它误称为新游戏截图。
+                yield return new WaitForEndOfFrame();
+                ScreenCapture.CaptureScreenshot(Path.Combine(OutputDirectory, "capture-start.png"));
+                yield return new WaitForSecondsRealtime(.3f);
+            }
             for (int index = 0; index < report.requestedRuns; index++)
             {
                 bootstrap.JumpTo(DebugPresets.BeforeSea);

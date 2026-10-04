@@ -51,11 +51,12 @@ Shader "RoomDemo/PaintingSea"
             half4 Frag(Varyings input) : SV_Target
             {
                 // Unity 立方体朝向房间的负 Z 面 UV 上下相反，统一为天空在上。
-                float2 uv = float2(input.uv.x, 1-input.uv.y);
+                float2 originalUV = float2(input.uv.x, 1-input.uv.y);
+                float2 uv = originalUV;
                 // 过渡为零时完全静止；第一阶段只扰动颜料，随后海逐渐覆盖原画。
                 float t = _Time.y * _WaveSpeed;
                 float motion = smoothstep(0,.45,_Transition);
-                uv += float2(sin(uv.y*22+t),sin(uv.x*17-t*.7)) * _Distortion * motion;
+                uv += float2(sin(uv.y*22+t),sin(uv.x*17-t*.7)) * _Distortion * motion * saturate((.52-uv.y)*4);
                 float grain = Noise(uv*180) * .035;
                 half3 paintSky = lerp(half3(.64,.59,.45),half3(.84,.76,.58),uv.y);
                 half3 farSky = lerp(half3(.58,.70,.66),half3(.29,.46,.51),uv.y);
@@ -69,17 +70,18 @@ Shader "RoomDemo/PaintingSea"
                 // 透视压缩浪纹：靠近地平线更密，前景更宽，建立画中空间深度。
                 float depth = saturate((.52-uv.y)/.52);
                 float frequency = lerp(95,19,pow(depth,.55));
-                float wave = sin(uv.y*frequency + sin(uv.x*11+t*.3)*1.5 - t*(.7+depth));
+                float broken = Noise(float2(uv.x*22+t*.07,uv.y*7-t*.08));
+                float wave = sin(uv.y*frequency + broken*4 + sin(uv.x*11+t*.3)*1.1 - t*(.7+depth));
                 float swell = sin(uv.x*7+uv.y*16-t*.4);
-                half3 water = lerp(_DeepColor.rgb,_LightColor.rgb,saturate(.35+wave*.17+swell*.13+depth*.15));
+                half3 water = lerp(_DeepColor.rgb,_LightColor.rgb,saturate(.35+wave*.08+swell*.08+broken*.16+depth*.15));
                 float patches = smoothstep(.48,.75,Noise(float2(uv.x*28+t*.2,uv.y*39-t*.15)));
                 float foam = smoothstep(.91,.998,wave) * patches * _WaveStrength;
                 water = lerp(water,half3(.70,.85,.79),foam);
                 // 窄地平线、天空层次与微弱反光避免整幅画只是一张蓝色纹理。
                 half3 sky = lerp(half3(.69,.79,.72),half3(.29,.47,.53),uv.y);
                 sky += Noise(uv*float2(6,18)+float2(t*.01,0))*.03;
-                half3 sea = lerp(water,sky,smoothstep(.515,.525,uv.y));
-                sea += half3(.10,.20,.19) * exp(-abs(uv.y-.52)*160);
+                half3 sea = lerp(water,sky,smoothstep(.515,.525,originalUV.y));
+                sea += half3(.10,.20,.19) * exp(-abs(originalUV.y-.52)*160);
                 float reflection = exp(-abs(uv.x-.32)*24)*depth*(.02+foam*.18);
                 sea += reflection + _Emission*.15;
                 // 低频颜料遮罩使连续侵入有不规则边界，而非一次颜色切换。
