@@ -19,6 +19,7 @@ namespace Game.Domain.Tests
         [Test] public void TwoPersonallyObservedDetailsFormGrowthThenInterpretPlant()
         {
             var game = new GameSession(ExplorationRules.Create());
+            // 没有认识来源物体时不能凭空观察细节；随后必须各自调查两个来源。
             Assert.That(game.ObserveDetail(DemoRules.Plant, "sprout").Single(), Is.TypeOf<InspectionFailed>());
             game.Inspect(DemoRules.Plant); game.ObserveDetail(DemoRules.Plant, "sprout");
             game.Inspect(DemoRules.Book); game.ObserveDetail(DemoRules.Book, "toward_light");

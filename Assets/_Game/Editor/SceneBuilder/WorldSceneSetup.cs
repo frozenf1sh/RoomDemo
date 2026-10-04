@@ -105,11 +105,40 @@ namespace Game.Editor
             var flames = new Transform[3];
             var ember = SurfaceArtPass.Material("WorldExterior", "M_Ember", new Color(1, .46f, .08f)); ember.EnableKeyword("_EMISSION"); ember.SetColor("_EmissionColor", new Color(1.3f, .45f, .04f));
             for (int i = 0; i < flames.Length; i++)
-                flames[i] = ExplorationSceneSetup.Primitive("Flame" + i, root.transform, PrimitiveType.Capsule, new Vector3((i - 1) * .13f, .54f, 0), new Vector3(.20f, .33f - i * .035f, .17f), ember).transform;
+            {
+                var flame = new GameObject("Flame" + i); flame.transform.SetParent(root.transform, false);
+                flame.transform.localPosition = new Vector3((i - 1) * .14f, .24f, 0); flame.transform.localScale = Vector3.one * (i == 1 ? 1 : .73f);
+                flame.AddComponent<MeshFilter>().sharedMesh = FlameMesh(); flame.AddComponent<MeshRenderer>().sharedMaterial = ember; flames[i] = flame.transform;
+            }
             var glow = new GameObject("Glow").AddComponent<Light>(); glow.transform.SetParent(root.transform, false); glow.transform.localPosition = Vector3.up * .7f;
             glow.type = LightType.Point; glow.range = 10; glow.intensity = 3.3f; glow.color = new Color(1, .52f, .20f); glow.shadows = LightShadows.None;
             var visual = root.AddComponent<CampfireVisual>(); visual.Configure(flames, glow, AudioArtPass.Source(root.transform, "Fire", true, .29f));
             var asset = PrefabUtility.SaveAsPrefabAsset(root, "Assets/_Game/Content/Prefabs/World/PF_Campfire.prefab"); Object.DestroyImmediate(root); return asset;
+        }
+        /// <summary>用少量三角形塑造尖火焰；普通发光材质和缩放动画已足够，无需火焰框架。</summary>
+        private static Mesh FlameMesh()
+        {
+            const string path = "Assets/_Game/Content/Art/WorldExterior/Flame.asset";
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path); if (mesh != null) return mesh;
+            const int sides = 7; var vertices = new Vector3[sides * 3 + 1]; var triangles = new System.Collections.Generic.List<int>();
+            for (int ring = 0; ring < 3; ring++)
+                for (int side = 0; side < sides; side++)
+                {
+                    float angle = side * Mathf.PI * 2 / sides, radius = ring == 2 ? .065f : .14f;
+                    vertices[ring * sides + side] = new Vector3(Mathf.Cos(angle) * radius + ring * .02f, ring * .29f, Mathf.Sin(angle) * radius);
+                }
+            vertices[vertices.Length - 1] = new Vector3(.08f, .87f, 0);
+            for (int side = 0; side < sides; side++)
+            {
+                int next = (side + 1) % sides;
+                for (int ring = 0; ring < 2; ring++)
+                {
+                    int lower = ring * sides, upper = (ring + 1) * sides;
+                    triangles.AddRange(new[] { lower + side, upper + side, lower + next, lower + next, upper + side, upper + next });
+                }
+                triangles.AddRange(new[] { sides * 2 + side, vertices.Length - 1, sides * 2 + next });
+            }
+            mesh = new Mesh { name = "原创尖火焰", vertices = vertices, triangles = triangles.ToArray() }; mesh.RecalculateNormals(); mesh.RecalculateBounds(); AssetDatabase.CreateAsset(mesh, path); return mesh;
         }
         private static GameObject NaturePrefab(string modelName, string prefabName, float height, Material material)
         {

@@ -4,6 +4,7 @@
 // 边界：只断言可观察功能；不测试 Shader 像素或代替陌生玩家发现体验。
 // =============================================================================
 using System.Collections;
+using System.Linq;
 using Game.Unity;
 using NUnit.Framework;
 using UnityEngine;
@@ -76,6 +77,10 @@ namespace Game.Tests
             Assert.That(notebook.IsOpen, Is.True); Assert.That(bootstrap.Session.State.Facts, Is.Empty);
             Assert.That(bootstrap.Session.State.Knows(Game.Domain.DemoRules.Growth), Is.True);
             var word = System.Linq.Enumerable.Single(Object.FindObjectsByType<UnityEngine.UI.Text>(FindObjectsInactive.Include), x => x.name == "InsightWord");
+            // 文本字段有内容仍可能因行高不足而生成空网格，必须检查真实绘制数据。
+            Canvas.ForceUpdateCanvases();
+            Assert.That(word.preferredHeight, Is.LessThanOrEqualTo(word.rectTransform.rect.height + .1f));
+            Assert.That(word.cachedTextGenerator.verts.Count, Is.GreaterThanOrEqualTo(8), "生长概念实际没有被绘制。");
             Assert.That(word.text, Is.EqualTo("生长"));
             notebook.SelectClue(Game.Domain.DemoRules.Clue("growth")); notebook.SelectClue(Game.Domain.DemoRules.Clue("plant"));
             Assert.That(notebook.SelectedClues.Count, Is.EqualTo(2));
@@ -160,6 +165,33 @@ namespace Game.Tests
             inspection.Exit(); bootstrap.SetDevelopmentMode(false); yield return null;
             Assert.That(Object.FindObjectsByType<TextMesh>().Length, Is.Zero);
             Assert.That(hud.Find("Header/Title").gameObject.activeSelf, Is.True);
+        }
+        /// <summary>近景字形要位于纸面内；验证几何尺寸，不进行 Shader 像素比对。</summary>
+        [UnityTest] public IEnumerator BookTextAndNotebookColumnsFitTheirActualSurfaces()
+        {
+            var book = System.Linq.Enumerable.Single(Object.FindObjectsByType<SceneEntity>(), x => x.Id == Game.Domain.DemoRules.Book);
+            inspection.Enter(book.GetComponent<InspectableObject>()); inspection.ActOnHotspot("cover"); inspection.ActOnHotspot("next1");
+            yield return new WaitForSecondsRealtime(.4f);
+            var words = inspection.CurrentVisual.GetComponentsInChildren<TextMesh>();
+            foreach (var word in words)
+            {
+                var bounds = word.GetComponent<Renderer>().bounds;
+                Assert.That(bounds.size.y, Is.LessThan(.35f), "书中文字过大：" + word.name);
+                Assert.That(Mathf.Abs(bounds.center.x - inspection.CurrentVisual.transform.position.x) + bounds.extents.x, Is.LessThan(1.52f), "书中文字超过页边：" + word.name);
+            }
+            inspection.Exit(); bootstrap.JumpTo(Game.Domain.ExplorationPresets.BeforeGrowthInsight); notebook.SetOpen(true); yield return null;
+            var body = notebook.transform.Find("NotebookPanel/Notebook");
+            foreach (string list in new[] { "Objects", "Observations", "Concepts" }) Assert.That(body.Find(list), Is.Not.Null);
+            Assert.That(notebook.transform.Find("NotebookPanel/Observations"), Is.Null, "分类列不得挂在全屏遮罩上。");
+            // 新灵感关系加上三条世界解释共五行，不只检查旧版本的三条历史。
+            var rules = bootstrap.Session.Rules;
+            bootstrap.JumpTo(new Game.Domain.DebugPreset("layout", System.Linq.Enumerable.Select(rules.Clues, x => x.Id).ToArray(),
+                new[] { Game.Domain.ExplorationRules.PlantStartsGrowing, Game.Domain.ExplorationRules.PlantOvergrown, Game.Domain.DemoRules.WindowFar, Game.Domain.DemoRules.PaintingSea },
+                System.Linq.Enumerable.Select(rules.Recipes, x => x.Id).ToArray(), "完整笔记布局", 2));
+            notebook.SetOpen(true); yield return null; Canvas.ForceUpdateCanvases();
+            var history = body.Find("CompletedRecipes").GetComponent<UnityEngine.UI.Text>();
+            Assert.That(history.text, Does.Contain("新芽 ─ 向光 → 生长"));
+            Assert.That(history.preferredHeight, Is.LessThanOrEqualTo(history.rectTransform.rect.height + .1f), "完整探索关系被裁切。");
         }
     }
 }

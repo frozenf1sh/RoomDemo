@@ -84,7 +84,9 @@ namespace Game.Unity
             if (e is ObjectInspected inspected) observationText.text = inspected.Description;
             if (e is InspectionFailed failed) observationText.text = failed.Reason;
             if (e is CombinationSucceeded) { waitedForBenchmark = presentation != null && presentation.IsBenchmarkPending; }
-            if (e is CombinationSucceeded) observationText.text = "你的解释已成为房间的一部分。找找发生了什么变化。";
+            if (e is CombinationSucceeded succeeded) observationText.text = succeeded.ProducedClues.Count > 0
+                ? "两个具体的观察，联系成了一个新的想法。"
+                : "你的解释已成为房间的一部分。找找发生了什么变化。";
             // 玩家引导只是对已发生事实的解释，不能触发下一步规则。
             if (e is FactAdded fact && fact.Fact == DemoRules.WindEntering) observationText.text = "你没有解释风。长大的盆栽与通往远方的窗户开始相互回应，一张纸滑了出来。";
             if (e is FactAdded end && end.Fact == DemoRules.Complete && (presentation == null || !presentation.IsBenchmarkPending)) observationText.text = "静止的房间，已经有了自己的呼吸。";
@@ -112,6 +114,11 @@ namespace Game.Unity
                     : s.Knows(ExplorationRules.Sprout) && s.Knows(ExplorationRules.TowardLight) ? "土边的新芽，书中的向光。按 N 将细节联系起来。"
                     : s.Knows(DemoRules.Plant) ? "旋转盆栽看看土边；旧书中也有值得细读的短句。"
                     : "选择一件事物，拿近看看。按 H 查看提示。";
+                return;
+            }
+            if (s.HasFact(ExplorationRules.WorldStarry))
+            {
+                objectiveText.text = "房间的边界正在退去。熟悉的东西会留在星空下。";
                 return;
             }
             objectiveText.text = presentation != null && presentation.IsBenchmarkPending ? "你将海赋予画。房间正在回应。"

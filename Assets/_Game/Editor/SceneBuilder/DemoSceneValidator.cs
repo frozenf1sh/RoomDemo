@@ -47,7 +47,7 @@ namespace Game.Editor
                     root.GetComponentsInChildren<WorldExterior>(true).Length != 1 || root.GetComponentsInChildren<WorldMutation>(true).Length != 1 ||
                     root.GetComponentsInChildren<VisualThemeController>(true).Length != 1 || root.GetComponentsInChildren<InspectionController>(true).Length != 1 ||
                     root.GetComponentsInChildren<DayTransitionController>(true).Length != 1 || root.GetComponentsInChildren<PlayerHudView>(true).Length != 1 ||
-                    root.GetComponentsInChildren<WorldDebugView>(true).Length != 1)
+                    root.GetComponentsInChildren<WorldDebugView>(true).Length != 1 || root.GetComponentsInChildren<ExplorationReviewDriver>(true).Length != 1)
                     throw new InvalidOperationException("检视、跨日、建筑模块、外景或星空导演缺失／重复。");
                 var gameBindings = new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true));
                 if (!gameBindings.FindProperty("explorationEnabled").boolValue || gameBindings.FindProperty("starrySequence").objectReferenceValue != starry[0])

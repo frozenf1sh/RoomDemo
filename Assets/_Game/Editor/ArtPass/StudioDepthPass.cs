@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 namespace Game.Editor
 {
+    /// <summary>工作室装饰安装器，导入与摆放均不产生游戏线索。</summary>
     public static class StudioDepthPass
     {
         /// <summary>整理四个单文件模型，不导入外部材质和动画。</summary>
@@ -60,6 +61,7 @@ namespace Game.Editor
             var root = new GameObject("PF_Studio_" + name); var visual = new GameObject("Visual"); visual.transform.SetParent(root.transform, false);
             var model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/Kenney/FurnitureKit/" + name + ".fbx");
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(model); instance.transform.SetParent(visual.transform, false);
+            // 同一模型可能有多个网格，合并实际边界后才按目标高度缩放。
             var renderers = instance.GetComponentsInChildren<Renderer>(); var bounds = renderers[0].bounds;
             foreach (var renderer in renderers)
             { bounds.Encapsulate(renderer.bounds); renderer.sharedMaterials = Enumerable.Repeat(material, renderer.sharedMaterials.Length).ToArray(); }

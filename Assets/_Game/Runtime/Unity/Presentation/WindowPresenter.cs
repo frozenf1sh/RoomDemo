@@ -69,6 +69,7 @@ namespace Game.Unity
         /// <summary>只推进已启动的海面覆盖，不查询或执行规则。</summary>
         private void Update()
         {
+            // 目标值由事实事件或恢复入口设定；这一帧只推进已获许可的视觉过渡。
             reveal = Mathf.MoveTowards(reveal, target, Time.deltaTime / 3);
             if (reveal >= 1) farBackground.SetActive(false);
             SetParameters();

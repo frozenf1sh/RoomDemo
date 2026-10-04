@@ -105,6 +105,7 @@ namespace Game.Editor
             if (root.GetComponentInChildren<WorldMutation>(true) == null || root.GetComponentInChildren<VisualThemeController>(true) == null) WorldSceneSetup.InstallMutationTools();
             if (root.GetComponentInChildren<StarryWorldSequence>(true) == null) WorldSceneSetup.InstallStarrySequence();
             if (root.GetComponentInChildren<PlayerHudView>(true) == null || root.GetComponentInChildren<WorldDebugView>(true) == null) PlayerSceneSetup.InstallPlayerHud();
+            if (root.GetComponentInChildren<ExplorationReviewDriver>(true) == null) ExplorationSceneSetup.InstallReviewDriver();
             Save(root);
         }
         /// <summary>给指定房间安装导演，独立灰盒也可复用此入口。</summary>

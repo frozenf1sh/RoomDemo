@@ -49,8 +49,8 @@ namespace Game.Editor
             var days = ExplorationSceneSetup.Rect("DayControls", hud, Vector2.zero, Vector2.one);
             foreach (string name in new[] { "Day", "EndDay" }) { var node = hud.Find(name); if (node != null) node.SetParent(days, false); }
             var player = hud.GetComponent<PlayerHudView>(); if (player == null) player = hud.gameObject.AddComponent<PlayerHudView>();
-            player.Configure(inspection, new[] { hud.Find("Header/Title").gameObject, hud.Find("Header/Objective").gameObject, hud.Find("Footer").gameObject,
-                hud.Find("Observation").gameObject, hud.Find("Hover").gameObject, days.gameObject });
+            player.Configure(inspection, root.GetComponentInChildren<NotebookView>(true), new[] { hud.Find("Header/Title").gameObject, hud.Find("Header/Objective").gameObject, hud.Find("Footer").gameObject,
+                hud.Find("Observation").gameObject, hud.Find("Hover").gameObject, days.gameObject }, (RectTransform)hud.Find("DiscoveryNotice"));
             var overlay = root.Find("UI/InspectionCanvas/InspectionOverlay");
             SetRect(overlay.Find("ExitInspection"), .78f, .055f, .95f, .125f);
             SetRect(overlay.Find("Hint"), .08f, .14f, .92f, .20f);

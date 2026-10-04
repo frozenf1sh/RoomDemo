@@ -18,24 +18,36 @@ namespace Game.Unity
         private MaterialPropertyBlock animationBlock;
         // 属性块包含 Unity 原生资源，必须在主线程生命周期中创建，不能放在字段初始化器。
         private void Awake() { animationBlock = new MaterialPropertyBlock(); }
+        /// <summary>本演出拥有的生成槽数，不统计预先放置的外景。</summary>
         public int SpawnedCount => spawned.Count;
+        /// <summary>编辑工具绑定整体主题消费者；本类不从领域选取主题。</summary>
         public void Configure(VisualThemeController controller) { theme = controller; }
         private void Remember(Transform node)
         {
             // 初次修改才记录；演出每帧调用不会不断分配快照。
             if (!poses.ContainsKey(node)) poses.Add(node, new Pose(node));
         }
+        /// <summary>显示一个已有视觉节点，初次调用时保存原 activeSelf 和姿态。</summary>
         public void Show(GameObject node) { Remember(node.transform); node.SetActive(true); }
+        /// <summary>隐藏视觉节点，不删除游戏实体或添加任何世界事实。</summary>
         public void Hide(GameObject node) { Remember(node.transform); node.SetActive(false); }
+        /// <summary>直接切换两套视觉；两者都可在重置时恢复到演出前状态。</summary>
         public void ReplaceVisual(GameObject oldVisual, GameObject newVisual) { Hide(oldVisual); Show(newVisual); }
         /// <summary>同一槽位只生成一个实例；重复最终恢复不会堆积篝火。</summary>
+        /// <param name="slot">本演出内的稳定生成槽身份。</param>
+        /// <param name="prefab">只负责视觉的 Prefab，不带新增游戏规则。</param>
+        /// <param name="parent">显式生成锚点，复制体以局部零姿态实例化。</param>
+        /// <returns>已存在的槽实例或新实例；本组件负责重置时停用并销毁。</returns>
         public GameObject Spawn(string slot, GameObject prefab, Transform parent)
         {
             if (spawned.TryGetValue(slot, out var existing) && existing != null) return existing;
             var instance = Instantiate(prefab, parent, false); instance.name = slot; spawned[slot] = instance; return instance;
         }
+        /// <summary>按显式端点平滑移动局部位置；端点固定，避免每帧累积位移误差。</summary>
         public void Move(Transform node, Vector3 from, Vector3 to, float progress) { Remember(node); node.localPosition = Vector3.Lerp(from, to, Mathf.SmoothStep(0, 1, Mathf.Clamp01(progress))); }
+        /// <summary>平滑插值局部旋转，第一次修改记录可恢复快照。</summary>
         public void Rotate(Transform node, Quaternion from, Quaternion to, float progress) { Remember(node); node.localRotation = Quaternion.Slerp(from, to, Mathf.SmoothStep(0, 1, Mathf.Clamp01(progress))); }
+        /// <summary>平滑插值局部缩放，进度限制在 0～1，不把大小视为游戏状态。</summary>
         public void Scale(Transform node, Vector3 from, Vector3 to, float progress) { Remember(node); node.localScale = Vector3.Lerp(from, to, Mathf.SmoothStep(0, 1, Mathf.Clamp01(progress))); }
         /// <summary>颜色过渡使用属性块；允许共享材质且能恢复原有块。</summary>
         public void MaterialTransition(Renderer renderer, Color from, Color to, float progress)
@@ -43,6 +55,7 @@ namespace Game.Unity
             if (!originals.ContainsKey(renderer)) { var original = new MaterialPropertyBlock(); renderer.GetPropertyBlock(original); originals.Add(renderer, original); }
             renderer.GetPropertyBlock(animationBlock); animationBlock.SetColor(ShaderIds.BaseColor, Color.Lerp(from, to, Mathf.Clamp01(progress))); renderer.SetPropertyBlock(animationBlock);
         }
+        /// <summary>将明确表现主题的进度交给主题消费者；本组件不存储灯光为世界事实。</summary>
         public void TransitionTheme(VisualThemeProfile profile, float progress) { theme.Transition(profile, progress); }
         /// <summary>退出旧演出时恢复自己借用的节点，立即停用旧生成物，再延迟销毁。</summary>
         public void ResetCapturedState()

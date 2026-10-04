@@ -14,6 +14,7 @@ namespace Game.Unity
     /// <summary>两件主物体共用的轻量检视适配器，拥有复制体和输入切换的生命周期。</summary>
     public sealed class InspectionController : MonoBehaviour
     {
+        /// <summary>近景复制体专用层，同一相机临时只渲染这一层。</summary>
         public const int InspectionLayer = 30;
         [SerializeField] private Camera viewCamera;
         [SerializeField] private Transform pivot;
@@ -37,10 +38,16 @@ namespace Game.Unity
         private float cameraFar, yaw, pitch, zoom = 3, pressTravel;
         private Vector2 pressAt;
         private string sourceId;
+        /// <summary>复制体存活即处于检视模式；退出先清空它，防止延迟销毁期间继续响应。</summary>
         public bool IsOpen => clone != null;
+        /// <summary>当前书页或检视动作的临时状态；不写入世界事实。</summary>
         public InspectionModel Model { get; private set; }
+        /// <summary>控制器拥有的当前复制体，仅供测试和明确开发工具观察。</summary>
         public GameObject CurrentVisual => clone;
+        /// <summary>相机距展示中心的距离，用于验证滚轮限制。</summary>
         public float ZoomDistance => zoom;
+        /// <summary>通过 Editor 显式绑定相机、展示中心、UI 与音源，不在每帧寻找依赖。</summary>
+        /// <remarks>只设置引用；场景验证器负责拒绝缺失绑定，Bind 才连接游戏会话。</remarks>
         public void Configure(Camera camera, Transform displayPivot, GameObject panel, Text name, Text hover, Text response,
             Button back, GameObject sample, AudioSource pickup, AudioSource page, AudioSource observation, AudioSource exit)
         {
@@ -54,6 +61,9 @@ namespace Game.Unity
             exitButton.onClick.RemoveAllListeners(); exitButton.onClick.AddListener(() => Exit()); overlay.SetActive(false);
         }
         /// <summary>先由领域确认可调查性并认识本物体，再展示独立近景模型。</summary>
+        /// <param name="item">真实房间实体的检视适配器，包含独立展示 Prefab。</param>
+        /// <returns>调查许可成立且已进入检视时返回 true，输入锁或世界条件不足时返回 false。</returns>
+        /// <remarks>正常入口仅认识当前物体；观察细节必须随后单独点击热点。</remarks>
         public bool Enter(InspectableObject item)
         {
             if (session == null || notebook.ExternalInputBlocked || !session.IsInspectable(item.Entity.Id)) return false;
@@ -104,6 +114,8 @@ namespace Game.Unity
             yaw += delta.x * .35f; pitch = Mathf.Clamp(pitch - delta.y * .25f, -60, 60);
             clone.transform.localRotation = Quaternion.Euler(pitch, yaw, 0); RefreshHotspots();
         }
+        /// <summary>把滚轮增量映射到有限展示距离，不缩放真实房间物体。</summary>
+        /// <param name="delta">新版输入系统的垂直滚轮增量，正数拉近。</param>
         public void Zoom(float delta)
         {
             if (!IsOpen) return;
@@ -115,6 +127,8 @@ namespace Game.Unity
             viewCamera.transform.rotation = Quaternion.identity;
         }
         /// <summary>热点必须满足页状态；拿近和翻页永远不会自动发现短语。</summary>
+        /// <param name="id">已命名热点动作，普通输入还需先通过 ObserveAt 射线与角度检查。</param>
+        /// <returns>临时动作可执行时返回 true；领域发现是否成功由反馈事件另行说明。</returns>
         public bool ActOnHotspot(string id)
         {
             if (!IsOpen || !Model.TryAct(id, out var action)) return false;
@@ -137,6 +151,8 @@ namespace Game.Unity
             RefreshHotspots(); return true;
         }
         /// <summary>真实射线入口；按当前角度和页状态寻找具体细节。</summary>
+        /// <param name="point">当前相机画面中的屏幕像素位置。</param>
+        /// <returns>射中当前可见、可执行的近景热点时返回 true。</returns>
         public bool ObserveAt(Vector2 point)
         {
             if (!IsOpen || !Physics.Raycast(viewCamera.ScreenPointToRay(point), out var hit, 12, 1 << InspectionLayer)) return false;

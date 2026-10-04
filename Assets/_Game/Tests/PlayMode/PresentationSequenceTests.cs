@@ -36,6 +36,7 @@ namespace Game.Tests
 #endif
             yield return null;
             bootstrap = Object.FindAnyObjectByType<GameBootstrap>();
+            // 只在旧演出回归夹具选择兼容数据，正式场景初始化仍走新的探索内容表。
             bootstrap.RestartLegacyForRegression(); // 保留旧样片的数据回归，正式新游戏使用探索规则。
             sequence = Object.FindAnyObjectByType<PaintingSeaSequence>();
             painting = Object.FindAnyObjectByType<PaintingPresenter>(); water = Object.FindAnyObjectByType<WaterPresenter>();

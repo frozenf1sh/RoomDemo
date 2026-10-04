@@ -58,8 +58,15 @@ namespace Game.Editor
                 var blade = Primitive("Leaf" + i, visual, PrimitiveType.Sphere, new Vector3((i % 2 == 0 ? 1 : -1) * .20f, i * .15f, .02f), new Vector3(.55f, .065f, .25f), leaf);
                 blade.transform.localRotation = Quaternion.Euler(0, i * 25, (i % 2 == 0 ? 1 : -1) * 18);
             }
-            var sprout = Hotspot("Sprout", visual, "sprout", new Vector3(.25f, -.12f, .34f), new Vector3(.17f, .23f, .08f), Material("Sprout", new Color(.47f, .68f, .26f)), Vector3.forward);
-            Primitive("NewLeaf", visual, PrimitiveType.Sphere, new Vector3(.29f, .015f, .34f), new Vector3(.16f, .07f, .08f), leaf);
+            var newGreen = Material("Sprout", new Color(.47f, .68f, .26f));
+            var sprout = Primitive("Sprout", visual, PrimitiveType.Capsule, new Vector3(.25f, -.12f, .34f), new Vector3(.045f, .105f, .045f), newGreen);
+            // 点击区域略大于嫩茎，但不把 Collider 的包围盒画成一块绿色方牌。
+            var detailCollider = sprout.AddComponent<BoxCollider>(); detailCollider.size = new Vector3(3.8f, 2.2f, 1.8f);
+            sprout.AddComponent<InspectionHotspot>().Configure("sprout", sprout.GetComponent<Renderer>(), Vector3.forward);
+            var tinyLeft = Primitive("NewLeafLeft", visual, PrimitiveType.Sphere, new Vector3(.20f, -.025f, .34f), new Vector3(.11f, .025f, .045f), newGreen);
+            tinyLeft.transform.localRotation = Quaternion.Euler(0, 0, -20);
+            var tinyRight = Primitive("NewLeafRight", visual, PrimitiveType.Sphere, new Vector3(.29f, .015f, .34f), new Vector3(.115f, .025f, .05f), newGreen);
+            tinyRight.transform.localRotation = Quaternion.Euler(0, 0, 25);
             var turning = new GameObject("NoTurningPage"); turning.transform.SetParent(node.transform, false);
             node.AddComponent<InspectionView>().Configure(new[] { "rest" }, new[] { visual.gameObject }, turning.transform);
             var asset = PrefabUtility.SaveAsPrefabAsset(node, Prefabs + "PF_InspectPlant.prefab"); Object.DestroyImmediate(node);
@@ -77,7 +84,7 @@ namespace Game.Editor
             var gold = Material("BookInk", new Color(.48f, .34f, .15f));
             var cover = new GameObject("Cover"); cover.transform.SetParent(node.transform, false);
             var closed = Hotspot("Cover", cover.transform, "cover", Vector3.zero, new Vector3(1.65f, 1.85f, .15f), leather, Vector3.back);
-            Text3D("CoverTitle", closed.transform, "关于光的习作", new Vector3(0, .14f, -.56f), .13f, TextAnchor.MiddleCenter);
+            Text3D("CoverTitle", closed.transform, "关于光的习作", new Vector3(0, .14f, -.56f), .18f, TextAnchor.MiddleCenter);
             Text3D("CoverHint", closed.transform, "轻触封面", new Vector3(0, -.26f, -.56f), .07f, TextAnchor.MiddleCenter);
             var pages = new GameObject[3];
             for (int i = 0; i < 3; i++)
@@ -97,8 +104,13 @@ namespace Game.Editor
             Text3D("QuoteWord", pages[1].transform, "向光", new Vector3(-1.28f, .12f, -.102f), .15f, TextAnchor.UpperLeft);
             Text3D("QuoteEnd", pages[1].transform, "处伸去。", new Vector3(-1.28f, -.20f, -.076f), .105f, TextAnchor.UpperLeft);
             // 热点放在短语下的细线位置，初始同纸色；悬停才出现轻微墨色反馈。
-            var quote = Hotspot("Quote", pages[1].transform, "quote", new Vector3(-.97f, -.025f, -.085f), new Vector3(.63f, .34f, .018f), paper, Vector3.back);
-            var underline = Primitive("ObservedUnderline", quote.transform, PrimitiveType.Cube, new Vector3(0, -.48f, -.8f), new Vector3(.95f, .035f, .20f), gold); underline.SetActive(false);
+            var quote = Hotspot("Quote", pages[1].transform, "quote", new Vector3(-1.17f, .05f, -.085f), new Vector3(.28f, .20f, .018f), paper, Vector3.back);
+            // 只有不可见点击盒，不把短语做成凸起按钮；悬停只轻轻提亮短句下的细线。
+            quote.GetComponent<Renderer>().enabled = false;
+            var trace = Primitive("HoverTrace", quote.transform, PrimitiveType.Cube, new Vector3(0, -.43f, -.8f), new Vector3(.80f, .018f, .20f), paper);
+            trace.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            quote.GetComponent<InspectionHotspot>().Configure("quote", trace.GetComponent<Renderer>(), Vector3.back);
+            var underline = Primitive("ObservedUnderline", quote.transform, PrimitiveType.Cube, new Vector3(0, -.45f, -.9f), new Vector3(.80f, .018f, .20f), gold); underline.SetActive(false);
             Text3D("SketchNote", pages[1].transform, "新叶还很小，\n却有自己的方向。", new Vector3(.20f, .35f, -.076f), .08f, TextAnchor.UpperLeft);
             Text3D("HorizonText", pages[2].transform, "页边没有尽头。", new Vector3(-1.27f, .34f, -.076f), .09f, TextAnchor.UpperLeft);
             var horizon = Hotspot("Horizon", pages[2].transform, "horizon", new Vector3(.70f, .02f, -.085f), new Vector3(1.05f, .48f, .02f), Material("Horizon", new Color(.41f, .50f, .47f)), Vector3.back);
@@ -124,26 +136,43 @@ namespace Game.Editor
             // 父节点可能是扁平热点；抵消缩放，字体尺寸始终以世界单位指定。
             node.transform.localScale = new Vector3(1 / parent.localScale.x, 1 / parent.localScale.y, 1 / parent.localScale.z);
             var text = node.AddComponent<TextMesh>(); text.font = AssetDatabase.LoadAssetAtPath<Font>(DemoSceneBuilder.ChineseFontPath);
-            text.GetComponent<Renderer>().sharedMaterial = text.font.material; text.fontSize = 64; text.characterSize = size; text.anchor = anchor; text.alignment = TextAlignment.Left;
+            // TextMesh 的 characterSize 不等于世界字高；64 号中文字形需要缩小十倍才适合书页。
+            // 参数 size 表示近似世界行高，实际网格边界另由运行测试检查，避免再溢出纸面。
+            text.GetComponent<Renderer>().sharedMaterial = text.font.material; text.fontSize = 64; text.characterSize = size * .1f; text.anchor = anchor; text.alignment = TextAlignment.Left;
             text.color = new Color(.21f, .15f, .10f); text.text = value; return text;
         }
         /// <summary>将纸面分成事物、观察、概念；不把任何正确组合写进按钮逻辑。</summary>
         public static void InstallNotebookExploration()
         {
             var root = PresentationArtPass.Room(); var notebook = root.GetComponentInChildren<NotebookView>(true);
-            var body = notebook.transform.Find("NotebookPanel");
-            // 现有纸页可能来自 Prefab 覆盖，仍沿用同一个实例与所有事件绑定。
-            if (body == null) body = notebook.GetComponentsInChildren<CanvasGroup>(true)[0].transform;
-            var objects = Rect("Objects", body, new Vector2(.05f, .58f), new Vector2(.31f, .81f));
-            var observations = Rect("Observations", body, new Vector2(.36f, .58f), new Vector2(.64f, .81f));
-            var concepts = Rect("Concepts", body, new Vector2(.69f, .58f), new Vector2(.95f, .81f));
+            var shade = notebook.transform.Find("NotebookPanel");
+            var body = shade.Find("Notebook");
+            // 旧增量工具误把三列挂到全屏遮罩；只清除它生成的重复节点，保留真实纸页与绑定。
+            foreach (string name in new[] { "Objects", "Concepts", "Observations", "ObjectsHeading", "ConceptsHeading", "ObservationsHeading", "InsightWord" })
+            { var misplaced = shade.Find(name); if (misplaced != null) Object.DestroyImmediate(misplaced.gameObject); }
+            var title = Label("Title", body, "未完成的笔记", new Vector2(.035f, .92f), new Vector2(.84f, .99f), 24);
+            Rect("CloseNotebook", body, new Vector2(.89f, .92f), new Vector2(.98f, .98f));
+            // 完整切片有四个事物条目，列表高度必须容纳四张纸片与行距。
+            var objects = Rect("Objects", body, new Vector2(.05f, .52f), new Vector2(.31f, .81f));
+            var observations = Rect("Observations", body, new Vector2(.36f, .52f), new Vector2(.64f, .81f));
+            var concepts = Rect("Concepts", body, new Vector2(.69f, .52f), new Vector2(.95f, .81f));
             var layout = observations.GetComponent<VerticalLayoutGroup>(); if (layout == null) layout = observations.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.childControlWidth = true; layout.childControlHeight = false; layout.childForceExpandHeight = false; layout.spacing = 4;
+            foreach (var list in new[] { objects, observations, concepts })
+            {
+                var column = list.GetComponent<VerticalLayoutGroup>();
+                column.childControlWidth = true; column.childControlHeight = true; column.childForceExpandHeight = false; column.spacing = 4;
+            }
             var ink = new Color(.22f, .17f, .11f);
+            title.color = ink;
             Label("ObjectsHeading", body, "看见的事物", new Vector2(.05f, .82f), new Vector2(.31f, .88f), 18).color = ink;
             Label("ObservationsHeading", body, "记下的细节", new Vector2(.36f, .82f), new Vector2(.64f, .88f), 18).color = ink;
             Label("ConceptsHeading", body, "想出的意义", new Vector2(.69f, .82f), new Vector2(.95f, .88f), 20).color = ink;
-            var word = Label("InsightWord", body, "", new Vector2(.25f, .44f), new Vector2(.75f, .55f), 42); word.color = ink; word.alignment = TextAnchor.MiddleCenter; word.gameObject.SetActive(false);
+            // 中文行高大于字体号数；为实际字形留足高度，否则 Text 会有内容但生成零顶点。
+            var word = Label("InsightWord", body, "", new Vector2(.25f, .42f), new Vector2(.75f, .54f), 36); word.color = ink; word.alignment = TextAnchor.MiddleCenter; word.gameObject.SetActive(false);
+            body.Find("PaperCrease").gameObject.SetActive(false);
+            // 四条关系加标题留足高度，同时与槽位和底部反馈保持间距。
+            Rect("CompletedRecipes", body, new Vector2(.035f, .085f), new Vector2(.67f, .275f));
+            Rect("Feedback", body, new Vector2(.035f, .02f), new Vector2(.965f, .075f));
             notebook.ConfigureExploration(observations, word);
             PresentationArtPass.Save(root);
         }
@@ -165,6 +194,21 @@ namespace Game.Editor
             controller.Configure(button, day, label, fade.gameObject, group, AudioArtPass.Source(system, "GrowthNight", false, .19f, false));
             root.GetComponentInChildren<GameBootstrap>(true).ConfigureDayTransition(controller);
             fade.gameObject.SetActive(false); PresentationArtPass.Save(root);
+        }
+        /// <summary>绑定原生构建复测器；只有专用命令行参数才能启动自动走查。</summary>
+        public static void InstallReviewDriver()
+        {
+            var root = PresentationArtPass.Room();
+            var node = PresentationArtPass.Ensure(root.Find("Presentation/Debug"), "ExplorationReview");
+            var driver = node.GetComponent<ExplorationReviewDriver>(); if (driver == null) driver = node.gameObject.AddComponent<ExplorationReviewDriver>();
+            var entities = root.GetComponentsInChildren<SceneEntity>(true);
+            var field = root.GetComponentInChildren<WorldExterior>(true);
+            driver.Configure(root.GetComponentInChildren<GameBootstrap>(true), root.GetComponentInChildren<NotebookView>(true), root.GetComponentInChildren<InspectionController>(true),
+                root.GetComponentInChildren<InteractionSystem>(true), root.GetComponentInChildren<DayTransitionController>(true), root.GetComponentInChildren<StarryWorldSequence>(true),
+                root.GetComponentInChildren<RoomModules>(true), field, field.GetComponent<WorldMutation>(),
+                System.Linq.Enumerable.Single(entities, x => x.Id == Game.Domain.DemoRules.Plant), System.Linq.Enumerable.Single(entities, x => x.Id == Game.Domain.DemoRules.Book),
+                new[] { root.Find("Environment/Table"), root.Find("Environment/Chair"), root.Find("Environment/BookShelf"), root.GetComponentInChildren<PaintingPresenter>(true).transform });
+            PresentationArtPass.Save(root);
         }
         private static GameObject CubePrefab()
         {
