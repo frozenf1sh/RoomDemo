@@ -38,6 +38,7 @@ namespace Game.Domain
 
             // 命令分发只区分输入方式，不能在这里写盆栽、海或窗户的规则。
             if (command is InspectObject inspect) accepted = Inspect(state, inspect, events);
+            else if (command is ObserveDetail detail) accepted = Observe(state, detail, events);
             else if (command is Combine combine) accepted = Combine(state, combine.Clues, events);
             else if (command is Interpret interpret) accepted = Interpret(state, interpret, events);
             else throw new ArgumentException("不支持此命令。", nameof(command));
@@ -71,7 +72,7 @@ namespace Game.Domain
             // 允许所有规则引用的事实，不把具体试玩内容写死在引擎中。
             var known = rules.Recipes.SelectMany(x => x.Produces.Concat(x.Requires))
                 .Concat(rules.Reactions.SelectMany(x => x.Produces.Concat(x.Requires)))
-                .Concat(rules.Discoveries.SelectMany(x => x.Requires)).ToHashSet();
+                .Concat(rules.Discoveries.SelectMany(x => x.Requires)).Concat(rules.Observations.SelectMany(x => x.Requires)).ToHashSet();
             if (facts.Any(f => !known.Contains(f))) throw new ArgumentException("未知的调试事实。");
             var events = new List<DomainEvent>();
             AddFacts(state, facts, events);
@@ -117,6 +118,21 @@ namespace Game.Domain
             GrantClues(state, definition.Grants, events);
             // 即使没有新发现，重复观察仍然可以再次阅读描述。
             events.Add(new ObjectInspected(command.Object, definition.Description));
+            return true;
+        }
+
+        /// <summary>检查已认识的来源与世界条件，只有明确的细节点击才授予观察。</summary>
+        private bool Observe(GameState state, ObserveDetail command, List<DomainEvent> events)
+        {
+            var definition = rules.Observations.FirstOrDefault(x => x.Source == command.Source && x.DetailId == command.DetailId);
+            if (definition == null || !state.Knows(command.Source) || !definition.Requires.All(state.HasFact))
+            {
+                events.Add(new InspectionFailed(command.Source, definition == null ? "未知观察细节。" : !state.Knows(command.Source) ? "请先亲自观察这件物体。" : definition.LockedDescription));
+                return false;
+            }
+            // 重复点细节仍可阅读描述，但 HashSet 保证线索与发现提示只新增一次。
+            GrantClues(state, definition.Grants, events);
+            events.Add(new ObjectInspected(command.Source, definition.Description));
             return true;
         }
 

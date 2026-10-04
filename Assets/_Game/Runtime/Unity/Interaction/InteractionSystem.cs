@@ -41,7 +41,7 @@ namespace Game.Unity
         {
             var target = FindClickable(screenPoint);
             if (target == null) return false;
-            if (inspection != null && target.TryGetComponent<InspectableObject>(out var item)) return inspection.Enter(item);
+            if (inspection != null && session.Rules.Observations.Count > 0 && target.TryGetComponent<InspectableObject>(out var item)) return inspection.Enter(item);
             target.Inspect(session); return true;
         }
         /// <summary>处理鼠标与 UI 遮挡，显示领域查询得到的中文反馈。</summary>

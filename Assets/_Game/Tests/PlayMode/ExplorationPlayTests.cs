@@ -38,6 +38,20 @@ namespace Game.Tests
             Assert.That(inspection.IsOpen || notebook.ExternalInputBlocked, Is.False);
             Assert.That(camera.transform.position, Is.EqualTo(position)); Assert.That(camera.transform.rotation, Is.EqualTo(rotation)); Assert.That(camera.cullingMask, Is.EqualTo(mask));
         }
+        [UnityTest] public IEnumerator PlantRequiresPersonalHotspotAndSuitableViewAngle()
+        {
+            var entity = System.Linq.Enumerable.Single(Object.FindObjectsByType<SceneEntity>(), x => x.Id == Game.Domain.DemoRules.Plant);
+            Assert.That(inspection.Enter(entity.GetComponent<InspectableObject>()), Is.True); yield return null;
+            Assert.That(bootstrap.Session.State.Knows(Game.Domain.DemoRules.Growth), Is.False);
+            var sprout = System.Linq.Enumerable.Single(inspection.CurrentVisual.GetComponentsInChildren<InspectionHotspot>(), x => x.ActionId == "sprout");
+            Assert.That(inspection.ObserveAt(Camera.main.WorldToScreenPoint(sprout.transform.position)), Is.False);
+            inspection.Rotate(new Vector2(180 / .35f, 0)); yield return null; Physics.SyncTransforms();
+            Assert.That(inspection.ObserveAt(Camera.main.WorldToScreenPoint(sprout.transform.position)), Is.True);
+            Assert.That(bootstrap.Session.State.Knows(Game.Domain.ExplorationRules.Sprout), Is.True);
+            Assert.That(bootstrap.Session.State.Knows(Game.Domain.DemoRules.Growth), Is.False);
+            Assert.That(notebook.HasUnreadDiscoveries, Is.True);
+            inspection.Exit(); yield return null;
+        }
         [UnityTest] public IEnumerator RestartDuringInspectionReleasesOldCopyAndInputLock()
         {
             inspection.InspectDebugCube(); yield return null; var copy = inspection.CurrentVisual;

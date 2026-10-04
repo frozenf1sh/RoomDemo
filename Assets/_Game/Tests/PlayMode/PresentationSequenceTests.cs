@@ -35,7 +35,9 @@ namespace Game.Tests
             yield return SceneManager.LoadSceneAsync("DemoRoom");
 #endif
             yield return null;
-            bootstrap = Object.FindAnyObjectByType<GameBootstrap>(); sequence = Object.FindAnyObjectByType<PaintingSeaSequence>();
+            bootstrap = Object.FindAnyObjectByType<GameBootstrap>();
+            bootstrap.RestartLegacyForRegression(); // 保留旧样片的数据回归，正式新游戏使用探索规则。
+            sequence = Object.FindAnyObjectByType<PaintingSeaSequence>();
             painting = Object.FindAnyObjectByType<PaintingPresenter>(); water = Object.FindAnyObjectByType<WaterPresenter>();
             plant = Object.FindAnyObjectByType<PlantPresenter>(); window = Object.FindAnyObjectByType<WindowPresenter>(); ending = Object.FindAnyObjectByType<EndingPresenter>();
             Assert.That(sequence, Is.Not.Null);

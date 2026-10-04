@@ -36,6 +36,9 @@ namespace Game.Application
         /// <returns>发现、观察或失败事件。</returns>
         public IReadOnlyList<DomainEvent> Inspect(ObjectId id) => Dispatch(new InspectObject(id));
 
+        /// <summary>来自检视模型许可后的细节点击；不能直接传入任意产出线索。</summary>
+        public IReadOnlyList<DomainEvent> ObserveDetail(ObjectId source, string detail) => Dispatch(new ObserveDetail(source, detail));
+
         /// <summary>第一版二元解释入口，内部适配为统一的碎片组合。</summary>
         /// <param name="concept">旧概念 ID。</param>
         /// <param name="target">旧目标物体 ID。</param>

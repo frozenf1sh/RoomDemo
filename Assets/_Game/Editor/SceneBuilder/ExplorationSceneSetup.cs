@@ -43,6 +43,31 @@ namespace Game.Editor
             root.GetComponentInChildren<InteractionSystem>(true).ConfigureInspection(controller);
             panel.gameObject.SetActive(false); PresentationArtPass.Save(root);
         }
+        /// <summary>安装盆栽近景复制体：新芽在背侧，旋转后才有有效观察角度。</summary>
+        public static void InstallPlantInspection()
+        {
+            var root = PresentationArtPass.Room();
+            var node = new GameObject("PF_InspectPlant");
+            var visual = PresentationArtPass.Ensure(node.transform, "Plant");
+            var pot = Material("Pot", new Color(.42f, .24f, .14f)); var leaf = Material("Leaf", new Color(.28f, .43f, .20f));
+            Primitive("Pot", visual, PrimitiveType.Cylinder, new Vector3(0, -.48f, 0), new Vector3(.90f, .27f, .9f), pot);
+            Primitive("Soil", visual, PrimitiveType.Cylinder, new Vector3(0, -.20f, 0), new Vector3(.80f, .015f, .8f), Material("Soil", new Color(.14f, .10f, .06f)));
+            Primitive("Stem", visual, PrimitiveType.Cylinder, new Vector3(0, .20f, 0), new Vector3(.055f, .40f, .055f), leaf);
+            for (int i = 0; i < 6; i++)
+            {
+                var blade = Primitive("Leaf" + i, visual, PrimitiveType.Sphere, new Vector3((i % 2 == 0 ? 1 : -1) * .20f, i * .15f, .02f), new Vector3(.55f, .065f, .25f), leaf);
+                blade.transform.localRotation = Quaternion.Euler(0, i * 25, (i % 2 == 0 ? 1 : -1) * 18);
+            }
+            var sprout = Hotspot("Sprout", visual, "sprout", new Vector3(.25f, -.12f, .34f), new Vector3(.17f, .23f, .08f), Material("Sprout", new Color(.47f, .68f, .26f)), Vector3.forward);
+            Primitive("NewLeaf", visual, PrimitiveType.Sphere, new Vector3(.29f, .015f, .34f), new Vector3(.16f, .07f, .08f), leaf);
+            var turning = new GameObject("NoTurningPage"); turning.transform.SetParent(node.transform, false);
+            node.AddComponent<InspectionView>().Configure(new[] { "rest" }, new[] { visual.gameObject }, turning.transform);
+            var asset = PrefabUtility.SaveAsPrefabAsset(node, Prefabs + "PF_InspectPlant.prefab"); Object.DestroyImmediate(node);
+            var entity = System.Linq.Enumerable.Single(root.GetComponentsInChildren<SceneEntity>(true), x => x.Id.Value == "plant");
+            var adapter = entity.GetComponent<InspectableObject>(); if (adapter == null) adapter = entity.gameObject.AddComponent<InspectableObject>(); adapter.Configure(entity, asset);
+            root.GetComponentInChildren<GameBootstrap>(true).ConfigureExploration(true);
+            PresentationArtPass.Save(root);
+        }
         private static GameObject CubePrefab()
         {
             var node = new GameObject("PF_InspectionCube");

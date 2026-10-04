@@ -1449,7 +1449,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6059086011204151989, guid: c33dcbe4d031344428700f17f99f72fb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1267587507}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8631092819891695273, guid: c33dcbe4d031344428700f17f99f72fb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 118100867}
   m_SourcePrefab: {fileID: 100100000, guid: c33dcbe4d031344428700f17f99f72fb, type: 3}
 --- !u!4 &118100861 stripped
 Transform:
@@ -1477,6 +1480,36 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6059086011204151989, guid: c33dcbe4d031344428700f17f99f72fb, type: 3}
   m_PrefabInstance: {fileID: 118100860}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &118100865 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8631092819891695273, guid: c33dcbe4d031344428700f17f99f72fb, type: 3}
+  m_PrefabInstance: {fileID: 118100860}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &118100866 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2015938410377813117, guid: c33dcbe4d031344428700f17f99f72fb, type: 3}
+  m_PrefabInstance: {fileID: 118100860}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118100865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b3b93637643949c6b13614b01ccdb49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Unity::Game.Unity.SceneEntity
+--- !u!114 &118100867
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118100865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a39fad6328b344d40a441c8b0784f985, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Unity::Game.Unity.InspectableObject
+  entity: {fileID: 118100866}
+  inspectVisual: {fileID: 9163380046199488420, guid: af2598c40853a48148598d20e6a46ae5, type: 3}
 --- !u!1 &138988820
 GameObject:
   m_ObjectHideFlags: 0
@@ -9597,6 +9630,7 @@ MonoBehaviour:
   interaction: {fileID: 1251718586}
   sequence: {fileID: 523448625}
   inspection: {fileID: 616863757}
+  explorationEnabled: 1
 --- !u!1 &1311770931
 GameObject:
   m_ObjectHideFlags: 0

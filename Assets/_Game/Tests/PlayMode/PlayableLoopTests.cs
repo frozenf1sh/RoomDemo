@@ -35,6 +35,7 @@ namespace Game.Tests
 #endif
             yield return null;
             bootstrap = Object.FindAnyObjectByType<GameBootstrap>();
+            bootstrap.RestartLegacyForRegression(); // 保留旧样片的数据回归，正式新游戏使用探索规则。
             notebook = Object.FindAnyObjectByType<NotebookView>();
             input = Object.FindAnyObjectByType<InteractionSystem>();
             // 同时校验领域与真实场景的可观察表现，防止状态正确但画面未同步。

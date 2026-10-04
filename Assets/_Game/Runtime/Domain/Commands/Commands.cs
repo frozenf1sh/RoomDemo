@@ -14,6 +14,13 @@ namespace Game.Domain
         /// <summary>复制输入列表，防止调用方在提交后改变命令内容。</summary>
         public Combine(System.Collections.Generic.IReadOnlyList<ClueId> clues) { Clues = System.Array.AsReadOnly(System.Linq.Enumerable.ToArray(clues)); }
     }
+    /// <summary>玩家在有效检视状态下亲点细节；产出由领域内容表判断。</summary>
+    public readonly struct ObserveDetail : ICommand
+    {
+        public ObjectId Source { get; }
+        public string DetailId { get; }
+        public ObserveDetail(ObjectId source, string detail) { Source = source; DetailId = detail; }
+    }
     /// <summary>所有外部命令的轻量标记边界。</summary>
     public interface ICommand { }
     /// <summary>携带调查来源 ID 的命令。</summary>

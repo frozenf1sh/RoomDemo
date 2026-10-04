@@ -115,9 +115,11 @@ namespace Game.Unity
             view.ApplyState(Model.State, action.NextState != null); pageAudio.Play();
             if (action.ObservationId != null)
             {
-                // 领域发现接入在物体内容阶段实现；技术样板没有观察产出。
-                feedback.text = action.Hint;
-                observeAudio.Play();
+                // 输入只提交来源与细节，绝不在适配器中写 KnownClues。
+                var events = session.ObserveDetail(source.Entity.Id, action.ObservationId);
+                var failed = events.OfType<Game.Domain.InspectionFailed>().FirstOrDefault();
+                feedback.text = failed != null ? failed.Reason : events.OfType<Game.Domain.ObjectInspected>().Last().Description;
+                if (failed == null) observeAudio.Play();
             }
             else feedback.text = action.Hint;
             RefreshHotspots(); return true;

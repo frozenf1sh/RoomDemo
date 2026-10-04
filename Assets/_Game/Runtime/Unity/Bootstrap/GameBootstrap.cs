@@ -20,6 +20,12 @@ namespace Game.Unity
         [SerializeField] private InteractionSystem interaction;
         [SerializeField] private PaintingSeaSequence sequence;
         [SerializeField] private InspectionController inspection;
+        [SerializeField] private bool explorationEnabled;
+        private bool legacyRegression;
+        /// <summary>技术回归入口使用旧内容表；玩家的重开仍默认使用探索内容。</summary>
+        public void RestartLegacyForRegression() { legacyRegression = true; Restart(); }
+        /// <summary>由场景工具启用新流程，不把玩法规则分散进 Inspector。</summary>
+        public void ConfigureExploration(bool enabled) { explorationEnabled = enabled; }
         /// <summary>当前会话引用；重开与跳转会整体替换。</summary>
         public GameSession Session { get; private set; }
         /// <summary>由场景生成器显式注入组件引用。</summary>
@@ -35,9 +41,13 @@ namespace Game.Unity
             Restart(); UnityEngine.Application.targetFrameRate = 60; UnityEngine.Application.runInBackground = true;
         }
         /// <summary>创建全新会话并同步恢复所有表现。</summary>
-        public void Restart() => Bind(new GameSession(DemoRules.Create()));
+        public void Restart() => Bind(new GameSession(explorationEnabled && !legacyRegression ? ExplorationRules.Create() : DemoRules.Create()));
         /// <summary>先恢复新会话，再用它替换当前会话。</summary>
-        public void JumpTo(DebugPreset preset) => Bind(GameSession.FromPreset(DemoRules.Create(), preset));
+        public void JumpTo(DebugPreset preset)
+        {
+            bool exploration = explorationEnabled && !legacyRegression;
+            Bind(GameSession.FromPreset(exploration ? ExplorationRules.Create() : DemoRules.Create(), exploration ? ExplorationPresets.AdaptLegacy(preset) : preset));
+        }
         /// <summary>通过应用层添加事实，然后立即恢复最终表现。</summary>
         public void AddDebugFact(FactId fact)
         {
