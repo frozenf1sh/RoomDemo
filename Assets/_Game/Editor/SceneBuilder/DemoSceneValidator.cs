@@ -36,7 +36,8 @@ namespace Game.Editor
                     root.GetComponentsInChildren<InteractionSystem>(true).Length != 1 || root.GetComponentsInChildren<Camera>(true).Length != 1)
                     throw new InvalidOperationException("场景系统缺失或重复。");
                 var sequences = root.GetComponentsInChildren<PaintingSeaSequence>(true);
-                if (sequences.Length != 1 || root.GetComponentsInChildren<AudioListener>(true).Length != 1 || root.GetComponentsInChildren<Light>(true).Length < 4)
+                if (sequences.Length != 1 || root.GetComponentsInChildren<AudioListener>(true).Length != 1 || root.GetComponentsInChildren<Light>(true).Length < 4 || root.GetComponentsInChildren<BenchmarkReviewDriver>(true).Length != 1 ||
+                    root.GetComponentsInChildren<PresentationDebugView>(true).Length != 1)
                     throw new InvalidOperationException("演出导演、音频监听器或必要灯光缺失／重复。");
                 if (new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true)).FindProperty("sequence").objectReferenceValue != sequences[0])
                     throw new InvalidOperationException("启动组件未绑定唯一的海画演出导演。");

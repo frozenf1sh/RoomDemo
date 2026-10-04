@@ -18,10 +18,13 @@ namespace Game.Unity
         [SerializeField] private Text hoverText;
         private GameSession session;
         private NotebookView notebook;
+        private Clickable previousTarget;
+        private bool previousInspectable;
+        private bool hasHoverSnapshot;
         /// <summary>注入射线相机与悬停文本。</summary>
         public void Configure(Camera camera, Text hover) { viewCamera = camera; hoverText = hover; }
         /// <summary>绑定当前会话及笔记本遮挡状态。</summary>
-        public void Bind(GameSession game, NotebookView view) { session = game; notebook = view; }
+        public void Bind(GameSession game, NotebookView view) { session = game; notebook = view; hasHoverSnapshot = false; }
         /// <summary>查询射线首先命中的 Collider 上的交互组件。</summary>
         public Clickable FindClickable(Vector2 screenPoint)
         {
@@ -45,7 +48,13 @@ namespace Game.Unity
             bool blocked = notebook.IsOpen || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
             // 中文显示来源于内容定义；业务许可来源于状态查询。
-            hoverText.text = target == null ? "" : (session.IsInspectable(target.Entity.Id) ? "点击观察 / " : "暂时无法调查 / ") + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName.ToUpperInvariant();
+            bool inspectable = target != null && session.IsInspectable(target.Entity.Id);
+            // 只在目标或可调查状态变化时生成文字，避免悬停期间每帧 LINQ 与字符串分配。
+            if (!hasHoverSnapshot || target != previousTarget || inspectable != previousInspectable)
+            {
+                hasHoverSnapshot = true; previousTarget = target; previousInspectable = inspectable;
+                hoverText.text = target == null ? "" : (inspectable ? "点击观察 / " : "暂时无法调查 / ") + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName;
+            }
             if (!blocked && Mouse.current.leftButton.wasPressedThisFrame) InspectAt(Mouse.current.position.ReadValue());
         }
     }

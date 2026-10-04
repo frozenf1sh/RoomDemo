@@ -117,6 +117,11 @@ namespace Game.Editor
             sequence.Configure(painting, water, plant, window, ending);
             sequence.ConfigureWind(root.GetComponentInChildren<WindPresenter>(true));
             root.GetComponentInChildren<GameBootstrap>(true).ConfigureSequence(sequence);
+            // 原生复测入口显式绑定，只有开发者按键或专用命令行参数才运行。
+            var reviewNode = Ensure(Ensure(presentation, "Debug"), "BenchmarkReview");
+            var review = reviewNode.GetComponent<BenchmarkReviewDriver>();
+            if (review == null) review = reviewNode.gameObject.AddComponent<BenchmarkReviewDriver>();
+            review.Configure(root.GetComponentInChildren<GameBootstrap>(true), root.GetComponentInChildren<NotebookView>(true), sequence, painting, water, plant, window, ending);
             if (new SerializedObject(root.GetComponentInChildren<NotebookView>(true)).FindProperty("paperBody").objectReferenceValue == null) NotebookArtPass.Install(root);
             Save(root);
         }
