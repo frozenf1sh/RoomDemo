@@ -11,6 +11,17 @@ namespace Game.Editor
     /// <summary>具体主物体演出资源的编辑器配置入口。</summary>
     public static class HeroArtPass
     {
+        /// <summary>为水生化配置独立声音，视觉层继续使用统一材质。</summary>
+        [MenuItem("游戏/美术/绑定水生植物")]
+        public static void Plant()
+        {
+            var root = PresentationArtPass.Room();
+            var plant = root.GetComponentInChildren<PlantPresenter>(true);
+            plant.ConfigureAquaticAudio(AudioArtPass.Source(plant.transform, "Aquatic", false, .45f));
+            var grow = plant.transform.Find("GrowAudio").GetComponent<AudioSource>();
+            grow.spatialBlend = 1; grow.minDistance = 2.5f; grow.maxDistance = 15;
+            PresentationArtPass.Save(root);
+        }
         /// <summary>配置局部湿痕与第一滴水的单独音源，不添加游戏规则。</summary>
         [MenuItem("游戏/美术/绑定滴水与湿痕")]
         public static void Water()
