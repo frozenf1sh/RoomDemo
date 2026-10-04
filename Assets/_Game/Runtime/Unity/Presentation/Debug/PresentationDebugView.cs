@@ -17,6 +17,9 @@ namespace Game.Unity
         [SerializeField] private Button[] buttons;
         private string previousBeat;
         private int previousSecond = -1;
+        private bool developmentMode;
+        /// <summary>正式玩家不开放演出预览按键；面板只在显式开发模式可见。</summary>
+        public void SetDevelopmentMode(bool enabled) { developmentMode = enabled; if (!enabled) panel.SetActive(false); }
         /// <summary>由编辑器显式配置全部按钮和导演。</summary>
         public void Configure(PaintingSeaSequence director, GameObject body, Text label, Button[] controls)
         { sequence = director; panel = body; status = label; buttons = controls; }
@@ -30,6 +33,7 @@ namespace Game.Unity
         /// <summary>读取表现进度；只有节拍或整秒变化才刷新文字。</summary>
         private void Update()
         {
+            if (!developmentMode) return;
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f4Key.wasPressedThisFrame) panel.SetActive(!panel.activeSelf);
             // 窗口化只用于实际程序的截图和帧率评审，不改变游戏机位或世界状态。

@@ -23,6 +23,11 @@ namespace Game.Unity
         [SerializeField] private bool explorationEnabled;
         [SerializeField] private DayTransitionController dayTransition;
         [SerializeField] private StarryWorldSequence starrySequence;
+        [SerializeField] private bool developmentMode;
+        [SerializeField] private TextMesh[] worldLabels;
+        [SerializeField] private PresentationDebugView presentationDebug;
+        [SerializeField] private WorldDebugView worldDebug;
+        [SerializeField] private BenchmarkReviewDriver reviewDriver;
         private bool legacyRegression;
         /// <summary>技术回归入口使用旧内容表；玩家的重开仍默认使用探索内容。</summary>
         public void RestartLegacyForRegression() { legacyRegression = true; Restart(); }
@@ -30,6 +35,21 @@ namespace Game.Unity
         public void ConfigureExploration(bool enabled) { explorationEnabled = enabled; }
         /// <summary>当前会话引用；重开与跳转会整体替换。</summary>
         public GameSession Session { get; private set; }
+        /// <summary>显式开发开关；编辑器也默认使用正式玩家显示，不自动暴露调试键。</summary>
+        public bool DevelopmentMode => developmentMode;
+        /// <summary>技术工具显式注入标签与面板；没有每帧场景查找。</summary>
+        public void ConfigureDevelopmentTools(TextMesh[] labels, PresentationDebugView seaDebug, WorldDebugView worldTools, BenchmarkReviewDriver review)
+        { worldLabels = labels; presentationDebug = seaDebug; worldDebug = worldTools; reviewDriver = review; }
+        /// <summary>只调整开发显示和输入许可；不改变会话、配方或事实。</summary>
+        public void SetDevelopmentMode(bool enabled)
+        {
+            developmentMode = enabled;
+            if (worldLabels != null) foreach (var label in worldLabels) if (label != null) label.gameObject.SetActive(enabled);
+            debugView.SetDevelopmentMode(enabled);
+            if (presentationDebug != null) presentationDebug.SetDevelopmentMode(enabled);
+            if (worldDebug != null) worldDebug.SetDevelopmentMode(enabled);
+            if (reviewDriver != null) reviewDriver.SetDevelopmentMode(enabled);
+        }
         /// <summary>由场景生成器显式注入组件引用。</summary>
         public void Configure(WorldPresenter[] views, NotebookView notebookView, DebugView debug, InteractionSystem input)
         { presenters = views; notebook = notebookView; debugView = debug; interaction = input; }
@@ -52,6 +72,8 @@ namespace Game.Unity
         /// <summary>在表现组件缓存初始姿态后创建会话，并设置帧率。</summary>
         private void Awake()
         {
+            // 命令行开发参数是明确的调试入口，正常运行不开放 F 键。
+            SetDevelopmentMode(developmentMode || Array.IndexOf(Environment.GetCommandLineArgs(), "-roomDemoDevelopment") >= 0);
             Restart(); UnityEngine.Application.targetFrameRate = 60; UnityEngine.Application.runInBackground = true;
         }
         /// <summary>创建全新会话并同步恢复所有表现。</summary>
@@ -78,6 +100,20 @@ namespace Game.Unity
             // 同一个房间只有一个整体导演持有光照；先结清海画，再开始世界重构。
             if (sequence != null && sequence.IsPlaying) sequence.ApplyFinalStateImmediately();
             Session.DebugAddFact(ExplorationRules.WorldStarry);
+        }
+        /// <summary>只预览整体世界演出；先归还海画表现所有权，不添加星空事实。</summary>
+        public void PreviewStarryBenchmark()
+        {
+            if (inspection != null) inspection.Exit(false);
+            notebook.SetOpen(false);
+            ResetStarryPresentation(); starrySequence.PlayBenchmarkPreview();
+        }
+        /// <summary>归还星空借用的建筑，恢复原有物件表现；领域中的星空事实不撤销。</summary>
+        public void ResetStarryPresentation()
+        {
+            starrySequence.Cancel();
+            if (sequence != null) sequence.ApplyFinalStateImmediately();
+            else foreach (var view in presenters) view.ApplyState(Session.State, false);
         }
         /// <summary>统一重绑 Presenter、笔记本、调试面板与输入。</summary>
         private void Bind(GameSession session)

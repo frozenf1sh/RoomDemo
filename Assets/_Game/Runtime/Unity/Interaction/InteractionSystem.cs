@@ -21,6 +21,7 @@ namespace Game.Unity
         private NotebookView notebook;
         private Clickable previousTarget;
         private bool previousInspectable;
+        private bool previousKnown;
         private bool hasHoverSnapshot;
         /// <summary>注入射线相机与悬停文本。</summary>
         public void ConfigureInspection(InspectionController controller) { inspection = controller; }
@@ -53,11 +54,15 @@ namespace Game.Unity
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
             // 中文显示来源于内容定义；业务许可来源于状态查询。
             bool inspectable = target != null && session.IsInspectable(target.Entity.Id);
+            bool known = target != null && session.State.Knows(target.Entity.Id);
             // 只在目标或可调查状态变化时生成文字，避免悬停期间每帧 LINQ 与字符串分配。
-            if (!hasHoverSnapshot || target != previousTarget || inspectable != previousInspectable)
+            if (!hasHoverSnapshot || target != previousTarget || inspectable != previousInspectable || known != previousKnown)
             {
-                hasHoverSnapshot = true; previousTarget = target; previousInspectable = inspectable;
-                hoverText.text = target == null ? "" : (inspectable ? "点击观察 / " : "暂时无法调查 / ") + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName;
+                hasHoverSnapshot = true; previousTarget = target; previousInspectable = inspectable; previousKnown = known;
+                // 未成功观察前不替物体命名；名字是亲自看过之后留在笔记里的奖励。
+                hoverText.text = target == null ? "" : !inspectable ? "这里还藏着什么。"
+                    : !known ? (target.GetComponent<InspectableObject>() != null ? "拿近看看" : "仔细看看")
+                    : "再看看 · " + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName;
             }
             if (!blocked && Mouse.current.leftButton.wasPressedThisFrame) InspectAt(Mouse.current.position.ReadValue());
         }

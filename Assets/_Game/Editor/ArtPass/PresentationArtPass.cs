@@ -91,7 +91,22 @@ namespace Game.Editor
         }
         /// <summary>只补演出技术对象，不覆盖主物体的人工摆放和已绑定资源。</summary>
         [MenuItem("游戏/美术/补齐缺失技术对象")]
-        public static void CreateMissingTechnicalObjects() { InstallTechnicalObjects(Room()); }
+        public static void CreateMissingTechnicalObjects()
+        {
+            var root = Room(); InstallTechnicalObjects(root);
+            // 只有确实缺失的第四阶段适配器才创建；已有人工作品的模型与摆放原样保留。
+            if (root.GetComponentInChildren<InspectionController>(true) == null) ExplorationSceneSetup.InstallInspectionCore();
+            if (!root.GetComponentsInChildren<InspectableObject>(true).Any(x => x.Entity.Id == Game.Domain.DemoRules.Plant)) ExplorationSceneSetup.InstallPlantInspection();
+            if (!root.GetComponentsInChildren<InspectableObject>(true).Any(x => x.Entity.Id == Game.Domain.DemoRules.Book)) ExplorationSceneSetup.InstallBookInspection();
+            if (new SerializedObject(root.GetComponentInChildren<NotebookView>(true)).FindProperty("observationList").objectReferenceValue == null) ExplorationSceneSetup.InstallNotebookExploration();
+            if (root.GetComponentInChildren<DayTransitionController>(true) == null) ExplorationSceneSetup.InstallDayTransition();
+            if (root.GetComponentInChildren<RoomModules>(true) == null) WorldSceneSetup.ModularizeRoom();
+            if (root.GetComponentInChildren<WorldExterior>(true) == null) WorldSceneSetup.CreateExterior();
+            if (root.GetComponentInChildren<WorldMutation>(true) == null || root.GetComponentInChildren<VisualThemeController>(true) == null) WorldSceneSetup.InstallMutationTools();
+            if (root.GetComponentInChildren<StarryWorldSequence>(true) == null) WorldSceneSetup.InstallStarrySequence();
+            if (root.GetComponentInChildren<PlayerHudView>(true) == null || root.GetComponentInChildren<WorldDebugView>(true) == null) PlayerSceneSetup.InstallPlayerHud();
+            Save(root);
+        }
         /// <summary>给指定房间安装导演，独立灰盒也可复用此入口。</summary>
         public static void InstallTechnicalObjects(Transform root)
         {

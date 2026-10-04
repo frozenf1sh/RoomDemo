@@ -94,7 +94,7 @@ namespace Game.Editor
             Text3D("FirstText", pages[0].transform, "一盆静默的绿。\n\n土壤并没有停下。", new Vector3(-1.27f, .36f, -.076f), .09f, TextAnchor.UpperLeft);
             Text3D("Margin", pages[0].transform, "读下去，\n看看它朝向哪里。", new Vector3(.22f, .2f, -.076f), .08f, TextAnchor.UpperLeft);
             Text3D("QuoteStart", pages[1].transform, "枝叶仍", new Vector3(-1.28f, .40f, -.076f), .105f, TextAnchor.UpperLeft);
-            Text3D("QuoteWord", pages[1].transform, "向光", new Vector3(-1.28f, .12f, -.092f), .15f, TextAnchor.UpperLeft);
+            Text3D("QuoteWord", pages[1].transform, "向光", new Vector3(-1.28f, .12f, -.102f), .15f, TextAnchor.UpperLeft);
             Text3D("QuoteEnd", pages[1].transform, "处伸去。", new Vector3(-1.28f, -.20f, -.076f), .105f, TextAnchor.UpperLeft);
             // 热点放在短语下的细线位置，初始同纸色；悬停才出现轻微墨色反馈。
             var quote = Hotspot("Quote", pages[1].transform, "quote", new Vector3(-.97f, -.025f, -.085f), new Vector3(.63f, .34f, .018f), paper, Vector3.back);

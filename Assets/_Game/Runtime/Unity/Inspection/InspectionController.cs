@@ -86,10 +86,16 @@ namespace Game.Unity
             if (!IsOpen) return;
             // 立即清空状态并移除旧复制体，延迟销毁期间也不能再响应射线。
             clone.SetActive(false); Destroy(clone); clone = null; Model = null; source = null; hovered = null;
-            viewCamera.transform.localPosition = cameraPosition; viewCamera.transform.localRotation = cameraRotation;
-            viewCamera.cullingMask = cameraMask; viewCamera.clearFlags = cameraClear; viewCamera.backgroundColor = cameraBackground; viewCamera.farClipPlane = cameraFar;
-            overlay.SetActive(false); notebook.ExternalInputBlocked = false;
-            pickupAudio.Stop(); pageAudio.Stop(); observeAudio.Stop(); if (playSound) exitAudio.Play(); else exitAudio.Stop();
+            if (viewCamera != null)
+            {
+                viewCamera.transform.localPosition = cameraPosition; viewCamera.transform.localRotation = cameraRotation;
+                viewCamera.cullingMask = cameraMask; viewCamera.clearFlags = cameraClear; viewCamera.backgroundColor = cameraBackground; viewCamera.farClipPlane = cameraFar;
+            }
+            // 场景卸载期间相机、UI 或音源可能先销毁；归还仍存活的资源即可。
+            if (overlay != null) overlay.SetActive(false);
+            if (notebook != null) notebook.ExternalInputBlocked = false;
+            if (pickupAudio != null) pickupAudio.Stop(); if (pageAudio != null) pageAudio.Stop(); if (observeAudio != null) observeAudio.Stop();
+            if (exitAudio != null) { if (playSound) exitAudio.Play(); else exitAudio.Stop(); }
         }
         /// <summary>只旋转复制体，限制俯仰以便近距离阅读；不读取旋转推导世界状态。</summary>
         public void Rotate(Vector2 delta)
@@ -147,16 +153,17 @@ namespace Game.Unity
             if (!IsOpen || Mouse.current == null) return;
             var mouse = Mouse.current; var keyboard = Keyboard.current;
             if (mouse.rightButton.wasPressedThisFrame || (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)) { Exit(); return; }
-            Zoom(mouse.scroll.ReadValue().y);
+            float scroll = mouse.scroll.ReadValue().y; if (scroll != 0) Zoom(scroll);
             if (mouse.leftButton.wasPressedThisFrame) { pressAt = mouse.position.ReadValue(); pressTravel = 0; }
             if (mouse.leftButton.isPressed)
             {
                 pressTravel = Mathf.Max(pressTravel, Vector2.Distance(pressAt, mouse.position.ReadValue()));
                 if (pressTravel > 6) Rotate(mouse.delta.ReadValue());
             }
-            if (mouse.leftButton.wasReleasedThisFrame && pressTravel <= 6) ObserveAt(mouse.position.ReadValue());
+            bool overUi = UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+            if (!overUi && mouse.leftButton.wasReleasedThisFrame && pressTravel <= 6) ObserveAt(mouse.position.ReadValue());
             InspectionHotspot next = null;
-            if (Physics.Raycast(viewCamera.ScreenPointToRay(mouse.position.ReadValue()), out var hit, 12, 1 << InspectionLayer)) next = hit.collider.GetComponent<InspectionHotspot>();
+            if (!overUi && Physics.Raycast(viewCamera.ScreenPointToRay(mouse.position.ReadValue()), out var hit, 12, 1 << InspectionLayer)) next = hit.collider.GetComponent<InspectionHotspot>();
             if (next != hovered)
             {
                 if (hovered != null) hovered.SetHover(false); hovered = next;

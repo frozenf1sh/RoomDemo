@@ -46,11 +46,14 @@ namespace Game.Editor
                 if (starry.Length != 1 || root.GetComponentsInChildren<RoomModules>(true).Length != 1 ||
                     root.GetComponentsInChildren<WorldExterior>(true).Length != 1 || root.GetComponentsInChildren<WorldMutation>(true).Length != 1 ||
                     root.GetComponentsInChildren<VisualThemeController>(true).Length != 1 || root.GetComponentsInChildren<InspectionController>(true).Length != 1 ||
-                    root.GetComponentsInChildren<DayTransitionController>(true).Length != 1)
+                    root.GetComponentsInChildren<DayTransitionController>(true).Length != 1 || root.GetComponentsInChildren<PlayerHudView>(true).Length != 1 ||
+                    root.GetComponentsInChildren<WorldDebugView>(true).Length != 1)
                     throw new InvalidOperationException("检视、跨日、建筑模块、外景或星空导演缺失／重复。");
                 var gameBindings = new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true));
                 if (!gameBindings.FindProperty("explorationEnabled").boolValue || gameBindings.FindProperty("starrySequence").objectReferenceValue != starry[0])
                     throw new InvalidOperationException("主场景必须启用探索内容并绑定星空导演。");
+                if (gameBindings.FindProperty("developmentMode").boolValue)
+                    throw new InvalidOperationException("已保存的主场景必须默认使用正式玩家模式；开发时使用显式运行参数。");
                 float starryDuration = new SerializedObject(starry[0]).FindProperty("duration").floatValue;
                 if (!float.IsFinite(starryDuration) || starryDuration < 13.5f || starryDuration > 20)
                     throw new InvalidOperationException("星空演出应为 13.5～20 秒，且最后保留主题过渡时间。");

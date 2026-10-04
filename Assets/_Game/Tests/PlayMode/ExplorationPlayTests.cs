@@ -141,5 +141,25 @@ namespace Game.Tests
             Assert.That(copy == null, Is.True); Assert.That(inspection.IsOpen || notebook.ExternalInputBlocked, Is.False);
             Assert.That(bootstrap.Session.State.Facts, Is.Empty);
         }
+        /// <summary>默认玩家 HUD 不泄露物体名或开发键，显式开发开关仍可进入检视。</summary>
+        [UnityTest] public IEnumerator PlayerModeHidesLabelsAndDevelopmentToolsAreExplicit()
+        {
+            Assert.That(bootstrap.DevelopmentMode, Is.False);
+            Assert.That(Object.FindObjectsByType<TextMesh>().Length, Is.Zero);
+            var hud = notebook.transform.parent.Find("DebugCanvas");
+            var controls = hud.Find("Footer/Controls").GetComponent<UnityEngine.UI.Text>();
+            Assert.That(controls.text, Does.Not.Contain("F3").And.Not.Contain("F7"));
+            Assert.That(hud.Find("DebugPanel").gameObject.activeSelf || hud.Find("WorldTools").gameObject.activeSelf, Is.False);
+            bootstrap.SetDevelopmentMode(true); Assert.That(controls.text, Does.Contain("F7"));
+            Assert.That(Object.FindObjectsByType<TextMesh>().Length, Is.GreaterThan(0));
+            hud.Find("WorldTools").gameObject.SetActive(true);
+            hud.Find("WorldTools/WorldAction7").GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); yield return null;
+            Assert.That(inspection.IsOpen, Is.True); Assert.That(inspection.Model.State, Is.EqualTo("closed"));
+            Assert.That(hud.Find("Header/Title").gameObject.activeSelf, Is.False);
+            Assert.That(hud.Find("Header/OpenNotebook").gameObject.activeInHierarchy, Is.True);
+            inspection.Exit(); bootstrap.SetDevelopmentMode(false); yield return null;
+            Assert.That(Object.FindObjectsByType<TextMesh>().Length, Is.Zero);
+            Assert.That(hud.Find("Header/Title").gameObject.activeSelf, Is.True);
+        }
     }
 }

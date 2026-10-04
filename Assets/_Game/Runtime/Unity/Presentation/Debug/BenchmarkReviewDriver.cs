@@ -29,6 +29,9 @@ namespace Game.Unity
         private Coroutine running;
         private ReviewReport report;
         private readonly List<float> frames = new List<float>(8192);
+        private bool developmentMode;
+        /// <summary>正常玩家禁用复测热键；显式命令行复测仍然可单独启动。</summary>
+        public void SetDevelopmentMode(bool enabled) { developmentMode = enabled; }
         /// <summary>报告使用 Unity 的可写用户目录，不依赖启动程序时的工作目录。</summary>
         public string OutputDirectory => Path.Combine(UnityEngine.Application.persistentDataPath, "BenchmarkReview");
         /// <summary>由场景工具显式绑定全部引用，构建验证器会检查缺失绑定。</summary>
@@ -45,6 +48,7 @@ namespace Game.Unity
         /// <summary>只接受开发者明确的复测按键；没有每帧世界规则检查。</summary>
         private void Update()
         {
+            if (!developmentMode) return;
             var keyboard = Keyboard.current; if (keyboard == null) return;
             if (keyboard.f9Key.wasPressedThisFrame)
             {

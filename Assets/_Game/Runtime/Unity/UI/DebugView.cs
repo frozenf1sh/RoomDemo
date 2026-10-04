@@ -27,6 +27,8 @@ namespace Game.Unity
         [SerializeField] private Button addFactButton;
         [SerializeField] private InputField factInput;
         [SerializeField] private Button[] presetButtons;
+        [SerializeField] private Text controlsText;
+        private bool developmentMode;
         private GameSession session;
         // 保留少量事件便于排查；不以日志或界面文字作为世界真相。
         private readonly Queue<string> recent = new Queue<string>();
@@ -40,6 +42,16 @@ namespace Game.Unity
         /// <summary>注入调试按钮、事实输入框和预设按钮。</summary>
         public void ConfigureTools(Text observations, Button restart, Button reset, Button grant, Button add, InputField input, Button[] presets)
         { observationText = observations; restartButton = restart; resetButton = reset; grantButton = grant; addFactButton = add; factInput = input; presetButtons = presets; }
+        /// <summary>绑定玩家操作说明，正式模式不显示开发快捷键。</summary>
+        public void ConfigureControls(Text controls) { controlsText = controls; }
+        /// <summary>隐藏开发状态与 F 键；H 仍是玩家可选提示。</summary>
+        public void SetDevelopmentMode(bool enabled)
+        {
+            developmentMode = enabled; if (!enabled) panel.SetActive(false);
+            if (controlsText != null) controlsText.text = enabled
+                ? "右键转头 · 左键观察 · N 笔记本 · F3 状态 · F4 海画 · F7 世界／检视 · F6 海之前 · F8 窗口 · F9 复测"
+                : "右键拖动转头 · 左键拿近／观察 · N 笔记本 · H 轻提示";
+        }
         /// <summary>重绑当前会话与显式操作回调，刷新中文状态显示。</summary>
         public void Bind(GameSession game, Action restart, Action<DebugPreset> jump, Action<FactId> addFact, PaintingSeaSequence director = null)
         {
@@ -50,7 +62,17 @@ namespace Game.Unity
             // 所有操作都走显式应用层回调或 Session，UI 不写 GameObject 状态。
             Wire(restartButton, () => restart()); Wire(resetButton, () => restart()); Wire(grantButton, () => session.DebugGrantAllClues());
             Wire(addFactButton, () => { try { addFact(new FactId(factInput.text.Trim())); } catch (ArgumentException e) { eventText.text = e.Message; } });
-            for (int i = 0; i < presetButtons.Length; i++) { var preset = DebugPresets.All[i]; Wire(presetButtons[i], () => jump(preset)); }
+            var presets = session.Rules.Observations.Count > 0
+                ? ExplorationPresets.All.Concat(new[] { DebugPresets.BeforeSea, DebugPresets.Emergence }).ToArray()
+                : DebugPresets.All.ToArray();
+            for (int i = 0; i < presetButtons.Length; i++)
+            {
+                // 同一场景也承载旧 MVP 回归，额外探索按钮在旧内容表下隐藏。
+                presetButtons[i].gameObject.SetActive(i < presets.Length);
+                if (i >= presets.Length) continue;
+                var preset = presets[i]; presetButtons[i].GetComponentInChildren<Text>().text = preset.DisplayName;
+                Wire(presetButtons[i], () => jump(preset));
+            }
             Render();
         }
         /// <summary>替换按钮监听，避免 Restart 后重复执行。</summary>
@@ -67,7 +89,7 @@ namespace Game.Unity
             if (e is FactAdded fact && fact.Fact == DemoRules.WindEntering) observationText.text = "你没有解释风。长大的盆栽与通往远方的窗户开始相互回应，一张纸滑了出来。";
             if (e is FactAdded end && end.Fact == DemoRules.Complete && (presentation == null || !presentation.IsBenchmarkPending)) observationText.text = "静止的房间，已经有了自己的呼吸。";
             // 详细日志按运行环境开关，Release 中不输出冗余事件。
-            if ((UnityEngine.Application.isEditor || Debug.isDebugBuild) &&
+            if (developmentMode && (UnityEngine.Application.isEditor || Debug.isDebugBuild) &&
                 (e is ClueDiscovered || e is CombinationSucceeded || e is CombinationFailed || e is FactAdded || e is ReactionTriggered)) Debug.Log(e.ToString());
             Render();
         }
@@ -120,8 +142,8 @@ namespace Game.Unity
                 Render();
             }
             var keyboard = Keyboard.current; if (keyboard == null || factInput.isFocused) return;
-            if (keyboard.f6Key.wasPressedThisFrame) jumpTo(DebugPresets.BeforeSea);
-            if (keyboard.f3Key.wasPressedThisFrame) panel.SetActive(!panel.activeSelf);
+            if (developmentMode && keyboard.f6Key.wasPressedThisFrame) jumpTo(DebugPresets.BeforeSea);
+            if (developmentMode && keyboard.f3Key.wasPressedThisFrame) panel.SetActive(!panel.activeSelf);
             if (keyboard.hKey.wasPressedThisFrame) { showHint = !showHint; Render(); }
         }
         /// <summary>解除会话事件监听。</summary>

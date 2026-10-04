@@ -88,6 +88,7 @@ namespace Game.Editor
             // 同时附带模型许可和中文来源清单，使试玩包可以独立核对第三方来源。
             File.Copy("Assets/ThirdParty/LICENSES.md", Path.Combine(Path.GetDirectoryName(output), "第三方素材来源.md"), true);
             File.Copy("Assets/ThirdParty/Kenney/FurnitureKit/License.txt", Path.Combine(Path.GetDirectoryName(output), "模型许可原文.txt"), true);
+            File.Copy("Assets/ThirdParty/Kenney/NatureKit/License.txt", Path.Combine(Path.GetDirectoryName(output), "自然素材许可原文.txt"), true);
             Debug.Log("命令行构建：成功，输出位于 " + output);
         }
         /// <summary>读取 Unity 进程的命令行参数，支持显式构建目标。</summary>
