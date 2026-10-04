@@ -101,6 +101,7 @@ namespace Game.Editor
                 var filter = layer.GetComponent<MeshFilter>(); if (filter == null) filter = layer.gameObject.AddComponent<MeshFilter>();
                 var renderer = layer.GetComponent<MeshRenderer>(); if (renderer == null) renderer = layer.gameObject.AddComponent<MeshRenderer>();
                 filter.sharedMesh = modelMesh; renderer.sharedMaterial = wet;
+                layer.gameObject.SetActive(true);
                 layer.localScale = Vector3.one * .14f;
                 layer.localPosition = new Vector3(-.15f + i * .08f, .28f, -.17f);
                 layer.localRotation = Quaternion.Euler(0, i * 120, (i - 1) * 12);
@@ -115,15 +116,17 @@ namespace Game.Editor
             found.localPosition = position; found.localScale = scale; found.GetComponent<Renderer>().sharedMaterial = material; return found;
         }
         /// <summary>生成两面可见的弯曲叶片，复用单个网格资产。</summary>
-        private static Mesh LeafMesh()
+        public static Mesh LeafMesh()
         {
             const string path = "Assets/_Game/Content/Art/Models/Leaf.asset";
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (mesh == null) { mesh = new Mesh { name = "弯曲叶片" }; AssetDatabase.CreateAsset(mesh, path); }
-            mesh.vertices = new[] { new Vector3(0, 0, -.5f), new Vector3(-.45f, .06f, 0), new Vector3(0, .20f, .1f), new Vector3(.45f, .06f, 0), new Vector3(0, .10f, .65f) };
-            mesh.uv = new[] { new Vector2(.5f, 0), new Vector2(0, .5f), new Vector2(.5f, .55f), new Vector2(1, .5f), new Vector2(.5f, 1) };
-            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3, 1, 4, 2, 2, 4, 3, 2, 1, 0, 3, 2, 0, 2, 4, 1, 3, 4, 2 };
+            var vertices = new[] { new Vector3(0, 0, -.5f), new Vector3(-.45f, .06f, 0), new Vector3(0, .20f, .1f), new Vector3(.45f, .06f, 0), new Vector3(0, .10f, .65f) };
+            var uv = new[] { new Vector2(.5f, 0), new Vector2(0, .5f), new Vector2(.5f, .55f), new Vector2(1, .5f), new Vector2(.5f, 1) };
+            // 背面使用独立顶点，避免相反三角形法线相消导致叶片发黑。
+            mesh.vertices = vertices.Concat(vertices).ToArray(); mesh.uv = uv.Concat(uv).ToArray();
+            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3, 1, 4, 2, 2, 4, 3, 7, 6, 5, 8, 7, 5, 7, 9, 6, 8, 9, 7 };
             mesh.RecalculateNormals(); mesh.RecalculateBounds(); EditorUtility.SetDirty(mesh); return mesh;
         }
     }

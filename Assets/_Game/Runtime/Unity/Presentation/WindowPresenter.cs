@@ -1,45 +1,83 @@
 // =============================================================================
 // 文件：WindowPresenter.cs
-// 职责：根据事实选择近景、远方或海洋，并表现海景展开。
-// 边界：只读 window.far 与 window.ocean，不自行推导海洋反应。
+// 职责：表现闭塞近景、远方和海景，让原野连续被海平线取代。
+// 边界：只设置视觉层与 Shader 目标；不通过时间或动画产生 window.ocean。
 // =============================================================================
 using Game.Domain;
 using UnityEngine;
 namespace Game.Unity
 {
-    /// <summary>根据事实选择近景、远方或海洋，并表现海景展开。</summary>
+    /// <summary>窗外三个层级与海景的连续覆盖，不用缩放窗口制造过渡。</summary>
     public sealed class WindowPresenter : WorldPresenter
     {
         [SerializeField] private GameObject nearBackground;
         [SerializeField] private GameObject farBackground;
         [SerializeField] private GameObject oceanBackground;
-        private float reveal;
-        private bool ocean;
-        /// <summary>远方视觉层，仅供表现与场景验证。</summary>
+        [SerializeField] private AudioSource oceanAudio;
+        private Renderer surface;
+        private MaterialPropertyBlock block;
+        private float reveal, target;
+        /// <summary>远方背景层，供场景绑定与表现验证使用。</summary>
         public GameObject FarBackground => farBackground;
-        /// <summary>海洋视觉层，仅供表现与场景验证。</summary>
+        /// <summary>海景覆盖层，始终保持真实窗口比例。</summary>
         public GameObject OceanBackground => oceanBackground;
-        /// <summary>注入近景、远景与海景三个独立视觉层。</summary>
-        public void Configure(GameObject near, GameObject far, GameObject sea) { nearBackground = near; farBackground = far; oceanBackground = sea; }
-        /// <summary>接收远方或海洋事实，重新选择视觉层。</summary>
-        protected override void OnFact(FactId fact) { if (fact == DemoRules.WindowFar || fact == DemoRules.WindowOcean) ApplyState(Session.State, true); }
-        /// <summary>根据已成立事实选择层级，恢复时海景直接完全展开。</summary>
+        /// <summary>已经展现的海景覆盖进度，不是领域状态。</summary>
+        public float OceanProgress => reveal;
+        /// <summary>注入近、远、海三个视觉层。</summary>
+        public void Configure(GameObject near, GameObject far, GameObject sea)
+        { nearBackground = near; farBackground = far; oceanBackground = sea; }
+        /// <summary>注入来自窗外的声音，引导玩家自行转头。</summary>
+        public void ConfigureOceanAudio(AudioSource audio) { oceanAudio = audio; }
+        /// <summary>初始化缓存海景表面和属性块，不每帧搜索层级。</summary>
+        private void Awake()
+        {
+            surface = oceanBackground.transform.Find("OceanSky").GetComponent<Renderer>();
+            block = new MaterialPropertyBlock();
+        }
+        /// <summary>远方与海景有独立入口；导演只延迟海景节拍。</summary>
+        protected override void OnFact(FactId fact)
+        {
+            if (fact == DemoRules.WindowFar) ShowFar();
+            if (fact == DemoRules.WindowOcean) PlayOceanTransition();
+        }
+        /// <summary>打开远方视野；增加自然光由灯光表现负责。</summary>
+        public void ShowFar()
+        {
+            nearBackground.SetActive(false); farBackground.SetActive(true); oceanBackground.SetActive(false);
+            reveal = target = 0; SetParameters();
+        }
+        /// <summary>从同一原野开始连续变海，声音先提示窗外有异常。</summary>
+        public void PlayOceanTransition()
+        {
+            nearBackground.SetActive(false); farBackground.SetActive(true); oceanBackground.SetActive(true);
+            target = 1; oceanAudio.Play();
+        }
+        /// <summary>立即恢复视觉终态；跳转不重播一次性窗外音效。</summary>
+        public void SetFinalVisual(bool far, bool ocean)
+        {
+            target = reveal = ocean ? 1 : 0;
+            nearBackground.SetActive(!far && !ocean); farBackground.SetActive(far && !ocean); oceanBackground.SetActive(ocean);
+            oceanBackground.transform.localScale = Vector3.one; oceanAudio.Stop(); SetParameters();
+        }
+        /// <summary>事实恢复与视觉预览共用参数路径，恢复模式取消旧过渡。</summary>
         public override void ApplyState(GameState state, bool animate)
         {
-            // 直接读两个独立事实，海景在表现层覆盖远景。
-            bool far = state.HasFact(DemoRules.WindowFar); ocean = state.HasFact(DemoRules.WindowOcean);
-            // 激活状态只是表现，不能作为领域条件读回。
-            nearBackground.SetActive(!far && !ocean); farBackground.SetActive(far && !ocean); oceanBackground.SetActive(ocean);
-            // 恢复时完全展开海景；初始状态保留近乎零的视觉缩放。
-            if (!animate) reveal = ocean ? 1 : 0;
-            oceanBackground.transform.localScale = new Vector3(1, Mathf.Max(.001f, reveal), 1);
+            if (!animate) SetFinalVisual(state.HasFact(DemoRules.WindowFar), state.HasFact(DemoRules.WindowOcean));
+            else if (state.HasFact(DemoRules.WindowOcean)) PlayOceanTransition();
+            else if (state.HasFact(DemoRules.WindowFar)) ShowFar();
         }
-        /// <summary>仅推进海景展开动画，不读取时间来触发事实。</summary>
+        /// <summary>只推进已启动的海面覆盖，不查询或执行规则。</summary>
         private void Update()
         {
-            if (!ocean || reveal >= 1) return;
-            reveal = Mathf.MoveTowards(reveal, 1, Time.deltaTime / 2.5f);
-            oceanBackground.transform.localScale = new Vector3(1, Mathf.Max(.001f, reveal), 1);
+            reveal = Mathf.MoveTowards(reveal, target, Time.deltaTime / 3);
+            if (reveal >= 1) farBackground.SetActive(false);
+            SetParameters();
+        }
+        /// <summary>复用属性块，远方与海景使用相同画面坐标以免切换跳动。</summary>
+        private void SetParameters()
+        {
+            block.Clear(); block.SetFloat(ShaderIds.Transition, reveal); block.SetFloat(ShaderIds.Wetness, 0);
+            block.SetFloat(ShaderIds.Emission, reveal * .15f); surface.SetPropertyBlock(block);
         }
     }
 }

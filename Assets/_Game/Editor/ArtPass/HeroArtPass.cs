@@ -11,6 +11,21 @@ namespace Game.Editor
     /// <summary>具体主物体演出资源的编辑器配置入口。</summary>
     public static class HeroArtPass
     {
+        /// <summary>让远方和海景共享连续表面，保留窗口原始比例。</summary>
+        [MenuItem("游戏/美术/绑定海窗过渡")]
+        public static void Window()
+        {
+            var root = PresentationArtPass.Room();
+            var window = root.GetComponentInChildren<WindowPresenter>(true);
+            var material = SurfaceArtPass.Material("Effects", "M_WindowOcean", Color.white);
+            material.shader = Shader.Find("RoomDemo/PaintingSea"); material.SetFloat("_CanvasMode", 0); material.SetFloat("_Transition", 0); material.SetFloat("_EdgeBlend", 0);
+            window.OceanBackground.transform.Find("OceanSky").GetComponent<Renderer>().sharedMaterial = material;
+            foreach (Transform child in window.OceanBackground.transform) if (child.name != "OceanSky") child.gameObject.SetActive(false);
+            window.FarBackground.transform.Find("Sky").GetComponent<Renderer>().sharedMaterial = material;
+            foreach (Transform child in window.FarBackground.transform) if (child.name != "Sky") child.gameObject.SetActive(false);
+            window.ConfigureOceanAudio(AudioArtPass.Source(window.transform, "Ocean", false, .5f));
+            PresentationArtPass.Save(root);
+        }
         /// <summary>为水生化配置独立声音，视觉层继续使用统一材质。</summary>
         [MenuItem("游戏/美术/绑定水生植物")]
         public static void Plant()
