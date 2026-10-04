@@ -1,0 +1,16 @@
+{
+  "result": "Succeeded",
+  "runs": 10,
+  "success_count": 10,
+  "fps_range": [
+    59.330135345458984,
+    59.5305290222168
+  ],
+  "p99_range_ms": [
+    17.592998504638672,
+    19.852294921875
+  ],
+  "maximum_frame_ms": 44.2467041015625,
+  "gen0_collections": 0,
+  "all_state_counts_match": true
+}
