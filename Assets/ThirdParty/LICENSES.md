@@ -35,3 +35,13 @@
 
 | 资源名称 | 来源链接 | 许可 | 下载日期 | 文件与大小 |
 | --- | --- | --- | --- | --- |
+
+## Kenney 水生植物视觉原型
+
+- 资产名：Furniture Kit / pottedPlant。
+- 来源：Kenney；[资产页面](https://kenney.nl/assets/furniture-kit)。2026-10-04 已重新核实页面明确标注 CC0。
+- 许可：Creative Commons Zero（CC0），原文保留在 `Kenney/FurnitureKit/License.txt`。
+- 下载日期：2026-10-04。
+- 格式与大小：FBX，23,744 字节。官方压缩包约 4.9 MiB，仅导入这一个模型与许可证。
+- 使用位置：盆栽水生化附加叶片的视觉原型；材质由项目统一提供，模型不承担交互逻辑。
+- 比较记录：Poly Haven 的 Potted Plant 01 当前页面默认下载约 264 MB、96K 三角形；本次采用轻量统一风格方案。
