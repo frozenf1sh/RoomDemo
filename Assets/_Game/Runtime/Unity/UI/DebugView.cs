@@ -30,7 +30,9 @@ namespace Game.Unity
         private GameSession session;
         // 保留少量事件便于排查；不以日志或界面文字作为世界真相。
         private readonly Queue<string> recent = new Queue<string>();
-        private bool showHint;
+        private bool showHint, waitedForBenchmark;
+        private PaintingSeaSequence presentation;
+        private Action<DebugPreset> jumpTo;
         /// <summary>玩家当前看到的中文引导文案。</summary>
         public string Objective => objectiveText.text;
         /// <summary>注入状态区、事件区与玩家引导文本。</summary>
@@ -39,8 +41,9 @@ namespace Game.Unity
         public void ConfigureTools(Text observations, Button restart, Button reset, Button grant, Button add, InputField input, Button[] presets)
         { observationText = observations; restartButton = restart; resetButton = reset; grantButton = grant; addFactButton = add; factInput = input; presetButtons = presets; }
         /// <summary>重绑当前会话与显式操作回调，刷新中文状态显示。</summary>
-        public void Bind(GameSession game, Action restart, Action<DebugPreset> jump, Action<FactId> addFact)
+        public void Bind(GameSession game, Action restart, Action<DebugPreset> jump, Action<FactId> addFact, PaintingSeaSequence director = null)
         {
+            presentation = director; jumpTo = jump; waitedForBenchmark = false;
             if (session != null) session.EventRaised -= OnEvent;
             session = game; session.EventRaised += OnEvent; recent.Clear(); eventText.text = ""; showHint = false;
             observationText.text = "环顾房间，收集观察到的碎片，再将意义赋予这里。按 H 查看提示。";
@@ -58,10 +61,11 @@ namespace Game.Unity
             recent.Enqueue(e.ToString()); while (recent.Count > 5) recent.Dequeue(); eventText.text = string.Join("\n", recent);
             if (e is ObjectInspected inspected) observationText.text = inspected.Description;
             if (e is InspectionFailed failed) observationText.text = failed.Reason;
+            if (e is CombinationSucceeded) { waitedForBenchmark = presentation != null && presentation.IsBenchmarkPending; }
             if (e is CombinationSucceeded) observationText.text = "你的解释已成为房间的一部分。找找发生了什么变化。";
             // 玩家引导只是对已发生事实的解释，不能触发下一步规则。
             if (e is FactAdded fact && fact.Fact == DemoRules.WindEntering) observationText.text = "你没有解释风。长大的盆栽与通往远方的窗户开始相互回应，一张纸滑了出来。";
-            if (e is FactAdded end && end.Fact == DemoRules.Complete) observationText.text = "海触及了你先前建立的意义。你没有再次解释，盆栽与窗户却自行改变了。";
+            if (e is FactAdded end && end.Fact == DemoRules.Complete && (presentation == null || !presentation.IsBenchmarkPending)) observationText.text = "海触及了你先前建立的意义。你没有再次解释，盆栽与窗户却自行改变了。";
             // 详细日志按运行环境开关，Release 中不输出冗余事件。
             if ((UnityEngine.Application.isEditor || Debug.isDebugBuild) &&
                 (e is ClueDiscovered || e is CombinationSucceeded || e is CombinationFailed || e is FactAdded || e is ReactionTriggered)) Debug.Log(e.ToString());
@@ -78,7 +82,8 @@ namespace Game.Unity
                 "\n\n已触发的反应\n" + string.Join("\n", s.FiredReactions.OrderBy(x => x).Select(x => DemoText.Reaction(x) + "（" + x + "）"));
             if (UnityEngine.Application.isEditor || Debug.isDebugBuild)
                 stateText.text += "\n\n当前可用的配方\n" + string.Join("\n", session.Rules.AvailableRecipes(s).Select(RecipeName));
-            objectiveText.text = s.HasFact(DemoRules.Complete) ? "房间记得。三次解释，一个开始回应的世界。"
+            objectiveText.text = presentation != null && presentation.IsBenchmarkPending ? "你将海赋予画。房间正在回应。"
+                : s.HasFact(DemoRules.Complete) ? "房间记得。三次解释，一个开始回应的世界。"
                 : s.Knows(DemoRules.Sea) && !s.Knows(DemoRules.Painting) ? "已收集海。请先点击观察墙上的画。"
                 : s.Knows(DemoRules.Sea) ? (showHint ? "提示：在笔记本中组合「海 + 画」。" : "纸上有一片海。什么能够容纳它？")
                 : s.HasFact(DemoRules.PaperRevealed) ? "风吹出了一张纸。调查地毯上的纸张。"
@@ -97,7 +102,15 @@ namespace Game.Unity
         /// <summary>处理调试开关与提示键；事实输入框聚焦时不抢按键。</summary>
         private void Update()
         {
+            // 等视觉完成再给玩家结束文字；调试事实列表仍即时反映领域真相。
+            if (waitedForBenchmark && presentation != null && !presentation.IsBenchmarkPending)
+            {
+                waitedForBenchmark = false;
+                observationText.text = "海触及了你先前建立的意义。你没有再次解释，盆栽与窗户却自行改变了。";
+                Render();
+            }
             var keyboard = Keyboard.current; if (keyboard == null || factInput.isFocused) return;
+            if (keyboard.f6Key.wasPressedThisFrame) jumpTo(DebugPresets.BeforeSea);
             if (keyboard.f3Key.wasPressedThisFrame) panel.SetActive(!panel.activeSelf);
             if (keyboard.hKey.wasPressedThisFrame) { showHint = !showHint; Render(); }
         }

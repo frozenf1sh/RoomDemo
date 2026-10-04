@@ -114,6 +114,7 @@ namespace Game.Editor
             var sequence = node.GetComponent<PaintingSeaSequence>(); if (sequence == null) sequence = node.gameObject.AddComponent<PaintingSeaSequence>();
             sequence.Configure(painting, water, plant, window, ending);
             root.GetComponentInChildren<GameBootstrap>(true).ConfigureSequence(sequence);
+            if (new SerializedObject(root.GetComponentInChildren<NotebookView>(true)).FindProperty("paperBody").objectReferenceValue == null) NotebookArtPass.Install(root);
             Save(root);
         }
         /// <summary>离线渲染固定观察机位，用于前后构图比较；不代表实际玩家帧率。</summary>

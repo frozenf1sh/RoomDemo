@@ -49,6 +49,17 @@ namespace Game.Tests
             var center = entity.GetComponent<Collider>().bounds.center;
             return input.InspectAt(Camera.main.WorldToScreenPoint(center));
         }
+        /// <summary>真实布局必须给标题按钮的中文留足行高，防止缩小栏后文字变空白。</summary>
+        [UnityTest] public IEnumerator HeaderButtonLabelsFitTheirActualRects()
+        {
+            Canvas.ForceUpdateCanvases(); yield return null;
+            foreach (var name in new[] { "OpenNotebook", "Restart" })
+            {
+                var text = FindButton(name).GetComponentInChildren<Text>();
+                Assert.That(text.preferredHeight, Is.GreaterThan(0));
+                Assert.That(text.preferredHeight, Is.LessThanOrEqualTo(text.rectTransform.rect.height + .1f), name);
+            }
+        }
         /// <summary>首次获取有完整通知与实际按钮闪烁，打开即确认，重复观察不重新提醒。</summary>
         [UnityTest] public IEnumerator DiscoveryNoticeBlinksUntilReadAndRestartClearsIt()
         {

@@ -47,7 +47,7 @@ namespace Game.Unity
         {
             Cancel();
             if (session != null) session.EventRaised -= OnEvent;
-            session = game; presenters = views;
+            session = game; presenters = views; preview = false;
             finalShown = session.State.HasFact(DemoRules.PaintingSea);
             session.EventRaised += OnEvent;
             CurrentBeat = finalShown ? "即时恢复" : "静止";
@@ -67,7 +67,9 @@ namespace Game.Unity
         /// <summary>播放已经成立的海画解释，不在导演中补充缺少的前置状态。</summary>
         public void PlayAnimated()
         {
-            if (IsPlaying || session == null || !session.State.HasFact(DemoRules.PaintingSea)) return;
+            if ((IsPlaying && !preview) || session == null || !session.State.HasFact(DemoRules.PaintingSea)) return;
+            // 若玩家在调试预览中提交真实解释，取消预览并转交正式演出。
+            if (preview) ResetPresentation();
             preview = false; finalShown = false; Begin();
         }
         /// <summary>开始协程前设置播放标志，确保同一轮后续事实不会立即表现。</summary>

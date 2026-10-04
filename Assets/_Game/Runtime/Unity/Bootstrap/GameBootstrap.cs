@@ -52,7 +52,7 @@ namespace Game.Unity
             Func<FactId, bool> filter = sequence == null ? (Func<FactId, bool>)null : sequence.ShouldPresentImmediately;
             foreach (var view in presenters) view.Bind(Session, filter);
             if (sequence != null) sequence.Bind(Session, presenters);
-            notebook.Bind(Session); debugView.Bind(Session, Restart, JumpTo, AddDebugFact); interaction.Bind(Session, notebook);
+            notebook.Bind(Session); debugView.Bind(Session, Restart, JumpTo, AddDebugFact, sequence); interaction.Bind(Session, notebook);
         }
     }
 }

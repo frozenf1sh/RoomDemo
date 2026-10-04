@@ -28,6 +28,13 @@ namespace Game.Unity
         [SerializeField] private Text completedText;
         [SerializeField] private GameObject discoveryPanel;
         [SerializeField] private Text discoveryText;
+        [SerializeField] private RectTransform paperBody;
+        [SerializeField] private CanvasGroup paperCanvas;
+        [SerializeField] private Image relationLine;
+        [SerializeField] private AudioSource paperAudio;
+        [SerializeField] private AudioSource inkAudio;
+        [SerializeField] private AudioSource scratchAudio;
+        private float openedAt, connectedAt = -1;
         // 仅保存临时界面选择，KnownClues 与配方历史从 Session 读取。
         private readonly ClueId?[] selected = new ClueId?[3];
         private GameSession session;
@@ -57,6 +64,9 @@ namespace Game.Unity
             discoveryPanel = notice;
             discoveryText = text;
         }
+        /// <summary>配置纸页过渡、连接墨线与轻反馈声音；仅为界面演出。</summary>
+        public void ConfigurePresentation(RectTransform body, CanvasGroup group, Image line, AudioSource paper, AudioSource ink, AudioSource scratch)
+        { paperBody = body; paperCanvas = group; relationLine = line; paperAudio = paper; inkAudio = ink; scratchAudio = scratch; }
         /// <summary>重绑会话与按钮，清空临时选择并重新建立只读视图。</summary>
         /// <param name="game">新的应用层会话；可以是初始会话或已经恢复的调试会话。</param>
         /// <remarks>本组件拥有这些按钮的监听；重绑必须先移除旧监听与旧会话订阅。</remarks>
@@ -64,7 +74,9 @@ namespace Game.Unity
         {
             // 重开或预设跳转时先解绑旧会话，避免旧事件修改新界面。
             if (session != null) session.EventRaised -= OnEvent;
-            session = game; session.EventRaised += OnEvent; closeAt = -1; ClearSelection(); SetOpen(false);
+            session = game; session.EventRaised += OnEvent; closeAt = -1; ClearSelection();
+            // 重开与预设跳转不播放翻页声，也不能留下上一会话的声音。
+            paperAudio.Stop(); inkAudio.Stop(); scratchAudio.Stop(); SetOpen(false, false);
             // 只缓存一次原始按钮样式；重开时不能把上一会话的闪烁颜色当作初始颜色。
             if (!buttonColorsCaptured)
             {
@@ -83,9 +95,13 @@ namespace Game.Unity
             feedbackText.text = "点击已收集的碎片，填入最多三个组合槽；点击已填槽位可清除选择。"; Render();
         }
         /// <summary>只修改笔记本界面开关。</summary>
-        public void SetOpen(bool open)
+        public void SetOpen(bool open, bool playSound = true)
         {
+            bool changed = panel.activeSelf != open;
             panel.SetActive(open);
+            if (changed && playSound) paperAudio.Play();
+            openedAt = Time.unscaledTime; connectedAt = -1; relationLine.enabled = false;
+            paperBody.localScale = Vector3.one; paperCanvas.alpha = 0;
             // 打开即可确认已看到新收集的条目；关闭笔记本不会凭空产生未读提醒。
             if (open) ClearDiscoveryReminder();
         }
@@ -100,7 +116,7 @@ namespace Game.Unity
         public void SelectClue(ClueId clue)
         {
             if (!session.State.Knows(clue)) return;
-            closeAt = -1;
+            closeAt = -1; connectedAt = -1; relationLine.enabled = false;
             // 同一碎片只能占一个槽，再次点击会取消；这只是输入组织。
             int existing = System.Array.FindIndex(selected, x => x.HasValue && x.Value == clue);
             if (existing >= 0) selected[existing] = null;
@@ -125,11 +141,15 @@ namespace Game.Unity
             }
             if (e is ObjectInspected inspected) feedbackText.text = inspected.Description;
             if (e is InspectionFailed inspectFailed) feedbackText.text = inspectFailed.Reason;
-            if (e is CombinationFailed failed) { feedbackText.text = failed.Reason; selectionText.color = new Color(.62f, .25f, .21f); closeAt = -1; }
+            if (e is CombinationFailed failed) { feedbackText.text = failed.Reason; selectionText.color = new Color(.42f, .35f, .27f); closeAt = -1; relationLine.enabled = false; scratchAudio.Play(); }
             // 成功时世界已经开始响应；界面强调后短暂延时收起。
             if (e is CombinationSucceeded)
             {
-                feedbackText.text = "解释已成立。看看房间如何记住它。";
+                feedbackText.text = "笔迹相连。看看房间正在回应什么。";
+                connectedAt = Time.unscaledTime; relationLine.enabled = true; inkAudio.Play();
+                // 只根据实际输入数量连接已填槽位，不读取配方答案。
+                relationLine.rectTransform.anchorMin = new Vector2(1f / 6, .27f);
+                relationLine.rectTransform.anchorMax = new Vector2(1f / 6 + (SelectedClues.Count - 1) / 3f, .274f);
                 selectionText.text = string.Join("  ─  ", SelectedClues.Select(Label)); selectionText.color = new Color(.75f, .43f, .10f);
                 closeAt = Time.unscaledTime + .65f; RenderHistory();
             }
@@ -202,14 +222,26 @@ namespace Game.Unity
         /// <summary>刷新槽位与提交许可，只校验输入数量。</summary>
         private void RenderSelection()
         {
+            relationLine.enabled = false;
             selectionText.text = "组合已收集的意义"; selectionText.color = new Color(.1f, .15f, .19f);
             for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) + "  ×" : i == 2 ? "+ 可选碎片" : "+ 选择碎片";
             interpretButton.interactable = SelectedClues.Count >= 2;
+        }
+        /// <summary>纸页轻展开，成功时墨线连接并在最后短暂合页；没有配方判断。</summary>
+        private void UpdatePaperRitual()
+        {
+            if (!IsOpen) return;
+            float opening = Mathf.Clamp01((Time.unscaledTime - openedAt) / .22f);
+            float closing = closeAt > 0 ? Mathf.Clamp01((Time.unscaledTime - closeAt + .20f) / .20f) : 0;
+            paperCanvas.alpha = opening * (1 - closing);
+            paperBody.localScale = new Vector3(.97f + opening * .03f - closing * .14f, .985f + opening * .015f - closing * .025f, 1);
+            if (connectedAt >= 0) relationLine.rectTransform.localScale = new Vector3(Mathf.Clamp01((Time.unscaledTime - connectedAt) / .38f), 1, 1);
         }
         /// <summary>处理面板按键与成功后收起；输入框编辑时不抢占键盘。</summary>
         private void Update()
         {
             UpdateDiscoveryFeedback();
+            UpdatePaperRitual();
             if (closeAt > 0 && Time.unscaledTime >= closeAt) { closeAt = -1; SetOpen(false); ClearSelection(); RenderSelection(); }
             var keyboard = Keyboard.current; if (keyboard == null) return;
             var focused = UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject;

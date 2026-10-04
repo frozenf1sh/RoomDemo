@@ -93,6 +93,16 @@ namespace Game.Tests
             yield return new WaitForSecondsRealtime(.7f);
             Assert.That(window.OceanProgress, Is.EqualTo(1));
         }
+        /// <summary>正式解释会接管调试预览，防止真实演出结束后一直显示未完成。</summary>
+        [UnityTest] public IEnumerator RealInterpretationTakesOverAnActivePreview()
+        {
+            bootstrap.JumpTo(DebugPresets.BeforeSea);
+            sequence.PlayBenchmarkPreview(); yield return new WaitForSecondsRealtime(1.5f);
+            bootstrap.Session.Combine(new[] { new ClueId("sea"), new ClueId("painting") });
+            Assert.That(sequence.IsPlaying); Assert.That(sequence.Elapsed, Is.LessThan(.1f));
+            Assert.That(painting.TransitionProgress, Is.Zero); Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete));
+            sequence.ApplyFinalStateImmediately(); Assert.That(sequence.IsBenchmarkPending, Is.False);
+        }
         /// <summary>单独调演出不会产生事实、碎片、配方或反应；恢复回到实际领域初始状态。</summary>
         [UnityTest] public IEnumerator PreviewNeverChangesDomainAndRestoreUsesActualFacts()
         {
