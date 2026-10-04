@@ -1,38 +1,94 @@
 // =============================================================================
 // 文件：EndingPresenter.cs
-// 职责：表现临时切片完成提示、环境光与氛围声音。
-// 边界：完成条件由领域层产生；本文件只消费完成事实。
+// 职责：管理单房间的暖灰、远方、海光和涌现光照，并显示临时结束提示。
+// 边界：颜色进度只是演出状态；完成与远方条件由领域产生，不写领域事实。
 // =============================================================================
 using Game.Domain;
 using UnityEngine;
+using UnityEngine.Rendering;
 namespace Game.Unity
 {
-    /// <summary>表现临时切片完成提示、环境光与氛围声音。</summary>
+    /// <summary>此房间具体的光照与结束表现，供导演按节奏调用。</summary>
     public sealed class EndingPresenter : WorldPresenter
     {
         [SerializeField] private GameObject endingPanel;
         [SerializeField] private Light roomLight;
         [SerializeField] private AudioSource ambience;
-        private Color initialColor, targetColor;
-        private float initialIntensity, targetIntensity;
-        /// <summary>临时结束提示面板。</summary>
+        [SerializeField] private Light warmFill;
+        [SerializeField] private Light windowLight;
+        [SerializeField] private Light seaLight;
+        private float far, sea, finale, targetFar, targetSea, targetFinale;
+        /// <summary>临时结束面板，只在最终氛围节拍显示。</summary>
         public GameObject EndingPanel => endingPanel;
-        /// <summary>注入结束面板、环境灯光和氛围音源。</summary>
-        public void Configure(GameObject panel, Light light, AudioSource audio) { endingPanel = panel; roomLight = light; ambience = audio; }
-        /// <summary>缓存初始光照，重开时可恢复。</summary>
-        private void Awake() { initialColor = roomLight.color; initialIntensity = roomLight.intensity; }
-        /// <summary>仅接收切片完成事实。</summary>
-        protected override void OnFact(FactId fact) { if (fact == DemoRules.Complete) ApplyState(Session.State, true); }
-        /// <summary>同步结束提示、光照目标与循环氛围声。</summary>
+        /// <summary>最终氛围表现的进度，供调试查看。</summary>
+        public float AtmosphereProgress => finale;
+        /// <summary>注入旧版结束资源，保留灰盒生成器兼容入口。</summary>
+        public void Configure(GameObject panel, Light light, AudioSource audio)
+        { endingPanel = panel; roomLight = light; ambience = audio; }
+        /// <summary>注入三个局部灯，所有灯只由本组件控制，避免互相覆盖。</summary>
+        public void ConfigureLighting(Light fill, Light natural, Light painting)
+        { warmFill = fill; windowLight = natural; seaLight = painting; }
+        /// <summary>远方立即进入过渡；海与终态由演出导演延迟转发。</summary>
+        protected override void OnFact(FactId fact)
+        {
+            if (fact == DemoRules.WindowFar) { targetFar = 1; }
+            if (fact == DemoRules.PaintingSea) PlaySeaLighting();
+            if (fact == DemoRules.Complete) PlayAtmosphere();
+        }
+        /// <summary>开始局部冷色侵入，不立即把全屋染成蓝色。</summary>
+        public void PlaySeaLighting() { targetSea = 1; }
+        /// <summary>最后一个节拍才扩大外部海光，并开启完成提示。</summary>
+        public void PlayAtmosphere()
+        {
+            targetFinale = 1;
+            endingPanel.SetActive(true);
+            if (!ambience.isPlaying) ambience.Play();
+        }
+        /// <summary>从领域终态直接恢复所有光照参数，不重播节拍。</summary>
         public override void ApplyState(GameState state, bool animate)
         {
-            // 结束条件已由领域闭包产生，本组件不再检查三个前置事实。
-            bool complete = state.HasFact(DemoRules.Complete); endingPanel.SetActive(complete);
-            targetColor = complete ? new Color(.54f, .84f, .95f) : initialColor; targetIntensity = complete ? initialIntensity * .8f : initialIntensity;
-            if (!animate) { roomLight.color = targetColor; roomLight.intensity = targetIntensity; }
-            if (complete && !ambience.isPlaying) ambience.Play(); if (!complete) ambience.Stop();
+            targetFar = state.HasFact(DemoRules.WindowFar) ? 1 : 0;
+            targetSea = state.HasFact(DemoRules.PaintingSea) ? 1 : 0;
+            targetFinale = state.HasFact(DemoRules.Complete) ? 1 : 0;
+            endingPanel.SetActive(targetFinale > 0);
+            if (targetFinale > 0 && !ambience.isPlaying) ambience.Play();
+            if (targetFinale == 0) ambience.Stop();
+            if (!animate)
+            {
+                // 重开取消旧目标；终态预设不产生再次闪光或淡入。
+                far = targetFar; sea = targetSea; finale = targetFinale;
+                SetLighting();
+            }
         }
-        /// <summary>平滑靠近灯光目标，不判断通关条件。</summary>
-        private void Update() { roomLight.color = Color.Lerp(roomLight.color, targetColor, Time.deltaTime * .6f); roomLight.intensity = Mathf.Lerp(roomLight.intensity, targetIntensity, Time.deltaTime * .6f); }
+        /// <summary>在三种局部影响之间插值，只推进已经设置的表现目标。</summary>
+        private void Update()
+        {
+            far = Mathf.MoveTowards(far, targetFar, Time.deltaTime / 2);
+            sea = Mathf.MoveTowards(sea, targetSea, Time.deltaTime / 4);
+            finale = Mathf.MoveTowards(finale, targetFinale, Time.deltaTime / 3);
+            SetLighting();
+        }
+        /// <summary>具体颜色脚本：低饱和暖灰 → 自然光 → 局部海光 → 开放海色。</summary>
+        private void SetLighting()
+        {
+            roomLight.color = Color.Lerp(new Color(1, .81f, .62f), new Color(.65f, .89f, .94f), finale);
+            roomLight.intensity = .65f + far * .50f + finale * .35f;
+            // 灰盒兼容模式允许尚未注入局部灯；正式美术场景由验证器要求全部绑定。
+            if (warmFill != null) { warmFill.color = new Color(1, .64f, .36f); warmFill.intensity = 1.35f - finale * .65f; }
+            if (windowLight != null) { windowLight.color = Color.Lerp(new Color(.78f, .84f, .82f), new Color(.36f, .80f, .92f), finale); windowLight.intensity = .20f + far * 1.3f + finale * 1.2f; }
+            if (seaLight != null)
+            {
+                seaLight.intensity = sea * (.85f + finale * .55f);
+                seaLight.color = new Color(.20f, .73f, .78f);
+                // 很轻的水面反光只在海已经开始表现后出现，初始环境保持静止。
+                seaLight.intensity *= 1 + sea * Mathf.Sin(Time.time * 1.3f) * .06f;
+            }
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = Color.Lerp(new Color(.23f, .21f, .19f), new Color(.31f, .43f, .46f), Mathf.Clamp01(far * .30f + finale * .70f));
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Exponential;
+            RenderSettings.fogDensity = Mathf.Lerp(.008f, .015f, finale);
+            RenderSettings.fogColor = Color.Lerp(new Color(.30f, .28f, .25f), new Color(.25f, .43f, .46f), finale);
+        }
     }
 }

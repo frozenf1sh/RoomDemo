@@ -1,0 +1,9 @@
+{
+    "frames": 301,
+    "gen0_collections": 5,
+    "seconds": 5.011857986450195,
+    "average_fps": 60.05756759643555,
+    "p99_frame_ms": 19.934921264648438,
+    "resolution": "844x451",
+    "environment": "Unity 编辑器运行模式"
+}
