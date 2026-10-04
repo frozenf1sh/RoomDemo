@@ -65,7 +65,7 @@ namespace Game.Unity
             if (e is CombinationSucceeded) observationText.text = "你的解释已成为房间的一部分。找找发生了什么变化。";
             // 玩家引导只是对已发生事实的解释，不能触发下一步规则。
             if (e is FactAdded fact && fact.Fact == DemoRules.WindEntering) observationText.text = "你没有解释风。长大的盆栽与通往远方的窗户开始相互回应，一张纸滑了出来。";
-            if (e is FactAdded end && end.Fact == DemoRules.Complete && (presentation == null || !presentation.IsBenchmarkPending)) observationText.text = "海触及了你先前建立的意义。你没有再次解释，盆栽与窗户却自行改变了。";
+            if (e is FactAdded end && end.Fact == DemoRules.Complete && (presentation == null || !presentation.IsBenchmarkPending)) observationText.text = "静止的房间，已经有了自己的呼吸。";
             // 详细日志按运行环境开关，Release 中不输出冗余事件。
             if ((UnityEngine.Application.isEditor || Debug.isDebugBuild) &&
                 (e is ClueDiscovered || e is CombinationSucceeded || e is CombinationFailed || e is FactAdded || e is ReactionTriggered)) Debug.Log(e.ToString());
@@ -106,7 +106,7 @@ namespace Game.Unity
             if (waitedForBenchmark && presentation != null && !presentation.IsBenchmarkPending)
             {
                 waitedForBenchmark = false;
-                observationText.text = "海触及了你先前建立的意义。你没有再次解释，盆栽与窗户却自行改变了。";
+                observationText.text = "静止的房间，已经有了自己的呼吸。";
                 Render();
             }
             var keyboard = Keyboard.current; if (keyboard == null || factInput.isFocused) return;

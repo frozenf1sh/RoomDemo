@@ -565,7 +565,7 @@ namespace Game.Editor
             var ending = Box("Ending", canvas, new Vector2(.30f, .09f), new Vector2(.70f, .22f), Vector2.zero, Vector2.zero, new Color(.05f, .14f, .18f, .9f));
             ending.GetComponent<Image>().raycastTarget = false;
             var endTitle = Text("EndingTitle", ending, "房间记得。", 29, Paper, new Vector2(0, .35f), Vector2.one, new Vector2(15, 0), new Vector2(-15, 0)); endTitle.alignment = TextAnchor.MiddleCenter;
-            var endDetail = Text("EndingDetail", ending, "你将海赋予画，盆栽与窗户自行回应。", 14, new Color(.68f, .87f, .89f), Vector2.zero, new Vector2(1, .4f), new Vector2(15, 0), new Vector2(-15, 0)); endDetail.alignment = TextAnchor.MiddleCenter;
+            var endDetail = Text("EndingDetail", ending, "先前留下的笔迹，还在继续。", 14, new Color(.68f, .87f, .89f), Vector2.zero, new Vector2(1, .4f), new Vector2(15, 0), new Vector2(-15, 0)); endDetail.alignment = TextAnchor.MiddleCenter;
             ending.gameObject.SetActive(false);
             var debug = canvas.gameObject.AddComponent<DebugView>(); debug.Configure(panel.gameObject, state, events, objective);
             debug.ConfigureTools(observation, restart, reset, grant, add, factInput, presetButtons);

@@ -46,6 +46,7 @@ namespace Game.Editor
             root.GetComponentInChildren<WaterPresenter>(true).transform.localPosition = new Vector3(2.72f, 0, 1.30f);
             // 桌椅退到右侧，避免遮住第一滴水的落点，保持固定机位可读性。
             root.Find("Environment/Table").localPosition = new Vector3(3.1f, 0, -.5f);
+            root.Find("Effects/WindPaper").localPosition = new Vector3(3.1f, .86f, -.5f);
             root.Find("Environment/Chair").localPosition = new Vector3(3.5f, 0, -1.1f);
             root.GetComponentInChildren<WindowPresenter>(true).transform.localPosition = new Vector3(1.55f, 2.1f, 3.65f);
             root.GetComponentInChildren<Camera>().fieldOfView = 59;
@@ -62,7 +63,7 @@ namespace Game.Editor
             sun.color = new Color(1, .81f, .62f); sun.intensity = .65f;
             sun.transform.rotation = Quaternion.Euler(36, -32, 0);
             var fill = systems.Find("RoomFill").GetComponent<Light>();
-            fill.color = new Color(1, .64f, .36f); fill.intensity = 1.35f; fill.range = 9;
+            fill.color = new Color(1, .64f, .36f); fill.intensity = 1.9f; fill.range = 9;
             fill.transform.localPosition = new Vector3(-1.8f, 2.5f, -.5f);
             var presentation = Ensure(root, "Presentation");
             var lighting = Ensure(presentation, "Lighting");
@@ -76,7 +77,7 @@ namespace Game.Editor
             painting.color = new Color(.2f, .73f, .78f); painting.transform.localPosition = new Vector3(2.65f, 1.7f, .8f);
             root.GetComponentInChildren<EndingPresenter>(true).ConfigureLighting(fill, window, painting);
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(.23f, .21f, .19f);
+            RenderSettings.ambientLight = new Color(.31f, .28f, .24f);
             Save(root);
         }
         /// <summary>只补缺少的技术分组，不覆盖已有子对象或人工摆放。</summary>

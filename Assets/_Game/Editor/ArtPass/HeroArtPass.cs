@@ -43,10 +43,11 @@ namespace Game.Editor
         {
             var root = PresentationArtPass.Room();
             var water = root.GetComponentInChildren<WaterPresenter>(true);
-            var wet = SurfaceArtPass.Material("Effects", "M_WetSurface", new Color(.12f, .20f, .19f, .72f), .94f);
+            var wet = SurfaceArtPass.Material("Effects", "M_WetSurface", new Color(.06f, .09f, .075f, .55f), .94f);
             wet.SetFloat("_Surface", 1); wet.SetFloat("_Blend", 0); wet.SetFloat("_SrcBlend", 5); wet.SetFloat("_DstBlend", 10);
             wet.SetFloat("_ZWrite", 0); wet.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); wet.renderQueue = 3000;
-            wet.SetFloat("_Metallic", .25f);
+            wet.SetFloat("_Metallic", 0); wet.SetFloat("_EnvironmentReflections", 0);
+            wet.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
             water.Puddle.GetComponentInChildren<Renderer>(true).sharedMaterial = wet;
             // 从画框向盆栽方向逐渐扩散的细湿痕，加强两者之间的空间因果。
             for (int i = 0; i < 6; i++)
@@ -56,6 +57,7 @@ namespace Game.Editor
                 patch.localPosition = new Vector3(-.4f - i * .48f, .023f, -.10f + i * .12f);
                 patch.localScale = new Vector3(.65f, .002f, .20f); patch.localRotation = Quaternion.Euler(0, -12, 0);
                 patch.GetComponent<Renderer>().sharedMaterial = wet;
+                patch.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
             var drop = AudioArtPass.Source(water.transform, "Drop", false, .7f);
             water.ConfigureDropAudio(drop);

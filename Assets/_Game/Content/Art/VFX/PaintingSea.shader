@@ -6,7 +6,7 @@ Shader "RoomDemo/PaintingSea"
     {
         _Transition("海的过渡", Range(0,1)) = 0
         _Distortion("颜料扰动", Range(0,.1)) = .025
-        _WaveStrength("浪纹强度", Range(0,1)) = .5
+        _WaveStrength("浪纹强度", Range(0,1)) = .25
         _WaveSpeed("浪纹速度", Float) = .6
         _Wetness("边缘湿润", Range(0,1)) = 0
         _Emission("海光强度", Range(0,1)) = .10
@@ -72,7 +72,8 @@ Shader "RoomDemo/PaintingSea"
                 float wave = sin(uv.y*frequency + sin(uv.x*11+t*.3)*1.5 - t*(.7+depth));
                 float swell = sin(uv.x*7+uv.y*16-t*.4);
                 half3 water = lerp(_DeepColor.rgb,_LightColor.rgb,saturate(.35+wave*.17+swell*.13+depth*.15));
-                float foam = smoothstep(.87,.99,wave) * Noise(float2(uv.x*35+t*.2,uv.y*45-t*.15)) * _WaveStrength;
+                float patches = smoothstep(.48,.75,Noise(float2(uv.x*28+t*.2,uv.y*39-t*.15)));
+                float foam = smoothstep(.91,.998,wave) * patches * _WaveStrength;
                 water = lerp(water,half3(.70,.85,.79),foam);
                 // 窄地平线、天空层次与微弱反光避免整幅画只是一张蓝色纹理。
                 half3 sky = lerp(half3(.69,.79,.72),half3(.29,.47,.53),uv.y);

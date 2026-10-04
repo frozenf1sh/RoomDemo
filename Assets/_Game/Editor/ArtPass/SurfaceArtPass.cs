@@ -36,8 +36,8 @@ namespace Game.Editor
             {
                 // 不规则的细木纹与低对比噪声保持整屋统一，不产生额外游戏信息。
                 float noise = Mathf.PerlinNoise(x * (wood ? .016f : .16f), y * (wood ? .15f : .16f));
-                float grain = wood ? Mathf.Sin(y * .34f + Mathf.PerlinNoise(x * .03f, y * .008f) * 8) * .06f : ((x + y) % 2) * .012f;
-                float value = .76f + noise * .18f + grain;
+                float grain = wood ? Mathf.Sin(y * .34f + Mathf.PerlinNoise(x * .03f, y * .008f) * 8) * .025f : ((x + y) % 2) * .003f;
+                float value = (wood ? .88f + noise * .08f : .955f + noise * .035f) + grain;
                 image.SetPixel(x, y, new Color(value, value, value));
             }
             image.Apply(); File.WriteAllBytes(path, image.EncodeToPNG()); Object.DestroyImmediate(image);
