@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 namespace Game.Domain
 {
-    /// <summary>碎片显示分类；当前只使用物体和概念，预留修饰与短语。</summary>
-    public enum ClueCategory { Object, Concept, Modifier, Phrase }
+    /// <summary>碎片显示分类；观察是具体细节，概念是联想产物；分类不参与配方判定。</summary>
+    public enum ClueCategory { Object = 0, Concept = 1, Modifier = 2, Phrase = 3, Observation = 4 }
     /// <summary>碎片的稳定身份、中文显示名与类别。</summary>
     public sealed class ClueDefinition
     {
@@ -23,7 +23,7 @@ namespace Game.Domain
         public ClueDefinition(ClueId id, string displayName, ClueCategory category)
         { Id = id; DisplayName = displayName; Category = category; }
     }
-    /// <summary>有限配方：无序精确输入、前置事实与产出事实。</summary>
+    /// <summary>有限配方：无序精确输入与前置事实，输出线索和／或事实。</summary>
     public sealed class SemanticRecipe
     {
         /// <summary>内容的稳定身份，用于查找与去重。</summary>
@@ -33,7 +33,11 @@ namespace Game.Domain
         /// <summary>必须全部成立的前置事实。</summary>
         public IReadOnlyList<FactId> Requires { get; }
         /// <summary>规则成立时添加的领域事实，不指定 Unity 表现。</summary>
-        public IReadOnlyList<FactId> Produces { get; }
+        public IReadOnlyList<FactId> ProducesFacts { get; }
+        /// <summary>组合后形成的线索；概念与世界解释共用同一求值路径。</summary>
+        public IReadOnlyList<ClueId> ProducesClues { get; }
+        /// <summary>旧内容代码的事实输出兼容视图，不保存第二份数据。</summary>
+        public IReadOnlyList<FactId> Produces => ProducesFacts;
         /// <summary>校验输入规模并复制规则数组，避免外部修改已装载内容。</summary>
         /// <param name="id">用于完成历史与日志的稳定配方 ID。</param>
         /// <param name="inputs">两个或三个不同碎片，无序精确匹配。</param>
@@ -41,12 +45,25 @@ namespace Game.Domain
         /// <param name="produces">命中后添加的事实，可被后续反应继续消费。</param>
         /// <exception cref="ArgumentException">配方 ID 为空、输入数量越界或输入重复。</exception>
         public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires, IReadOnlyList<FactId> produces)
+            : this(id, inputs, requires, Array.Empty<ClueId>(), produces) { }
+
+        /// <summary>创建可以产生线索和事实的统一配方；不按“灵感／解释”分支执行。</summary>
+        /// <param name="producesClues">形成的新线索，通常为概念；可以为空。</param>
+        /// <param name="producesFacts">世界事实输出；可以为空。</param>
+        public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires,
+            IReadOnlyList<ClueId> producesClues, IReadOnlyList<FactId> producesFacts)
         {
+            if (inputs == null || requires == null || producesClues == null || producesFacts == null)
+                throw new ArgumentNullException("配方集合不能为 null；没有输出时使用空数组。");
             // 限制为两个或三个不同碎片；重复输入不能伪装成更多语义。
             if (string.IsNullOrWhiteSpace(id) || inputs.Count < 2 || inputs.Count > 3 || inputs.Distinct().Count() != inputs.Count)
                 throw new ArgumentException("配方需要非空标识符，以及两个或三个不同的输入碎片。");
             // 复制集合后再包装为只读，调用者修改原数组不会影响配方。
-            Id = id; Inputs = Array.AsReadOnly(inputs.ToArray()); Requires = Array.AsReadOnly(requires.ToArray()); Produces = Array.AsReadOnly(produces.ToArray());
+            Id = id;
+            Inputs = Array.AsReadOnly(inputs.ToArray());
+            Requires = Array.AsReadOnly(requires.ToArray());
+            ProducesClues = Array.AsReadOnly(producesClues.ToArray());
+            ProducesFacts = Array.AsReadOnly(producesFacts.ToArray());
         }
         /// <summary>无序精确匹配：数量相等、无重复输入且所有碎片一致。</summary>
         /// <param name="inputs">玩家提交的完整输入集合；多余碎片不能忽略。</param>
@@ -103,7 +120,7 @@ namespace Game.Domain
                 discoveries.Select(x => x.Id).Distinct().Count() != discoveries.Length || recipes.Select(x => x.Id).Distinct().Count() != recipes.Length || reactions.Select(x => x.Id).Distinct().Count() != reactions.Length)
                 throw new ArgumentException("内容标识符必须唯一。");
             // 配方输入和发现产出都必须指向已定义的碎片。
-            if (recipes.Any(x => x.Inputs.Any(c => !clues.Any(d => d.Id == c))) || discoveries.Any(x => x.Grants.Any(c => !clues.Any(d => d.Id == c))))
+            if (recipes.Any(x => x.Inputs.Concat(x.ProducesClues).Any(c => !clues.Any(d => d.Id == c))) || discoveries.Any(x => x.Grants.Any(c => !clues.Any(d => d.Id == c))))
                 throw new ArgumentException("内容引用了未知碎片。");
             // 两个配方即使前置事实不同也不能使用相同输入；当前不引入优先级。
             for (int i = 0; i < recipes.Length; i++)

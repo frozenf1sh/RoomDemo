@@ -97,8 +97,8 @@ namespace Game.Domain
             {
                 var recipe = rules.Recipes.Single(r => r.Id == id);
                 // 历史必须与世界一致，不能记录一个尚未产生其输出的配方。
-                if (!recipe.Produces.All(state.HasFact))
-                    throw new ArgumentException("预设的已完成配方必须与其产出的事实一致。");
+                if (!recipe.ProducesFacts.All(state.HasFact) || !recipe.ProducesClues.All(state.Knows))
+                    throw new ArgumentException("预设的已完成配方必须与其产出的线索和事实一致。");
                 state.Complete(id);
             }
         }
@@ -114,16 +114,7 @@ namespace Game.Domain
                     definition == null ? "未知物体。" : definition.LockedDescription));
                 return false;
             }
-            foreach (var clue in definition.Grants)
-            {
-                // HashSet 的添加结果保证重复观察不会重复产生发现事件。
-                if (!state.Discover(clue)) continue;
-                events.Add(new ClueDiscovered(clue));
-                var category = rules.Clues.Single(x => x.Id == clue).Category;
-                // 保留第一版消费者所需的兼容事件，所有实际线索仍只存一份。
-                if (category == ClueCategory.Object) events.Add(new ObjectDiscovered(new ObjectId(clue.Value)));
-                if (category == ClueCategory.Concept) events.Add(new ConceptDiscovered(new ConceptId(clue.Value)));
-            }
+            GrantClues(state, definition.Grants, events);
             // 即使没有新发现，重复观察仍然可以再次阅读描述。
             events.Add(new ObjectInspected(command.Object, definition.Description));
             return true;
@@ -164,7 +155,9 @@ namespace Game.Domain
             // 碎片不会被消耗；成功只记录配方并添加其输出事实。
             state.Complete(recipe.Id);
             events.Add(new CombinationSucceeded(recipe.Id));
-            AddFacts(state, recipe.Produces, events);
+            // 两类输出都由数据驱动；线索先发布，随后事实进入同一个反应闭包。
+            GrantClues(state, recipe.ProducesClues, events);
+            AddFacts(state, recipe.ProducesFacts, events);
             return true;
         }
 
@@ -187,6 +180,20 @@ namespace Game.Domain
                 // 每个非空轮次至少消耗一个未触发反应，轮次最多受反应总数限制。
                 // 即使本轮产生了已有事实，也只再扫描到没有新反应为止。
             } while (fired);
+        }
+
+        /// <summary>统一授予线索并保持兼容事件；发现与配方产出都在这里去重。</summary>
+        private void GrantClues(GameState state, IEnumerable<ClueId> clues, List<DomainEvent> events)
+        {
+            foreach (var clue in clues)
+            {
+                // 同一观察反复点击或多条规则输出同一概念，都只发一次新发现。
+                if (!state.Discover(clue)) continue;
+                events.Add(new ClueDiscovered(clue));
+                var category = rules.Clues.Single(x => x.Id == clue).Category;
+                if (category == ClueCategory.Object) events.Add(new ObjectDiscovered(new ObjectId(clue.Value)));
+                if (category == ClueCategory.Concept) events.Add(new ConceptDiscovered(new ConceptId(clue.Value)));
+            }
         }
 
         /// <summary>唯一的批量事实添加出口，只为第一次成立的事实产生事件。</summary>
