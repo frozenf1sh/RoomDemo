@@ -1,6 +1,6 @@
 # 第三方资源与许可
 
-房间的灰盒几何、材质、海面动画和占位音频均由项目本地生成。第三方模型按下表逐件导入；没有引入整套大型素材包。
+项目自有几何、演出 Shader、程序纹理和占位音频由本地制作。第五阶段另外引入免费模型及木地板、墙面、织物纹理；第三方资产按实际文件登记，并与游戏逻辑分离。
 
 ## 中文字体
 
@@ -79,3 +79,87 @@
 | campfire_logs | 28,565 字节 | 自有篝火 Prefab 的木柴视觉层 |
 
 所有模型经 Wrapper 与统一项目材质使用。星空图案、草地几何、火焰运动、光照和占位声音均为项目原创；没有 AI 风格转换、运行时世界生成或流体模拟。
+
+## 第五阶段新增模型与表面纹理
+
+2026-10-05 通过 Chrome 重新查看 Kenney 的两套官方资产页面，均明确标注 CC0。复用此前下载的官方压缩包，按需提取 **47 个新增 FBX**（家具 17 个、自然 30 个）；此前登记的 8 个模型不重复列出。以下大小为仓库中实际文件字节数，所有新增文件的提取／导入日期为 2026-10-05。原始许可证分别保留在 `Kenney/FurnitureKit/License.txt` 与 `Kenney/NatureKit/License.txt`。
+
+“装饰库”表示已导入的视觉候选，不表示每个候选都必须摆入场景；模型均不承载 Clue、Recipe 或交互规则。
+
+### 工作室家具
+
+文件目录：`Kenney/FurnitureKit/`。
+
+| 文件 | 实际大小 | 官方来源 | 许可 | 使用位置／类别 |
+| --- | ---: | --- | --- | --- |
+| `bookcaseClosed.fbx` | 44,542 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：封闭书柜 |
+| `bookcaseOpen.fbx` | 38,100 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：开放书架 |
+| `bookcaseOpenLow.fbx` | 26,186 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：矮书架 |
+| `cabinetBedDrawer.fbx` | 36,228 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：抽屉收纳柜 |
+| `chair.fbx` | 25,130 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：木椅 |
+| `chairRounded.fbx` | 38,436 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：圆背椅 |
+| `coatRackStanding.fbx` | 33,130 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：立式衣架 |
+| `desk.fbx` | 34,207 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：书桌 |
+| `deskCorner.fbx` | 41,311 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：转角桌 |
+| `lampRoundTable.fbx` | 21,261 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：圆形桌灯 |
+| `lampSquareTable.fbx` | 18,047 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：方形桌灯 |
+| `lampWall.fbx` | 16,993 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：壁灯 |
+| `rugDoormat.fbx` | 40,504 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：门垫 |
+| `rugRectangle.fbx` | 13,510 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：地毯 |
+| `sideTable.fbx` | 22,455 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：边桌 |
+| `table.fbx` | 24,396 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：桌子 |
+| `tableRound.fbx` | 19,706 字节 | [Kenney 官方页](https://kenney.nl/assets/furniture-kit) | CC0 | 工作室装饰库：圆桌 |
+
+### 树林与自然环境
+
+文件目录：`Kenney/NatureKit/`。
+
+| 文件 | 实际大小 | 官方来源 | 许可 | 使用位置／类别 |
+| --- | ---: | --- | --- | --- |
+| `campfire_stones.fbx` | 54,276 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：篝火石圈 |
+| `flower_redA.fbx` | 23,315 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：野花 |
+| `flower_yellowA.fbx` | 23,492 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：野花 |
+| `grass.fbx` | 35,455 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：风动草丛 |
+| `grass_large.fbx` | 52,888 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：风动草丛 |
+| `grass_leafs.fbx` | 18,669 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：风动长叶草 |
+| `grass_leafsLarge.fbx` | 42,404 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：风动长叶草 |
+| `log.fbx` | 40,987 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：倒木 |
+| `log_stack.fbx` | 33,923 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：木柴堆 |
+| `mushroom_red.fbx` | 20,798 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：蘑菇 |
+| `mushroom_tan.fbx` | 19,960 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：蘑菇 |
+| `plant_bush.fbx` | 16,968 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：灌木 |
+| `plant_bushLarge.fbx` | 23,496 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：大灌木 |
+| `plant_bushSmall.fbx` | 14,333 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：低矮灌木 |
+| `plant_flatShort.fbx` | 15,878 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：短叶植物 |
+| `plant_flatTall.fbx` | 15,166 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：高叶植物 |
+| `rock_largeB.fbx` | 26,602 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：岩石 |
+| `rock_largeC.fbx` | 24,019 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：岩石 |
+| `rock_smallA.fbx` | 13,954 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：碎石 |
+| `rock_smallB.fbx` | 14,902 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：碎石 |
+| `rock_smallC.fbx` | 14,036 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：碎石 |
+| `stone_largeA.fbx` | 25,231 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：石头 |
+| `stone_smallA.fbx` | 13,653 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 自然装饰库：小石头 |
+| `tree_detailed.fbx` | 82,459 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：阔叶树 |
+| `tree_oak.fbx` | 45,836 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：橡树 |
+| `tree_pineRoundB.fbx` | 60,112 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：松树 |
+| `tree_pineRoundC.fbx` | 44,694 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：松树 |
+| `tree_pineRoundD.fbx` | 42,452 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：松树 |
+| `tree_pineTallA.fbx` | 22,995 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：高松树 |
+| `tree_small.fbx` | 21,554 字节 | [Kenney 官方页](https://kenney.nl/assets/nature-kit) | CC0 | 星空外景：矮树 |
+
+### Poly Haven 表面纹理
+
+2026-10-05 通过 Chrome 查看以下三个具体资产页，均显示 CC0，并指向 [Poly Haven 官方许可](https://polyhaven.com/license)。官方说明允许商业使用、修改和分发。本轮仅下载 **1K JPG 的漫反射与 OpenGL 法线**，不用大型模型或完整高分辨率贴图包。下载／导入日期均为 2026-10-05。
+
+| 资产与文件 | 实际大小 | 官方来源 | 许可 | 使用位置 |
+| --- | ---: | --- | --- | --- |
+| Old Wood Floor／`PolyHaven/OldWoodFloor/Diffuse.jpg`（漫反射） | 755,937 字节 | [资产页](https://polyhaven.com/a/old_wood_floor) | CC0 | 工作室木地板与星空后保留木台 |
+| Old Wood Floor／`PolyHaven/OldWoodFloor/nor_gl.jpg`（OpenGL 法线） | 714,487 字节 | [资产页](https://polyhaven.com/a/old_wood_floor) | CC0 | 工作室木地板与星空后保留木台 |
+| Painted Plaster Wall／`PolyHaven/PaintedPlasterWall/Diffuse.jpg`（漫反射） | 686,726 字节 | [资产页](https://polyhaven.com/a/painted_plaster_wall) | CC0 | 工作室墙面与独立天花板 |
+| Painted Plaster Wall／`PolyHaven/PaintedPlasterWall/nor_gl.jpg`（OpenGL 法线） | 900,461 字节 | [资产页](https://polyhaven.com/a/painted_plaster_wall) | CC0 | 工作室墙面与独立天花板 |
+| Rough Linen／`PolyHaven/RoughLinen/Diffuse.jpg`（漫反射） | 835,801 字节 | [资产页](https://polyhaven.com/a/rough_linen) | CC0 | 画布、帘布及布料表面 |
+| Rough Linen／`PolyHaven/RoughLinen/nor_gl.jpg`（OpenGL 法线） | 916,843 字节 | [资产页](https://polyhaven.com/a/rough_linen) | CC0 | 画布、帘布及布料表面 |
+
+### 本轮新增原创表现
+
+第五阶段专用溶解、植物分段显影、梦境植物、曲面书页、文字墨迹、风动自然表面、银河与月轮 Shader；书页／枝条／叶片／外景地面网格；旧织毯、纸纤维与研究稿纹样；灰尘、灵感、星光碎屑、火舌、余烬与烟的粒子配置，均为本项目原创制作，不含外部下载图案或 AI 风格转换。上述内容无第三方资产许可要求；实际使用的 Kenney 木柴、石圈、自然模型与 Poly Haven 表面纹理仍按本节 CC0 条目登记。`_Game/Content/Art/Studio/Models/Surface_*.asset` 是保留原始几何、重新投影 UV 的 Kenney 模型衍生文件，仍按相应 CC0 来源登记。
