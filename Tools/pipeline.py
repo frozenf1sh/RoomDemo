@@ -107,7 +107,7 @@ def main():
     parser.add_argument('--headless', action='store_true', help='要求先关闭项目 Editor，再使用批处理验证。')
     parser.add_argument('--editor', type=Path, default=Path(f'/Applications/Unity/Hub/Editor/{VERSION}/Unity.app/Contents/MacOS/Unity'))
     parser.add_argument('--domain-only', action='store_true', help='仅编译和运行编辑模式测试，不修改场景或构建。')
-    parser.add_argument('--regenerate-scene', action='store_true', help='明确重建灰盒场景与生成的 Prefab。')
+    parser.add_argument('--regenerate-scene', action='store_true', help='生成独立灰盒参考，不覆盖已有美术试玩场景。')
     args = parser.parse_args()
     status = subprocess.run(['unity', 'status', '--format', 'json'], cwd=ROOT, capture_output=True, text=True)
     connected = status.returncode == 0 and any(x.get('project') == str(ROOT) and x.get('state') == 'ready' for x in json.loads(status.stdout)['data']['instances'])
@@ -119,7 +119,7 @@ def main():
         test_live('editor')
         if args.domain_only: return
         if args.regenerate_scene:
-            live('eval', 'Game.Editor.DemoSceneBuilder.Build();')
+            live('eval', 'Game.Editor.DemoSceneBuilder.BuildGreyboxScene();')
             live('eval', 'UnityEditor.AssetDatabase.SaveAssets(); var scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(Game.Editor.DemoSceneBuilder.ScenePath); if (scene.isLoaded) UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);')
         live('eval', 'Game.Editor.DemoSceneValidator.ValidateScene();')
         test_live('playmode')
@@ -137,7 +137,7 @@ def main():
         batch(args.editor, 'EditMode', ['-runTests', '-testPlatform', 'EditMode', '-testResults', str(LOGS / 'EditMode.xml')], tests=True)
         if args.domain_only: return
         if args.regenerate_scene:
-            batch(args.editor, 'scene', ['-executeMethod', 'Game.Editor.DemoSceneBuilder.Build'])
+            batch(args.editor, 'scene', ['-executeMethod', 'Game.Editor.DemoSceneBuilder.BuildGreyboxScene'])
         batch(args.editor, 'validate', ['-executeMethod', 'Game.Editor.DemoSceneValidator.ValidateScene'])
         batch(args.editor, 'PlayMode', ['-runTests', '-testPlatform', 'PlayMode', '-testResults', str(LOGS / 'PlayMode.xml')], tests=True)
         batch(args.editor, 'build', ['-executeMethod', 'Game.Editor.CliBuild.BuildDemo', '-buildTarget', 'StandaloneOSX'])

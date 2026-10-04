@@ -44,6 +44,14 @@ namespace Game.Unity
             endingPanel.SetActive(true);
             if (!ambience.isPlaying) ambience.Play();
         }
+        /// <summary>调试只设置光照表现，不创建或改写领域状态。</summary>
+        public void SetPresentation(bool farVisible, bool seaVisible, bool completeVisible)
+        {
+            targetFar = far = farVisible ? 1 : 0; targetSea = sea = seaVisible ? 1 : 0; targetFinale = finale = completeVisible ? 1 : 0;
+            endingPanel.SetActive(completeVisible);
+            if (completeVisible && !ambience.isPlaying) ambience.Play(); if (!completeVisible) ambience.Stop();
+            SetLighting();
+        }
         /// <summary>从领域终态直接恢复所有光照参数，不重播节拍。</summary>
         public override void ApplyState(GameState state, bool animate)
         {

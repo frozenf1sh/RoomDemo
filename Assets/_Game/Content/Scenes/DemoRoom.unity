@@ -1949,6 +1949,62 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519244337}
   m_Mesh: {fileID: 46604309741045415, guid: 8c08f31f0ecf34078b0c381287a6fc92, type: 3}
+--- !u!1 &523448623
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 523448624}
+  - component: {fileID: 523448625}
+  m_Layer: 0
+  m_Name: PaintingSeaSequence
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &523448624
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 523448623}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1241544115}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &523448625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 523448623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bc40d3b9e78d4d2da83c85f549aa209, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Unity::Game.Unity.PaintingSeaSequence
+  painting: {fileID: 1562010418}
+  water: {fileID: 319706685}
+  plant: {fileID: 118100863}
+  window: {fileID: 182196766}
+  ending: {fileID: 883796692}
+  anomalyAt: 1.2
+  seaAt: 2.2
+  waterAt: 4.8
+  plantAt: 7
+  windowAt: 10.2
+  atmosphereAt: 13.5
+  finishAt: 17
 --- !u!1 &586702332
 GameObject:
   m_ObjectHideFlags: 0
@@ -3069,6 +3125,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1727347766}
+  - {fileID: 1241544115}
   m_Father: {fileID: 6054089}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1029125027
@@ -3449,6 +3506,38 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2585177405749757898, guid: c095742652ea3406793c9b83f334d4a6, type: 3}
   m_PrefabInstance: {fileID: 1153314840}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1241544114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1241544115}
+  m_Layer: 0
+  m_Name: Sequences
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1241544115
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241544114}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 523448624}
+  m_Father: {fileID: 1009311585}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1247537076
 GameObject:
   m_ObjectHideFlags: 0
@@ -3979,6 +4068,7 @@ MonoBehaviour:
   notebook: {fileID: 173337230}
   debugView: {fileID: 173337229}
   interaction: {fileID: 1251718586}
+  sequence: {fileID: 523448625}
 --- !u!1 &1331071225
 GameObject:
   m_ObjectHideFlags: 0

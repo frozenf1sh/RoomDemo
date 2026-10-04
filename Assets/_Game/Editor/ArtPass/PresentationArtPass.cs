@@ -88,6 +88,34 @@ namespace Game.Editor
             created.SetParent(parent, false);
             return created;
         }
+        /// <summary>只补演出技术对象，不覆盖主物体的人工摆放和已绑定资源。</summary>
+        [MenuItem("游戏/美术/补齐缺失技术对象")]
+        public static void CreateMissingTechnicalObjects() { InstallTechnicalObjects(Room()); }
+        /// <summary>给指定房间安装导演，独立灰盒也可复用此入口。</summary>
+        public static void InstallTechnicalObjects(Transform root)
+        {
+            var presentation = Ensure(root, "Presentation");
+            var lighting = Ensure(presentation, "Lighting");
+            var windowLight = Ensure(lighting, "WindowLight").GetComponent<Light>();
+            if (windowLight == null) { windowLight = lighting.Find("WindowLight").gameObject.AddComponent<Light>(); windowLight.range = 8; windowLight.intensity = .2f; windowLight.transform.localPosition = new Vector3(1.4f, 2, 3); }
+            var seaLight = Ensure(lighting, "PaintingLight").GetComponent<Light>();
+            if (seaLight == null) { seaLight = lighting.Find("PaintingLight").gameObject.AddComponent<Light>(); seaLight.range = 5; seaLight.intensity = 0; seaLight.transform.localPosition = new Vector3(2.65f, 1.7f, .8f); }
+            var painting = root.GetComponentInChildren<PaintingPresenter>(true);
+            var water = root.GetComponentInChildren<WaterPresenter>(true);
+            var plant = root.GetComponentInChildren<PlantPresenter>(true);
+            var window = root.GetComponentInChildren<WindowPresenter>(true);
+            var ending = root.GetComponentInChildren<EndingPresenter>(true);
+            ending.ConfigureLighting(root.Find("_Systems/RoomFill").GetComponent<Light>(), windowLight, seaLight);
+            // 仅填充缺失引用；有效的人工作品材质、音频和模型不被替换。
+            if (new SerializedObject(water).FindProperty("firstDropAudio").objectReferenceValue == null) water.ConfigureDropAudio(AudioArtPass.Source(water.transform, "Drop", false, .7f));
+            if (new SerializedObject(plant).FindProperty("aquaticAudio").objectReferenceValue == null) plant.ConfigureAquaticAudio(AudioArtPass.Source(plant.transform, "Aquatic", false, .45f));
+            if (new SerializedObject(window).FindProperty("oceanAudio").objectReferenceValue == null) window.ConfigureOceanAudio(AudioArtPass.Source(window.transform, "Ocean", false, .5f));
+            var node = Ensure(Ensure(presentation, "Sequences"), "PaintingSeaSequence");
+            var sequence = node.GetComponent<PaintingSeaSequence>(); if (sequence == null) sequence = node.gameObject.AddComponent<PaintingSeaSequence>();
+            sequence.Configure(painting, water, plant, window, ending);
+            root.GetComponentInChildren<GameBootstrap>(true).ConfigureSequence(sequence);
+            Save(root);
+        }
         /// <summary>离线渲染固定观察机位，用于前后构图比较；不代表实际玩家帧率。</summary>
         public static void Capture(string path)
         {

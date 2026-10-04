@@ -136,7 +136,7 @@ namespace Game.Tests
             Assert.That(ClickObject(DemoRules.Painting));
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Concept_sea").onClick.Invoke(); FindButton("Object_painting").onClick.Invoke();
-            FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(3.2f);
+            FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(Object.FindAnyObjectByType<PaintingSeaSequence>().Duration + .2f);
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(bootstrap.Session.State.CompletedRecipes.Count, Is.EqualTo(3));
             Assert.That(bootstrap.Session.State.FiredReactions.Count, Is.EqualTo(8));
             Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.Visual.localScale.y, Is.GreaterThan(2.3f));

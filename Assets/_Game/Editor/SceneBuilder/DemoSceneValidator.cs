@@ -35,6 +35,18 @@ namespace Game.Editor
                 if (root.GetComponentsInChildren<GameBootstrap>(true).Length != 1 || root.GetComponentsInChildren<NotebookView>(true).Length != 1 ||
                     root.GetComponentsInChildren<InteractionSystem>(true).Length != 1 || root.GetComponentsInChildren<Camera>(true).Length != 1)
                     throw new InvalidOperationException("场景系统缺失或重复。");
+                var sequences = root.GetComponentsInChildren<PaintingSeaSequence>(true);
+                if (sequences.Length != 1 || root.GetComponentsInChildren<AudioListener>(true).Length != 1 || root.GetComponentsInChildren<Light>(true).Length < 4)
+                    throw new InvalidOperationException("演出导演、音频监听器或必要灯光缺失／重复。");
+                if (new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true)).FindProperty("sequence").objectReferenceValue != sequences[0])
+                    throw new InvalidOperationException("启动组件未绑定唯一的海画演出导演。");
+                var timing = new SerializedObject(sequences[0]); float previous = 0;
+                foreach (var field in new[] { "anomalyAt", "seaAt", "waterAt", "plantAt", "windowAt", "atmosphereAt", "finishAt" })
+                {
+                    float value = timing.FindProperty(field).floatValue;
+                    if (!float.IsFinite(value) || value <= previous || value > 90) throw new InvalidOperationException("演出节拍必须有限、递增且在 90 秒以内：" + field);
+                    previous = value;
+                }
                 // 同时检查数量、唯一性与内容覆盖，重复 ID 也必须阻止构建。
                 var entities = root.GetComponentsInChildren<SceneEntity>(true);
                 if (entities.Length != 5 || entities.Select(x => x.Id).Distinct().Count() != 5 ||

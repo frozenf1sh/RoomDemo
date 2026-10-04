@@ -23,6 +23,8 @@ namespace Game.Editor
     public static class DemoSceneBuilder
     {
         public const string ScenePath = "Assets/_Game/Content/Scenes/DemoRoom.unity";
+        public const string GreyboxScenePath = "Assets/_Game/Content/Scenes/DemoGreybox.unity";
+        private static string assetVariant = "";
         public const string ChineseFontPath = "Assets/ThirdParty/NotoSans/NotoSansCJKsc-Regular.otf";
         private const string Content = "Assets/_Game/Content/";
         private static Material wall, wood, darkWood, leaf, pot, book, cream, sky, hill, accent;
@@ -31,13 +33,26 @@ namespace Game.Editor
         private static readonly Color Paper = new Color(.94f, .92f, .85f);
 
         /// <summary>命令行灰盒重建入口，明确执行生成操作。</summary>
-        public static void BuildGreyboxScene() => Build();
+        public static void BuildGreyboxScene()
+        {
+            // 独立参考场景和资产目录，不能通过重建灰盒覆盖已有美术摆放或 Prefab。
+            assetVariant = "Greybox/";
+            try { BuildInto(GreyboxScenePath); }
+            finally { assetVariant = ""; }
+        }
         /// <summary>兼容验证入口，委托独立场景验证器。</summary>
         public static void ValidateScene() => DemoSceneValidator.ValidateScene();
 
         [MenuItem("游戏/生成灰盒房间")]
         /// <summary>生成基础房间、交互对象、系统、中文 UI 和绑定并保存。</summary>
         public static void Build()
+        {
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null)
+                throw new InvalidOperationException("DemoRoom 已存在。请使用 BuildGreyboxScene 生成独立灰盒，或用 CreateMissingTechnicalObjects 补技术对象，避免覆盖美术场景。");
+            BuildInto(ScenePath);
+        }
+        /// <summary>只生成明确的新场景；所有生成资产使用独立变体目录。</summary>
+        private static void BuildInto(string outputPath)
         {
             // 生成属于显式资产写操作；先保护运行状态和未保存场景。
             if (EditorApplication.isPlaying) throw new InvalidOperationException("请先退出运行模式，再生成场景。");
@@ -106,15 +121,16 @@ namespace Game.Editor
             Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
             // 先保存资源，再保存场景，确保序列化绑定指向有效资产。
             AssetDatabase.SaveAssets();
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log("场景生成器：已生成 " + ScenePath);
+            EditorSceneManager.SaveScene(scene, outputPath);
+            PresentationArtPass.InstallTechnicalObjects(root);
+            Debug.Log("场景生成器：已生成 " + outputPath);
         }
 
         /// <summary>准备目录、嵌入中文字体和灰盒共享材料。</summary>
         private static void PrepareMaterials()
         {
-            Directory.CreateDirectory(Content + "Art/Materials");
-            Directory.CreateDirectory(Content + "Audio");
+            Directory.CreateDirectory(Content + "Art/Materials/" + assetVariant);
+            Directory.CreateDirectory(Content + "Audio/" + assetVariant);
             // 中文字体随构建嵌入，避免依赖开发者电脑安装的系统字体。
             var importer = AssetImporter.GetAtPath(ChineseFontPath) as TrueTypeFontImporter;
             if (importer == null) throw new FileNotFoundException("缺少项目中文字体：" + ChineseFontPath);
@@ -134,7 +150,7 @@ namespace Game.Editor
         /// <summary>复用或创建 URP 材质，设置灰盒色彩与粗糙度。</summary>
         private static Material Mat(string name, Color color)
         {
-            string path = Content + "Art/Materials/" + name + ".mat";
+            string path = Content + "Art/Materials/" + assetVariant + name + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             { material = new Material(Shader.Find("Universal Render Pipeline/Lit")); AssetDatabase.CreateAsset(material, path); }
@@ -159,8 +175,8 @@ namespace Game.Editor
         /// <summary>保存生成资产，再实例化 Prefab 并保留原始局部姿态。</summary>
         private static Transform SavePrefab(Transform instance, string folder, string name)
         {
-            Directory.CreateDirectory(Content + "Prefabs/" + folder);
-            var asset = PrefabUtility.SaveAsPrefabAsset(instance.gameObject, Content + "Prefabs/" + folder + "/PF_" + name + ".prefab");
+            Directory.CreateDirectory(Content + "Prefabs/" + assetVariant + folder);
+            var asset = PrefabUtility.SaveAsPrefabAsset(instance.gameObject, Content + "Prefabs/" + assetVariant + folder + "/PF_" + name + ".prefab");
             // 临时生成物替换为 Prefab 实例时保留原有局部位置和旋转。
             var parent = instance.parent; var pos = instance.localPosition; var rot = instance.localRotation;
             UnityEngine.Object.DestroyImmediate(instance.gameObject);
@@ -306,19 +322,26 @@ namespace Game.Editor
         /// <summary>复用原创海面 Shader 材质，不引入流体模拟。</summary>
         private static Material SeaMaterial()
         {
-            string path = Content + "Art/Materials/SeaSurface.mat";
+            string path = Content + "Art/Materials/" + assetVariant + "SeaSurface.mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null) { material = new Material(Shader.Find("RoomDemo/SeaSurface")); AssetDatabase.CreateAsset(material, path); }
             return material;
+        }
+        /// <summary>灰盒使用自己的连续表面材料，不覆盖美术材质库。</summary>
+        private static Material PaintingSurfaceMaterial(string name, float canvasMode)
+        {
+            var material = Mat(name, Color.white); material.shader = Shader.Find("RoomDemo/PaintingSea");
+            material.SetFloat("_CanvasMode", canvasMode); material.SetFloat("_Transition", 0); return material;
         }
         /// <summary>创建天空、海面、地平线与远月组成的海景层。</summary>
         private static Transform Ocean(Transform parent)
         {
             var ocean = Group("OceanBackground", parent);
-            Cube("OceanSky", ocean, new Vector3(0, 0, .26f), new Vector3(2.65f, 2.16f, .04f), Mat("OceanSky", new Color(.64f, .80f, .83f)));
+            Cube("OceanSky", ocean, new Vector3(0, 0, .26f), new Vector3(2.65f, 2.16f, .04f), PaintingSurfaceMaterial("WindowCanvas", 0));
             Cube("Sea", ocean, new Vector3(0, -.63f, .19f), new Vector3(2.65f, .93f, .04f), SeaMaterial());
             Cube("Horizon", ocean, new Vector3(0, -.16f, .16f), new Vector3(2.65f, .025f, .03f), cream);
             Shape("DistantMoon", ocean, PrimitiveType.Sphere, new Vector3(-.66f, .53f, .19f), new Vector3(.36f, .36f, .03f), cream);
+            foreach (Transform child in ocean) if (child.name != "OceanSky") child.gameObject.SetActive(false);
             return ocean;
         }
         /// <summary>创建画框、普通静态画及动态海画视觉层。</summary>
@@ -337,7 +360,7 @@ namespace Game.Editor
             Cube("PigmentBand", ordinary, new Vector3(0, -.14f, -.025f), new Vector3(1.1f, .21f, .02f), pot);
             Shape("StillSun", ordinary, PrimitiveType.Sphere, new Vector3(-.22f, .23f, -.025f), new Vector3(.34f, .34f, .015f), accent);
             var sea = Group("SeaPainting", visual);
-            Cube("MovingSea", sea, new Vector3(0, 0, .02f), new Vector3(1.10f, 1.27f, .06f), SeaMaterial()); sea.gameObject.SetActive(false);
+            Cube("MovingSea", sea, new Vector3(0, 0, .02f), new Vector3(1.10f, 1.27f, .06f), PaintingSurfaceMaterial("PaintingCanvas", 1)); sea.gameObject.SetActive(false);
             Label(visual, "画", new Vector3(0, -.85f, -.14f));
             painting.gameObject.AddComponent<PaintingPresenter>().Configure(ordinary.gameObject, sea.gameObject, Sound(painting, "Sea", true, .23f));
             return SavePrefab(painting, "Interactables", "Painting").GetComponent<PaintingPresenter>();
@@ -377,7 +400,7 @@ namespace Game.Editor
         /// <summary>用固定种子噪声和简单音调生成确定性的占位 WAV。</summary>
         private static AudioSource Sound(Transform parent, string kind, bool loop, float volume)
         {
-            string path = Content + "Audio/" + kind + ".wav";
+            string path = Content + "Audio/" + assetVariant + kind + ".wav";
             // 写标准单声道 16 位 PCM WAV；声音只是可替换占位反馈。
             const int rate = 22050;
             int count = rate * (loop ? 6 : 1); var random = new System.Random(31); float smooth = 0;
@@ -408,7 +431,7 @@ namespace Game.Editor
         private static AudioClip CreateWindClip()
         {
             // 固定种子的低通噪声构成原创循环风声，不使用外部音频。
-            string path = Content + "Audio/Wind.wav";
+            string path = Content + "Audio/" + assetVariant + "Wind.wav";
             const int rate = 22050, count = rate * 4;
             var random = new System.Random(17); float sample = 0;
             using (var stream = new BinaryWriter(File.Create(path)))
