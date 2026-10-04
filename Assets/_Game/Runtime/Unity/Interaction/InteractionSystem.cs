@@ -16,11 +16,14 @@ namespace Game.Unity
     {
         [SerializeField] private Camera viewCamera;
         [SerializeField] private Text hoverText;
+        [SerializeField] private InspectionController inspection;
         private GameSession session;
         private NotebookView notebook;
         private Clickable previousTarget;
         private bool previousInspectable;
         private bool hasHoverSnapshot;
+        /// <summary>注入射线相机与悬停文本。</summary>
+        public void ConfigureInspection(InspectionController controller) { inspection = controller; }
         /// <summary>注入射线相机与悬停文本。</summary>
         public void Configure(Camera camera, Text hover) { viewCamera = camera; hoverText = hover; }
         /// <summary>绑定当前会话及笔记本遮挡状态。</summary>
@@ -38,6 +41,7 @@ namespace Game.Unity
         {
             var target = FindClickable(screenPoint);
             if (target == null) return false;
+            if (inspection != null && target.TryGetComponent<InspectableObject>(out var item)) return inspection.Enter(item);
             target.Inspect(session); return true;
         }
         /// <summary>处理鼠标与 UI 遮挡，显示领域查询得到的中文反馈。</summary>
@@ -45,7 +49,7 @@ namespace Game.Unity
         {
             if (Mouse.current == null || session == null) return;
             // 统一判断 UI 遮挡，避免点击按钮同时调查其后的世界物体。
-            bool blocked = notebook.IsOpen || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
+            bool blocked = notebook.IsOpen || notebook.ExternalInputBlocked || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
             // 中文显示来源于内容定义；业务许可来源于状态查询。
             bool inspectable = target != null && session.IsInspectable(target.Entity.Id);

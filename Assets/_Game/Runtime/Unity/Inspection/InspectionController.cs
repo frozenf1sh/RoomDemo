@@ -1,0 +1,161 @@
+// =============================================================================
+// 文件：InspectionController.cs
+// 职责：在独立展示空间创建近景复制体，处理拖转、缩放、热点与返回房间。
+// 边界：同一相机暂时切到独立 Layer；不使用物理抓取，不修改房间物体姿态。
+//       临时页状态来自应用层模型；观察只能通过会话发现入口进入领域。
+// =============================================================================
+using System.Linq;
+using Game.Application;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+namespace Game.Unity
+{
+    /// <summary>两件主物体共用的轻量检视适配器，拥有复制体和输入切换的生命周期。</summary>
+    public sealed class InspectionController : MonoBehaviour
+    {
+        public const int InspectionLayer = 30;
+        [SerializeField] private Camera viewCamera;
+        [SerializeField] private Transform pivot;
+        [SerializeField] private GameObject overlay;
+        [SerializeField] private Text title, hint, feedback;
+        [SerializeField] private Button exitButton;
+        [SerializeField] private GameObject cubePrefab;
+        [SerializeField] private AudioSource pickupAudio, pageAudio, observeAudio, exitAudio;
+        private GameSession session;
+        private NotebookView notebook;
+        private GameObject clone;
+        private InspectionView view;
+        private InspectionHotspot[] hotspots;
+        private InspectionHotspot hovered;
+        private InspectableObject source;
+        private Vector3 cameraPosition;
+        private Quaternion cameraRotation;
+        private int cameraMask;
+        private CameraClearFlags cameraClear;
+        private Color cameraBackground;
+        private float cameraFar, yaw, pitch, zoom = 3, pressTravel;
+        private Vector2 pressAt;
+        private string sourceId;
+        public bool IsOpen => clone != null;
+        public InspectionModel Model { get; private set; }
+        public GameObject CurrentVisual => clone;
+        public float ZoomDistance => zoom;
+        public void Configure(Camera camera, Transform displayPivot, GameObject panel, Text name, Text hover, Text response,
+            Button back, GameObject sample, AudioSource pickup, AudioSource page, AudioSource observation, AudioSource exit)
+        {
+            viewCamera = camera; pivot = displayPivot; overlay = panel; title = name; hint = hover; feedback = response;
+            exitButton = back; cubePrefab = sample; pickupAudio = pickup; pageAudio = page; observeAudio = observation; exitAudio = exit;
+        }
+        /// <summary>重开或预设跳转先退出旧检视，再绑定新会话；不会留下输入锁。</summary>
+        public void Bind(GameSession game, NotebookView book)
+        {
+            Exit(false); session = game; notebook = book;
+            exitButton.onClick.RemoveAllListeners(); exitButton.onClick.AddListener(() => Exit()); overlay.SetActive(false);
+        }
+        /// <summary>先由领域确认可调查性并认识本物体，再展示独立近景模型。</summary>
+        public bool Enter(InspectableObject item)
+        {
+            if (session == null || notebook.ExternalInputBlocked || !session.IsInspectable(item.Entity.Id)) return false;
+            session.Inspect(item.Entity.Id);
+            source = item;
+            Open(item.InspectVisual, item.Entity.Id.Value, session.Rules.Discoveries.Single(x => x.Source == item.Entity.Id).DisplayName);
+            return true;
+        }
+        /// <summary>开发入口：技术样板不授予物体或观察，也不改变领域状态。</summary>
+        public void InspectDebugCube() { if (IsOpen) Exit(false); source = null; Open(cubePrefab, "test_cube", "检视技术样板"); }
+        private void Open(GameObject prefab, string id, string name)
+        {
+            notebook.SetOpen(false); notebook.ExternalInputBlocked = true;
+            sourceId = id; Model = new InspectionModel(InspectionContent.For(id));
+            cameraPosition = viewCamera.transform.localPosition; cameraRotation = viewCamera.transform.localRotation;
+            cameraMask = viewCamera.cullingMask; cameraClear = viewCamera.clearFlags; cameraBackground = viewCamera.backgroundColor; cameraFar = viewCamera.farClipPlane;
+            clone = Instantiate(prefab, pivot, false);
+            foreach (var child in clone.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = InspectionLayer;
+            view = clone.GetComponent<InspectionView>(); hotspots = clone.GetComponentsInChildren<InspectionHotspot>(true);
+            yaw = pitch = 0; zoom = 3; hovered = null;
+            viewCamera.cullingMask = 1 << InspectionLayer; viewCamera.clearFlags = CameraClearFlags.SolidColor;
+            viewCamera.backgroundColor = new Color(.055f, .06f, .065f); viewCamera.farClipPlane = 15;
+            title.text = name + " · 仔细看"; hint.text = "拖动旋转，滚轮拉近。细节藏在不同角度。";
+            feedback.text = ""; overlay.SetActive(true); view.ApplyState(Model.State, false); PositionCamera(); pickupAudio.Play();
+            RefreshHotspots();
+        }
+        /// <summary>使用局部相机快照恢复，原来固定观察点和转头角度保持不变。</summary>
+        public void Exit(bool playSound = true)
+        {
+            if (!IsOpen) return;
+            // 立即清空状态并移除旧复制体，延迟销毁期间也不能再响应射线。
+            clone.SetActive(false); Destroy(clone); clone = null; Model = null; source = null; hovered = null;
+            viewCamera.transform.localPosition = cameraPosition; viewCamera.transform.localRotation = cameraRotation;
+            viewCamera.cullingMask = cameraMask; viewCamera.clearFlags = cameraClear; viewCamera.backgroundColor = cameraBackground; viewCamera.farClipPlane = cameraFar;
+            overlay.SetActive(false); notebook.ExternalInputBlocked = false;
+            pickupAudio.Stop(); pageAudio.Stop(); observeAudio.Stop(); if (playSound) exitAudio.Play(); else exitAudio.Stop();
+        }
+        /// <summary>只旋转复制体，限制俯仰以便近距离阅读；不读取旋转推导世界状态。</summary>
+        public void Rotate(Vector2 delta)
+        {
+            if (!IsOpen) return;
+            yaw += delta.x * .35f; pitch = Mathf.Clamp(pitch - delta.y * .25f, -60, 60);
+            clone.transform.localRotation = Quaternion.Euler(pitch, yaw, 0); RefreshHotspots();
+        }
+        public void Zoom(float delta)
+        {
+            if (!IsOpen) return;
+            zoom = Mathf.Clamp(zoom - delta * .002f, 1.6f, 5.2f); PositionCamera();
+        }
+        private void PositionCamera()
+        {
+            viewCamera.transform.position = pivot.position + Vector3.back * zoom;
+            viewCamera.transform.rotation = Quaternion.identity;
+        }
+        /// <summary>热点必须满足页状态；拿近和翻页永远不会自动发现短语。</summary>
+        public bool ActOnHotspot(string id)
+        {
+            if (!IsOpen || !Model.TryAct(id, out var action)) return false;
+            view.ApplyState(Model.State, action.NextState != null); pageAudio.Play();
+            if (action.ObservationId != null)
+            {
+                // 领域发现接入在物体内容阶段实现；技术样板没有观察产出。
+                feedback.text = action.Hint;
+                observeAudio.Play();
+            }
+            else feedback.text = action.Hint;
+            RefreshHotspots(); return true;
+        }
+        /// <summary>真实射线入口；按当前角度和页状态寻找具体细节。</summary>
+        public bool ObserveAt(Vector2 point)
+        {
+            if (!IsOpen || !Physics.Raycast(viewCamera.ScreenPointToRay(point), out var hit, 12, 1 << InspectionLayer)) return false;
+            var hotspot = hit.collider.GetComponent<InspectionHotspot>();
+            return hotspot != null && hotspot.Faces(viewCamera) && ActOnHotspot(hotspot.ActionId);
+        }
+        private void RefreshHotspots()
+        {
+            foreach (var hotspot in hotspots)
+                hotspot.GetComponent<Collider>().enabled = hotspot.gameObject.activeInHierarchy && Model.CanAct(hotspot.ActionId) && hotspot.Faces(viewCamera);
+        }
+        private void Update()
+        {
+            if (!IsOpen || Mouse.current == null) return;
+            var mouse = Mouse.current; var keyboard = Keyboard.current;
+            if (mouse.rightButton.wasPressedThisFrame || (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)) { Exit(); return; }
+            Zoom(mouse.scroll.ReadValue().y);
+            if (mouse.leftButton.wasPressedThisFrame) { pressAt = mouse.position.ReadValue(); pressTravel = 0; }
+            if (mouse.leftButton.isPressed)
+            {
+                pressTravel = Mathf.Max(pressTravel, Vector2.Distance(pressAt, mouse.position.ReadValue()));
+                if (pressTravel > 6) Rotate(mouse.delta.ReadValue());
+            }
+            if (mouse.leftButton.wasReleasedThisFrame && pressTravel <= 6) ObserveAt(mouse.position.ReadValue());
+            InspectionHotspot next = null;
+            if (Physics.Raycast(viewCamera.ScreenPointToRay(mouse.position.ReadValue()), out var hit, 12, 1 << InspectionLayer)) next = hit.collider.GetComponent<InspectionHotspot>();
+            if (next != hovered)
+            {
+                if (hovered != null) hovered.SetHover(false); hovered = next;
+                if (hovered != null) { hovered.SetHover(true); hint.text = Model.Definition.Actions.Single(x => x.Id == hovered.ActionId).Hint + " · 点击"; }
+                else hint.text = "左键拖动旋转 · 滚轮缩放 · 点击细节 · 右键／Esc 返回";
+            }
+        }
+        private void OnDestroy() { if (IsOpen) Exit(false); }
+    }
+}

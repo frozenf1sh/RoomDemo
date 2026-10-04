@@ -49,6 +49,8 @@ namespace Game.Unity
         public bool HasUnreadDiscoveries { get; private set; }
         /// <summary>笔记本界面开关，仅为临时输入状态。</summary>
         public bool IsOpen => panel.activeSelf;
+        /// <summary>检视／跨日过渡的临时输入锁；不进入世界状态。</summary>
+        public bool ExternalInputBlocked { get; set; }
         /// <summary>本次界面选择的输入快照，不代表已完成配方。</summary>
         public IReadOnlyList<ClueId> SelectedClues => selected.Where(x => x.HasValue).Select(x => x.Value).ToArray();
         /// <summary>注入列表、模板、反馈和提交按钮。</summary>
@@ -97,6 +99,7 @@ namespace Game.Unity
         /// <summary>只修改笔记本界面开关。</summary>
         public void SetOpen(bool open, bool playSound = true)
         {
+            if (open && ExternalInputBlocked) return;
             bool changed = panel.activeSelf != open;
             panel.SetActive(open);
             if (changed && playSound) paperAudio.Play();
@@ -205,7 +208,7 @@ namespace Game.Unity
             {
                 // 捕获本条碎片的 ID，生成的按钮仅提交选择。
                 var id = definition.Id; bool objectClue = definition.Category == ClueCategory.Object;
-                AddRow(objectClue ? objectList : conceptList, (objectClue ? "Object_" : "Concept_") + id.Value, definition.DisplayName, () => SelectClue(id));
+                AddRow(objectClue ? objectList : conceptList, (objectClue ? "Object_" : "Concept_") + id.Value, (definition.Category == ClueCategory.Observation ? "观察 · " : "") + definition.DisplayName, () => SelectClue(id));
             }
             RenderSelection(); RenderHistory();
         }
@@ -247,6 +250,7 @@ namespace Game.Unity
             var focused = UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject;
             // 编辑调试事实时不抢 N、Tab 和 Esc，保证输入体验。
             if (focused != null && focused.TryGetComponent<InputField>(out var input) && input.isFocused) return;
+            if (ExternalInputBlocked) return;
             if (keyboard.nKey.wasPressedThisFrame || keyboard.tabKey.wasPressedThisFrame) Toggle();
             if (keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
         }

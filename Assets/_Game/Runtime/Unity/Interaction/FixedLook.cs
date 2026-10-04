@@ -31,7 +31,7 @@ namespace Game.Unity
         private void Update()
         {
             // 输入设备缺失或笔记本打开时暂停转头，避免界面选择时晃动画面。
-            if (Mouse.current == null || notebook.IsOpen) return;
+            if (Mouse.current == null || notebook.IsOpen || notebook.ExternalInputBlocked) return;
             if (Mouse.current.rightButton.isPressed) ApplyLook(Mouse.current.delta.ReadValue());
             if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
             { yaw = pitch = 0; transform.localRotation = origin; }

@@ -19,6 +19,7 @@ namespace Game.Unity
         [SerializeField] private DebugView debugView;
         [SerializeField] private InteractionSystem interaction;
         [SerializeField] private PaintingSeaSequence sequence;
+        [SerializeField] private InspectionController inspection;
         /// <summary>当前会话引用；重开与跳转会整体替换。</summary>
         public GameSession Session { get; private set; }
         /// <summary>由场景生成器显式注入组件引用。</summary>
@@ -26,6 +27,8 @@ namespace Game.Unity
         { presenters = views; notebook = notebookView; debugView = debug; interaction = input; }
         /// <summary>注入本房间的演出导演，核心会话不依赖它。</summary>
         public void ConfigureSequence(PaintingSeaSequence director) { sequence = director; }
+        /// <summary>显式绑定检视输入，重开时负责退出并释放临时相机。</summary>
+        public void ConfigureInspection(InspectionController controller) { inspection = controller; }
         /// <summary>在表现组件缓存初始姿态后创建会话，并设置帧率。</summary>
         private void Awake()
         {
@@ -46,13 +49,16 @@ namespace Game.Unity
         /// <summary>统一重绑 Presenter、笔记本、调试面板与输入。</summary>
         private void Bind(GameSession session)
         {
+            if (inspection != null) inspection.Exit(false);
             if (sequence != null) sequence.Cancel();
             Session = session;
             // 所有表现消费同一 Session；不让 Prefab 直接调用其他 Prefab。
             Func<FactId, bool> filter = sequence == null ? (Func<FactId, bool>)null : sequence.ShouldPresentImmediately;
             foreach (var view in presenters) view.Bind(Session, filter);
             if (sequence != null) sequence.Bind(Session, presenters);
-            notebook.Bind(Session); debugView.Bind(Session, Restart, JumpTo, AddDebugFact, sequence); interaction.Bind(Session, notebook);
+            notebook.Bind(Session);
+            if (inspection != null) inspection.Bind(Session, notebook);
+            debugView.Bind(Session, Restart, JumpTo, AddDebugFact, sequence); interaction.Bind(Session, notebook);
         }
     }
 }
