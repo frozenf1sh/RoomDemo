@@ -65,6 +65,9 @@ namespace Game.Unity
             if (sequence != null) sequence.ApplyFinalStateImmediately();
             else foreach (var view in presenters) view.ApplyState(Session.State, false);
         }
+        /// <summary>独立世界样板的应用层入口：提交明确的调试事实，让演出消费者自行响应。</summary>
+        /// <remarks>区别于跳转预设，这个入口保留过渡事件；导演本身不能调用它。</remarks>
+        public void PlayStarryBenchmark() { Session.DebugAddFact(ExplorationRules.WorldStarry); }
         /// <summary>统一重绑 Presenter、笔记本、调试面板与输入。</summary>
         private void Bind(GameSession session)
         {

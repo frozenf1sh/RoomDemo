@@ -73,7 +73,8 @@ namespace Game.Domain
             // 允许所有规则引用的事实，不把具体试玩内容写死在引擎中。
             var known = rules.Recipes.SelectMany(x => x.Produces.Concat(x.Requires))
                 .Concat(rules.Reactions.SelectMany(x => x.Produces.Concat(x.Requires)))
-                .Concat(rules.Discoveries.SelectMany(x => x.Requires)).Concat(rules.Observations.SelectMany(x => x.Requires)).ToHashSet();
+                .Concat(rules.Discoveries.SelectMany(x => x.Requires)).Concat(rules.Observations.SelectMany(x => x.Requires))
+                .Concat(rules.DeclaredFacts).ToHashSet();
             if (facts.Any(f => !known.Contains(f))) throw new ArgumentException("未知的调试事实。");
             var events = new List<DomainEvent>();
             AddFacts(state, facts, events);

@@ -107,6 +107,9 @@ namespace Game.Domain
         public IReadOnlyList<ReactionRule> Reactions { get; }
         /// <summary>近景中亲自点击的具体观察来源，与房间点击发现分别配置。</summary>
         public IReadOnlyList<ObservationDiscovery> Observations { get; }
+        /// <summary>由外部明确触发的已声明事实，当前用于独立世界样板的开发入口。</summary>
+        /// <remarks>只是内容身份清单，没有视觉、时间或反应逻辑。</remarks>
+        public IReadOnlyList<FactId> DeclaredFacts { get; }
         // 第一版的兼容查询视图；实际匹配始终只使用 ClueId 配方。
         /// <summary>由统一内容定义派生的第一版物体视图。</summary>
         public IReadOnlyList<ObjectDefinition> Objects { get; }
@@ -115,9 +118,10 @@ namespace Game.Domain
         /// <summary>从兼容二元配方派生的旧解释视图。</summary>
         public IReadOnlyList<InterpretationRule> Interpretations { get; }
         /// <summary>装载规则并校验唯一性、引用与歧义；旧构造入口会转换成新数据。</summary>
-        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null)
+        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null)
         {
             observations = observations ?? Array.Empty<ObservationDiscovery>();
+            declaredFacts = declaredFacts ?? Array.Empty<FactId>();
             // 一次性验证所有内容身份，尽早暴露策划数据错误。
             if (clues.Select(x => x.Id).Distinct().Count() != clues.Length || discoveries.Select(x => x.Source).Distinct().Count() != discoveries.Length ||
                 discoveries.Select(x => x.Id).Distinct().Count() != discoveries.Length || recipes.Select(x => x.Id).Distinct().Count() != recipes.Length || reactions.Select(x => x.Id).Distinct().Count() != reactions.Length)
@@ -137,6 +141,8 @@ namespace Game.Domain
             Clues = Array.AsReadOnly((ClueDefinition[])clues.Clone()); Discoveries = Array.AsReadOnly((DiscoveryRule[])discoveries.Clone());
             Recipes = Array.AsReadOnly((SemanticRecipe[])recipes.Clone()); Reactions = Array.AsReadOnly((ReactionRule[])reactions.Clone());
             Observations = Array.AsReadOnly((ObservationDiscovery[])observations.Clone());
+            // 独立样板可以声明一个事实，无需伪造空反应或新增玩家谜题。
+            DeclaredFacts = Array.AsReadOnly(declaredFacts.Distinct().ToArray());
             // 旧视图从统一定义推导，不作为第二份世界状态来源。
             Objects = Array.AsReadOnly(discoveries.Select(x => new ObjectDefinition(x.Source, x.DisplayName, x.Description, x.Requires.ToArray(),
                 x.Grants.Where(c => clues.Single(d => d.Id == c).Category == ClueCategory.Concept).Select(c => new ConceptId(c.Value)).ToArray(),

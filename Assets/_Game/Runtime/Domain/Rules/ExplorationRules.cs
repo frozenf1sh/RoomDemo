@@ -31,7 +31,7 @@ namespace Game.Domain
             var reactions = old.Reactions.Concat(new[] {
                 new ReactionRule("growth-continues-next-day", new[] { PlantStartsGrowing }, new[] { PlantOvergrown }, 1),
                 new ReactionRule("overgrowth-is-grown", new[] { PlantOvergrown }, new[] { DemoRules.PlantGrown }) }).ToArray();
-            return new RuleSet(clues, discoveries, recipes, reactions, observations);
+            return new RuleSet(clues, discoveries, recipes, reactions, observations, new[] { WorldStarry });
         }
     }
 }
