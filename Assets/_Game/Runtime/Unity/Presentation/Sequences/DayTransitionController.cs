@@ -58,8 +58,8 @@ namespace Game.Unity
                 yield return null;
             }
             darkness.alpha = 1; restore(); remainingSound.Play();
-            transitionLabel.text = "第 " + session.State.DayIndex + " 天\n熟悉的房间，还记着昨天的解释。";
-            yield return new WaitForSecondsRealtime(.9f);
+            transitionLabel.text = "第 " + session.State.DayIndex + " 天";
+            yield return new WaitForSecondsRealtime(1.3f);
             elapsed = 0;
             while (elapsed < .85f)
             {

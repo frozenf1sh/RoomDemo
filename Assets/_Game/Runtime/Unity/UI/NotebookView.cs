@@ -53,6 +53,7 @@ namespace Game.Unity
         private float blinkStartedAt;
         private ColorBlock originalButtonColors;
         private bool buttonColorsCaptured;
+        private CanvasGroup[] columnCanvas;
         /// <summary>是否有尚未打开笔记本查看的新发现；不代表任何领域事实。</summary>
         public bool HasUnreadDiscoveries { get; private set; }
         /// <summary>笔记本界面开关，仅为临时输入状态。</summary>
@@ -61,6 +62,12 @@ namespace Game.Unity
         public bool ExternalInputBlocked { get; set; }
         /// <summary>本次界面选择的输入快照，不代表已完成配方。</summary>
         public IReadOnlyList<ClueId> SelectedClues => selected.Where(x => x.HasValue).Select(x => x.Value).ToArray();
+        private void Awake()
+        {
+            // 纸面分类淡出只是灵感书写的构图；灰盒没有分列 CanvasGroup 时照常工作。
+            columnCanvas = new[] { objectList, observationList, conceptList }.Where(x => x != null)
+                .Select(x => x.GetComponent<CanvasGroup>()).Where(x => x != null).ToArray();
+        }
         /// <summary>注入列表、模板、反馈和提交按钮。</summary>
         public void Configure(GameObject body, Transform objects, Transform concepts, Button template, Button interpret, Text selection, Text feedback)
         { panel = body; objectList = objects; conceptList = concepts; rowTemplate = template; interpretButton = interpret; selectionText = selection; feedbackText = feedback; }
@@ -102,7 +109,7 @@ namespace Game.Unity
             openButton.onClick.RemoveAllListeners(); openButton.onClick.AddListener(Toggle);
             closeButton.onClick.RemoveAllListeners(); closeButton.onClick.AddListener(() => SetOpen(false));
             for (int i = 0; i < slotButtons.Length; i++) { int index = i; slotButtons[i].onClick.RemoveAllListeners(); slotButtons[i].onClick.AddListener(() => { selected[index] = null; RenderSelection(); }); }
-            feedbackText.text = "点击已收集的碎片，填入最多三个组合槽；点击已填槽位可清除选择。"; Render();
+            feedbackText.text = "把细节放在一起。"; Render();
         }
         /// <summary>只修改笔记本界面开关。</summary>
         public void SetOpen(bool open, bool playSound = true)
@@ -153,23 +160,23 @@ namespace Game.Unity
             }
             if (e is ObjectInspected inspected) feedbackText.text = inspected.Description;
             if (e is InspectionFailed inspectFailed) feedbackText.text = inspectFailed.Reason;
-            if (e is CombinationFailed failed) { feedbackText.text = failed.Reason; selectionText.color = new Color(.42f, .35f, .27f); closeAt = -1; relationLine.enabled = false; scratchAudio.Play(); }
+            if (e is CombinationFailed) { feedbackText.text = "还没有形成联系。"; selectionText.color = new Color(.42f, .35f, .27f); closeAt = -1; relationLine.enabled = false; scratchAudio.Play(); }
             // 成功时世界已经开始响应；界面强调后短暂延时收起。
             if (e is CombinationSucceeded success)
             {
-                feedbackText.text = "笔迹相连。看看房间正在回应什么。";
+                feedbackText.text = "笔迹落下，房间开始回应。";
                 connectedAt = Time.unscaledTime; relationLine.enabled = true; inkAudio.Play();
                 // 只根据实际输入数量连接已填槽位，不读取配方答案。
-                relationLine.rectTransform.anchorMin = new Vector2(1f / 6, .27f);
-                relationLine.rectTransform.anchorMax = new Vector2(1f / 6 + (SelectedClues.Count - 1) / 3f, .274f);
-                selectionText.text = string.Join("  ─  ", SelectedClues.Select(Label)); selectionText.color = new Color(.75f, .43f, .10f);
+                relationLine.rectTransform.anchorMin = new Vector2(1f / 6, .350f);
+                relationLine.rectTransform.anchorMax = new Vector2(1f / 6 + (SelectedClues.Count - 1) / 3f, .354f);
+                selectionText.text = string.Join("  ─  ", SelectedClues.Select(Label)); selectionText.color = new Color(.48f, .37f, .18f);
                 var concepts = success.ProducedClues.Where(c => session.Rules.Clues.Single(x => x.Id == c).Category == ClueCategory.Concept).ToArray();
                 if (concepts.Length > 0)
                 {
                     // 仅根据实际输出事件改变反馈；没有在 UI 匹配输入或复制配方答案。
                     formedWord = string.Join(" · ", concepts.Select(Label)); clearedInsightSlots = false; closeAt = -1;
                     if (insightWord != null) { insightWord.text = ""; insightWord.gameObject.SetActive(true); }
-                    feedbackText.text = "两个细节之间，你想到了一个词。";
+                    feedbackText.text = "一个词，慢慢浮现。";
                 }
                 else closeAt = Time.unscaledTime + .65f;
                 RenderHistory();
@@ -228,7 +235,7 @@ namespace Game.Unity
                 var id = definition.Id; bool objectClue = definition.Category == ClueCategory.Object;
                 bool observation = definition.Category == ClueCategory.Observation;
                 var list = objectClue ? objectList : observation && observationList != null ? observationList : conceptList;
-                AddRow(list, (objectClue ? "Object_" : observation ? "Observation_" : "Concept_") + id.Value, definition.DisplayName, () => SelectClue(id));
+                AddRow(list, (objectClue ? "Object_" : observation ? "Observation_" : "Concept_") + id.Value, definition.DisplayName, definition.Category, () => SelectClue(id));
             }
             RenderSelection(); RenderHistory();
         }
@@ -240,16 +247,32 @@ namespace Game.Unity
         /// <summary>先隐藏旧按钮再延迟销毁，避免同一帧残留可点击项。</summary>
         private static void ClearRows(Transform list) { foreach (Transform child in list) { child.gameObject.SetActive(false); Destroy(child.gameObject); } }
         /// <summary>从模板创建中文条目，并绑定本条碎片的选择回调。</summary>
-        private void AddRow(Transform list, string name, string label, UnityEngine.Events.UnityAction select)
-        { var row = Instantiate(rowTemplate, list); row.name = name; row.gameObject.SetActive(true); row.GetComponentInChildren<Text>().text = label; row.onClick.AddListener(select); }
+        private void AddRow(Transform list, string name, string label, ClueCategory category, UnityEngine.Events.UnityAction select)
+        {
+            var row = Instantiate(rowTemplate, list);
+            row.name = name;
+            row.gameObject.SetActive(true);
+            var text = row.GetComponentInChildren<Text>();
+            text.text = label;
+            // 同一碎片输入仍使用同一按钮；字的重量区分具体事物、旁注观察和抽象灵感。
+            bool concept = category == ClueCategory.Concept;
+            bool observation = category == ClueCategory.Observation;
+            text.fontSize = concept ? 26 : observation ? 17 : 21;
+            text.color = observation ? new Color(.40f, .38f, .32f) : new Color(.25f, .25f, .21f);
+            row.GetComponent<LayoutElement>().preferredHeight = concept ? 44 : observation ? 32 : 36;
+            row.targetGraphic = text;
+            row.onClick.AddListener(select);
+        }
         /// <summary>刷新槽位与提交许可，只校验输入数量。</summary>
         private void RenderSelection()
         {
             if (formedWord != null) return;
             relationLine.enabled = false;
-            selectionText.text = "把观察联系起来，或用概念解释事物"; selectionText.color = new Color(.1f, .15f, .19f);
-            for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) + "  ×" : i == 2 ? "+ 可选碎片" : "+ 选择碎片";
+            selectionText.text = "让这些细节靠近一些"; selectionText.color = new Color(.40f, .38f, .33f);
+            for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) : i == 2 ? "···" : "放下碎片";
             interpretButton.interactable = SelectedClues.Count >= 2;
+            var submit = interpretButton.GetComponentInChildren<Text>();
+            submit.color = new Color(.40f, .29f, .12f, interpretButton.interactable ? 1 : .35f);
         }
         /// <summary>纸页轻展开，成功时墨线连接并在最后短暂合页；没有配方判断。</summary>
         private void UpdatePaperRitual()
@@ -260,6 +283,11 @@ namespace Game.Unity
             paperCanvas.alpha = opening * (1 - closing);
             paperBody.localScale = new Vector3(.97f + opening * .03f - closing * .14f, .985f + opening * .015f - closing * .025f, 1);
             if (connectedAt >= 0) relationLine.rectTransform.localScale = new Vector3(Mathf.Clamp01((Time.unscaledTime - connectedAt) / .38f), 1, 1);
+            if (columnCanvas != null)
+            {
+                float alpha = formedWord != null ? .36f : 1;
+                foreach (var column in columnCanvas) column.alpha = Mathf.MoveTowards(column.alpha, alpha, Time.unscaledDeltaTime * 2.5f);
+            }
         }
         /// <summary>处理面板按键与成功后收起；输入框编辑时不抢占键盘。</summary>
         private void Update()
@@ -273,8 +301,8 @@ namespace Game.Unity
                 if (elapsed > 1.6f && !clearedInsightSlots)
                 {
                     clearedInsightSlots = true; ClearSelection(); interpretButton.interactable = false;
-                    foreach (var slot in slotButtons) slot.GetComponentInChildren<Text>().text = "+ 选择碎片";
-                    feedbackText.text = "“" + formedWord + "”。现在试着用它重新看待一件事物。";
+                    for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = i == 2 ? "···" : "放下碎片";
+                    feedbackText.text = "“" + formedWord + "”。重新看待一件事物。";
                 }
             }
             if (closeAt > 0 && Time.unscaledTime >= closeAt) { closeAt = -1; SetOpen(false); ClearSelection(); RenderSelection(); }

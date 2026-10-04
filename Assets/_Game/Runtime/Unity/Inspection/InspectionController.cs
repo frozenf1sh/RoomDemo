@@ -35,9 +35,10 @@ namespace Game.Unity
         private int cameraMask;
         private CameraClearFlags cameraClear;
         private Color cameraBackground;
-        private float cameraFar, yaw, pitch, zoom = 3, pressTravel;
+        private float cameraFar, cameraFov, targetFov, focusTime, openedTime, feedbackTime, yaw, pitch, zoom = 3, pressTravel;
         private Vector2 pressAt;
         private string sourceId;
+        private bool instructionShown, showOpeningInstruction;
         /// <summary>复制体存活即处于检视模式；退出先清空它，防止延迟销毁期间继续响应。</summary>
         public bool IsOpen => clone != null;
         /// <summary>当前书页或检视动作的临时状态；不写入世界事实。</summary>
@@ -80,13 +81,17 @@ namespace Game.Unity
             sourceId = id; Model = new InspectionModel(InspectionContent.For(id));
             cameraPosition = viewCamera.transform.localPosition; cameraRotation = viewCamera.transform.localRotation;
             cameraMask = viewCamera.cullingMask; cameraClear = viewCamera.clearFlags; cameraBackground = viewCamera.backgroundColor; cameraFar = viewCamera.farClipPlane;
+            cameraFov = viewCamera.fieldOfView;
             clone = Instantiate(prefab, pivot, false);
             foreach (var child in clone.GetComponentsInChildren<Transform>(true)) child.gameObject.layer = InspectionLayer;
             view = clone.GetComponent<InspectionView>(); hotspots = clone.GetComponentsInChildren<InspectionHotspot>(true);
             yaw = pitch = 0; zoom = 3; hovered = null;
+            focusTime = 0; openedTime = 0; feedbackTime = 0; targetFov = id == "book" ? 43 : 52;
             viewCamera.cullingMask = 1 << InspectionLayer; viewCamera.clearFlags = CameraClearFlags.SolidColor;
-            viewCamera.backgroundColor = new Color(.055f, .06f, .065f); viewCamera.farClipPlane = 15;
-            title.text = name + " · 仔细看"; hint.text = "拖动旋转，滚轮拉近。细节藏在不同角度。";
+            viewCamera.backgroundColor = new Color(.026f, .024f, .021f); viewCamera.farClipPlane = 15;
+            showOpeningInstruction = !instructionShown;
+            instructionShown = true;
+            title.text = name; hint.text = showOpeningInstruction ? "拖动旋转 · 滚轮拉近" : "";
             feedback.text = ""; overlay.SetActive(true); view.ApplyState(Model.State, false); PositionCamera(); pickupAudio.Play();
             RefreshHotspots();
         }
@@ -100,6 +105,7 @@ namespace Game.Unity
             {
                 viewCamera.transform.localPosition = cameraPosition; viewCamera.transform.localRotation = cameraRotation;
                 viewCamera.cullingMask = cameraMask; viewCamera.clearFlags = cameraClear; viewCamera.backgroundColor = cameraBackground; viewCamera.farClipPlane = cameraFar;
+                viewCamera.fieldOfView = cameraFov;
             }
             // 场景卸载期间相机、UI 或音源可能先销毁；归还仍存活的资源即可。
             if (overlay != null) overlay.SetActive(false);
@@ -123,8 +129,11 @@ namespace Game.Unity
         }
         private void PositionCamera()
         {
-            viewCamera.transform.position = pivot.position + Vector3.back * zoom;
+            // 近景复制体从稍远处自然落入焦点；玩家滚轮仍控制真实目标距离。
+            float ease = Mathf.SmoothStep(0, 1, Mathf.Clamp01(focusTime / .72f));
+            viewCamera.transform.position = pivot.position + Vector3.back * (zoom + .42f * (1 - ease));
             viewCamera.transform.rotation = Quaternion.identity;
+            viewCamera.fieldOfView = Mathf.Lerp(cameraFov, targetFov, ease);
         }
         /// <summary>热点必须满足页状态；拿近和翻页永远不会自动发现短语。</summary>
         /// <param name="id">已命名热点动作，普通输入还需先通过 ObserveAt 射线与角度检查。</param>
@@ -138,16 +147,17 @@ namespace Game.Unity
                 // 输入只提交来源与细节，绝不在适配器中写 KnownClues。
                 var events = session.ObserveDetail(source.Entity.Id, action.ObservationId);
                 var failed = events.OfType<Game.Domain.InspectionFailed>().FirstOrDefault();
-                feedback.text = failed != null ? failed.Reason : events.OfType<Game.Domain.ObjectInspected>().Last().Description;
+                feedback.text = failed != null ? failed.Reason : "这一刻，记在纸上。";
                 if (failed == null)
                 {
                     observeAudio.Play();
                     // 轻勾短语而非弹“奖励 +1”；标记只存在于这次近景复制体。
                     foreach (var hotspot in hotspots.Where(x => x.ActionId == id))
-                    { var mark = hotspot.transform.Find("ObservedUnderline"); if (mark != null) mark.gameObject.SetActive(true); }
+                        hotspot.MarkObserved();
                 }
             }
             else feedback.text = action.Hint;
+            feedbackTime = 3;
             RefreshHotspots(); return true;
         }
         /// <summary>真实射线入口；按当前角度和页状态寻找具体细节。</summary>
@@ -166,7 +176,19 @@ namespace Game.Unity
         }
         private void Update()
         {
-            if (!IsOpen || Mouse.current == null) return;
+            if (!IsOpen) return;
+            focusTime = Mathf.Min(.72f, focusTime + Time.unscaledDeltaTime);
+            openedTime += Time.unscaledDeltaTime;
+            feedbackTime = Mathf.Max(0, feedbackTime - Time.unscaledDeltaTime);
+            // 检视也以物品为主体：入场操作说明与动作反馈均短暂淡出。
+            var hintColor = hint.color;
+            hintColor.a = hovered != null ? 1 : showOpeningInstruction ? Mathf.Clamp01(4 - openedTime) : 0;
+            hint.color = hintColor;
+            var feedbackColor = feedback.color;
+            feedbackColor.a = Mathf.Clamp01(feedbackTime);
+            feedback.color = feedbackColor;
+            PositionCamera();
+            if (Mouse.current == null) return;
             var mouse = Mouse.current; var keyboard = Keyboard.current;
             if (mouse.rightButton.wasPressedThisFrame || (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)) { Exit(); return; }
             float scroll = mouse.scroll.ReadValue().y; if (scroll != 0) Zoom(scroll);
@@ -184,7 +206,7 @@ namespace Game.Unity
             {
                 if (hovered != null) hovered.SetHover(false); hovered = next;
                 if (hovered != null) { hovered.SetHover(true); hint.text = Model.Definition.Actions.Single(x => x.Id == hovered.ActionId).Hint + " · 点击"; }
-                else hint.text = "左键拖动旋转 · 滚轮缩放 · 点击细节 · 右键／Esc 返回";
+                else hint.text = showOpeningInstruction && openedTime < 4 ? "拖动旋转 · 滚轮拉近" : "";
             }
         }
         private void OnDestroy() { if (IsOpen) Exit(false); }
