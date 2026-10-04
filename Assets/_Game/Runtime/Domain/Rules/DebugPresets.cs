@@ -21,9 +21,11 @@ namespace Game.Domain
         public IReadOnlyList<FactId> Facts { get; }
         /// <summary>已建立的玩家配方 ID 快照，用于历史和重复提交校验。</summary>
         public IReadOnlyList<string> CompletedRecipes { get; }
+        /// <summary>恢复的日序；不借用真实时间或存档系统。</summary>
+        public int DayIndex { get; }
         /// <summary>复制预设数组，中文显示名与稳定预设 ID 分开。</summary>
-        public DebugPreset(string id, ClueId[] known, FactId[] facts, string[] recipes, string displayName = null)
-        { Id = id; DisplayName = displayName ?? id; Known = Array.AsReadOnly((ClueId[])known.Clone()); Facts = Array.AsReadOnly((FactId[])facts.Clone()); CompletedRecipes = Array.AsReadOnly((string[])recipes.Clone()); }
+        public DebugPreset(string id, ClueId[] known, FactId[] facts, string[] recipes, string displayName = null, int dayIndex = 1)
+        { DayIndex = dayIndex; Id = id; DisplayName = displayName ?? id; Known = Array.AsReadOnly((ClueId[])known.Clone()); Facts = Array.AsReadOnly((FactId[])facts.Clone()); CompletedRecipes = Array.AsReadOnly((string[])recipes.Clone()); }
     }
     /// <summary>正式规则求值后的四个调试里程碑。</summary>
     public static class DebugPresets

@@ -53,6 +53,11 @@ namespace Game.Application
         /// <summary>查询物体当前是否可调查，不读取或改变场景 Collider。</summary>
         public bool IsInspectable(ObjectId id) => Rules.IsInspectable(State, id);
 
+        /// <summary>有待执行的解释时，玩家可以选择结束今天。</summary>
+        public bool CanAdvanceDay => State.PendingDeferredEffects.Count > 0;
+        /// <summary>玩家明确推进日序；立即计算次日事实，视觉过渡独立进行。</summary>
+        public IReadOnlyList<DomainEvent> AdvanceDay() => Dispatch(new AdvanceDay());
+
         /// <summary>调试授予全部已定义碎片，不自动解谜。</summary>
         public IReadOnlyList<DomainEvent> DebugGrantAllClues() => Publish(engine.DebugGrantClues(State, Rules.Clues.Select(x => x.Id).ToArray()));
 

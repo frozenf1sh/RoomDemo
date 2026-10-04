@@ -34,6 +34,28 @@ namespace Game.Domain
         public CombinationFailed(string reason) { Reason = reason; }
         public override string ToString() => $"[配方] 失败：{Reason}";
     }
+    /// <summary>世界记下一个将于后续日序执行的反应。</summary>
+    public sealed class ReactionScheduled : DomainEvent
+    {
+        public string ReactionId { get; }
+        public int DueDay { get; }
+        public ReactionScheduled(string id, int day) { ReactionId = id; DueDay = day; }
+        public override string ToString() => $"[延迟反应] {ReactionId}，将在第 {DueDay} 天发生";
+    }
+    /// <summary>玩家结束今天后，领域日序已经推进。</summary>
+    public sealed class DayAdvanced : DomainEvent
+    {
+        public int DayIndex { get; }
+        public DayAdvanced(int day) { DayIndex = day; }
+        public override string ToString() => $"[日序] 已进入第 {DayIndex} 天";
+    }
+    /// <summary>目前没有等待时间的解释，因此本次结束当天无效。</summary>
+    public sealed class DayAdvanceFailed : DomainEvent
+    {
+        public string Reason { get; }
+        public DayAdvanceFailed(string reason) { Reason = reason; }
+        public override string ToString() => "[日序] " + Reason;
+    }
     /// <summary>领域事件共同类型，只描述已发生的事情。</summary>
     public abstract class DomainEvent { }
     /// <summary>旧消费者使用的物体发现兼容事件。</summary>

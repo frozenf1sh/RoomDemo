@@ -38,6 +38,7 @@ namespace Game.Domain
 
             // 命令分发只区分输入方式，不能在这里写盆栽、海或窗户的规则。
             if (command is InspectObject inspect) accepted = Inspect(state, inspect, events);
+            else if (command is AdvanceDay) accepted = Advance(state, events);
             else if (command is ObserveDetail detail) accepted = Observe(state, detail, events);
             else if (command is Combine combine) accepted = Combine(state, combine.Clues, events);
             else if (command is Interpret interpret) accepted = Interpret(state, interpret, events);
@@ -92,6 +93,7 @@ namespace Game.Domain
                 throw new ArgumentException("预设引用了未知配方。");
 
             // 种子事实走正式闭包，后续事实与反应由规则产生；返回事件在此有意丢弃。
+            state.RestoreDay(preset.DayIndex);
             DebugGrantClues(state, preset.Known);
             DebugAddFacts(state, preset.Facts);
             foreach (var id in preset.CompletedRecipes)
@@ -177,6 +179,25 @@ namespace Game.Domain
             return true;
         }
 
+        /// <summary>日序推进后应用到期效果；正常反应随后继续求值到稳定。</summary>
+        private bool Advance(GameState state, List<DomainEvent> events)
+        {
+            if (state.PendingDeferredEffects.Count == 0)
+            {
+                events.Add(new DayAdvanceFailed("先让一个解释留在房间里，再结束今天。"));
+                return false;
+            }
+            state.AdvanceDay(); events.Add(new DayAdvanced(state.DayIndex));
+            // 使用快照后移除，不在枚举可变队列时修改其内容。
+            foreach (var effect in state.PendingDeferredEffects.Where(x => x.DueDay <= state.DayIndex).ToArray())
+            {
+                state.Consume(effect.ReactionId);
+                events.Add(new ReactionTriggered(effect.ReactionId));
+                AddFacts(state, effect.Produces, events);
+            }
+            return true;
+        }
+
         /// <summary>全量扫描反应直到稳定；内容定义顺序不影响最终事实闭包。</summary>
         private void EvaluateReactions(GameState state, List<DomainEvent> events)
         {
@@ -189,8 +210,19 @@ namespace Game.Domain
                     if (state.HasFired(rule.Id) || !rule.Requires.All(state.HasFact)) continue;
                     // 先标记后产出，保证循环 A→B→A 也无法重复触发同一反应。
                     state.Fire(rule.Id);
-                    events.Add(new ReactionTriggered(rule.Id));
-                    AddFacts(state, rule.Produces, events);
+                    if (rule.DelayDays == 0)
+                    {
+                        events.Add(new ReactionTriggered(rule.Id));
+                        AddFacts(state, rule.Produces, events);
+                    }
+                    else if (!rule.Produces.All(state.HasFact))
+                    {
+                        // 不等待几秒，不延后领域的判断：现在登记到指定日序。
+                        int dueDay = checked(state.DayIndex + rule.DelayDays);
+                        state.Schedule(new PendingDeferredEffect(rule.Id, dueDay, rule.Produces));
+                        events.Add(new ReactionScheduled(rule.Id, dueDay));
+                    }
+                    // 预设已包含全部延迟输出时，只标记反应，不重新安排未来再发生。
                     fired = true;
                 }
                 // 每个非空轮次至少消耗一个未触发反应，轮次最多受反应总数限制。

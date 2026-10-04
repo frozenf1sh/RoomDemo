@@ -16,6 +16,11 @@ namespace Game.Domain
         private readonly HashSet<string> reactions = new HashSet<string>();
         private readonly HashSet<string> recipes = new HashSet<string>();
         private readonly Dictionary<ClueId, ClueCategory> categories;
+        private readonly Dictionary<string, PendingDeferredEffect> pending = new Dictionary<string, PendingDeferredEffect>();
+        /// <summary>显式游戏日序，初始为第一天，不与真实时间关联。</summary>
+        public int DayIndex { get; private set; } = 1;
+        /// <summary>已登记但尚未到日的效果快照，外部不能修改队列。</summary>
+        public IReadOnlyCollection<PendingDeferredEffect> PendingDeferredEffects => pending.Values.OrderBy(x => x.DueDay).ThenBy(x => x.ReactionId).ToList().AsReadOnly();
         /// <summary>建立碎片类别索引，供旧物体与概念查询派生视图。</summary>
         public GameState(IEnumerable<ClueDefinition> definitions) { categories = definitions.ToDictionary(x => x.Id, x => x.Category); }
         // 每次查询返回只读快照，避免外部强制转换后修改内部 HashSet。
@@ -54,5 +59,13 @@ namespace Game.Domain
         internal bool Fire(string id) => reactions.Add(id);
         /// <summary>领域内部记录已完成的玩家配方。</summary>
         internal bool Complete(string id) => recipes.Add(id);
+        /// <summary>领域内部推进日序，不发布事件；事件由引擎统一组织。</summary>
+        internal void AdvanceDay() { DayIndex = checked(DayIndex + 1); }
+        /// <summary>仅全新预设恢复使用；恢复日序不代表玩家结束了一天。</summary>
+        internal void RestoreDay(int day) { if (day < 1) throw new System.ArgumentOutOfRangeException(nameof(day)); DayIndex = day; }
+        /// <summary>以反应身份去重登记；不能从表现层修改待执行效果。</summary>
+        internal void Schedule(PendingDeferredEffect effect) { pending.Add(effect.ReactionId, effect); }
+        /// <summary>在输出前移除，防止重复推进日序再次应用同一效果。</summary>
+        internal void Consume(string id) { pending.Remove(id); }
     }
 }

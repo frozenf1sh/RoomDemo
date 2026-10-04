@@ -21,6 +21,8 @@ namespace Game.Domain
         public string DetailId { get; }
         public ObserveDetail(ObjectId source, string detail) { Source = source; DetailId = detail; }
     }
+    /// <summary>玩家明确选择结束今天；不由鼠标点击数或真实时钟自动提交。</summary>
+    public readonly struct AdvanceDay : ICommand { }
     /// <summary>所有外部命令的轻量标记边界。</summary>
     public interface ICommand { }
     /// <summary>携带调查来源 ID 的命令。</summary>

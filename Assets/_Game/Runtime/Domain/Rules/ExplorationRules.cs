@@ -28,7 +28,10 @@ namespace Game.Domain
                 new ObservationDiscovery(DemoRules.Plant, "sprout", "土边，一颗新芽。已经把这个细节记下。", Array.Empty<FactId>(), new[] { Sprout }),
                 new ObservationDiscovery(DemoRules.Book, "toward_light", "“枝叶仍向光处伸去。”\n向光——把这两个字留在笔记里。", Array.Empty<FactId>(), new[] { TowardLight }),
                 new ObservationDiscovery(DemoRules.Book, "book_far", "第二天，页边的地平线似乎伸到了纸外。远方。", new[] { DemoRules.BookFallen }, new[] { DemoRules.Clue("far") }, "页边的铅笔痕还很淡。也许明天再看，会有新的发现。") };
-            return new RuleSet(clues, discoveries, recipes, old.Reactions.ToArray(), observations);
+            var reactions = old.Reactions.Concat(new[] {
+                new ReactionRule("growth-continues-next-day", new[] { PlantStartsGrowing }, new[] { PlantOvergrown }, 1),
+                new ReactionRule("overgrowth-is-grown", new[] { PlantOvergrown }, new[] { DemoRules.PlantGrown }) }).ToArray();
+            return new RuleSet(clues, discoveries, recipes, reactions, observations);
         }
     }
 }
