@@ -44,7 +44,10 @@ namespace Game.Editor
             for (int i = 0; i < 4; i++)
                 SurfaceArtPass.Cube("PaintTube" + i, decor, new Vector3(3.15f + i * .09f, .87f, -.65f), new Vector3(.055f, .04f, .23f), metal);
             for (int i = 0; i < 2; i++)
+            {
+                var previous = decor.Find("DriedBottle" + i); if (previous != null) Object.DestroyImmediate(previous.gameObject);
                 ExplorationSceneSetup.Primitive("DriedBottle" + i, decor, PrimitiveType.Cylinder, new Vector3(3.52f, .94f, -.05f + i * .18f), new Vector3(.08f, .09f, .08f), bottle);
+            }
             foreach (var renderer in decor.GetComponentsInChildren<Renderer>())
                 GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, StaticEditorFlags.BatchingStatic);
             PresentationArtPass.Save(room);

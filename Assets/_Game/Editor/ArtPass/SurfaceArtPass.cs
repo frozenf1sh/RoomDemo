@@ -74,7 +74,8 @@ namespace Game.Editor
                 if (name == "Paper") renderer.sharedMaterial = paper;
                 if (name == "Leaves") renderer.sharedMaterial = leaf;
             }
-            root.Find("Environment/RoomShell/Floor").GetComponent<Renderer>().sharedMaterial = floor;
+            var modules = root.GetComponentInChildren<RoomModules>(true);
+            (modules != null ? modules.Floor : root.Find("Environment/RoomShell/Floor")).GetComponent<Renderer>().sharedMaterial = floor;
             var decor = PresentationArtPass.Ensure(root.Find("Environment"), "Decoration");
             // 木板接缝、踢脚线和画框内沿提供尺度，远比额外几十件小物体更有效。
             for (int i = 0; i < 17; i++) Cube("FloorJoint" + i, decor, new Vector3(-4 + i * .5f, .004f, 0), new Vector3(.009f, .012f, 8), dark);
