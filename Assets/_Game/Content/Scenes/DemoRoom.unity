@@ -3856,6 +3856,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: e52b5a10d6fb94f11a7e3091b482fb95, type: 2}
+    - target: {fileID: 4327707713848648427, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a57fa22277fe44d669a9353657db12c0, type: 2}
     - target: {fileID: 4363594958651658055, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -3912,6 +3916,22 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: e52b5a10d6fb94f11a7e3091b482fb95, type: 2}
+    - target: {fileID: 9131152011217628786, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
+      propertyPath: MaxDistance
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 9131152011217628786, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
+      propertyPath: MinDistance
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9131152011217628786, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
+      propertyPath: rolloffMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9131152011217628786, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
+      propertyPath: panLevelCustomCurve.m_Curve.Array.data[0].value
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 9181546925660090729, guid: 51b1729bae9564ee2b11459bef81db51, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
