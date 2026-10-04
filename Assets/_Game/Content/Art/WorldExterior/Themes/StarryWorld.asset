@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e245d333206b04f81bbd3fe8d090af8e, type: 3}
   m_Name: StarryWorld
   m_EditorClassIdentifier: Game.Unity::Game.Unity.VisualThemeProfile
-  Ambient: {r: 0.18, g: 0.23, b: 0.34, a: 1}
-  Fog: {r: 0.07, g: 0.11, b: 0.19, a: 1}
-  Sun: {r: 0.55, g: 0.66, b: 0.89, a: 1}
-  Fill: {r: 0.92, g: 0.56, b: 0.31, a: 1}
-  FogDensity: 0.006
-  SunIntensity: 0.85
-  FillIntensity: 1.1
-  WindowIntensity: 0.15
+  Ambient: {r: 0.17, g: 0.21, b: 0.32, a: 1}
+  Fog: {r: 0.06, g: 0.105, b: 0.17, a: 1}
+  Sun: {r: 0.53, g: 0.65, b: 0.94, a: 1}
+  Fill: {r: 1, g: 0.57, b: 0.28, a: 1}
+  FogDensity: 0.017
+  SunIntensity: 1.03
+  FillIntensity: 0.65
+  WindowIntensity: 0.12
   SeaIntensity: 0
   StyleBlend: 1
+  SunEuler: {x: 42, y: -24, z: 0}
   Ambience: {fileID: 8300000, guid: 224c4d5111e3e4c549ff99e36e7563d6, type: 3}

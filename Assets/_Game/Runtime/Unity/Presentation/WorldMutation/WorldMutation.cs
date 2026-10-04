@@ -58,15 +58,19 @@ namespace Game.Unity
         /// <summary>将明确表现主题的进度交给主题消费者；本组件不存储灯光为世界事实。</summary>
         public void TransitionTheme(VisualThemeProfile profile, float progress) { theme.Transition(profile, progress); }
         /// <summary>退出旧演出时恢复自己借用的节点，立即停用旧生成物，再延迟销毁。</summary>
-        public void ResetCapturedState()
+        /// <param name="restoreObjects">场景卸载时为 false，只释放快照与全局主题，不能重新激活正在销毁的节点。</param>
+        public void ResetCapturedState(bool restoreObjects = true)
         {
-            foreach (var pair in poses)
+            if (restoreObjects) foreach (var pair in poses)
             {
                 if (pair.Key == null) continue; var pose = pair.Value;
                 pair.Key.localPosition = pose.Position; pair.Key.localRotation = pose.Rotation; pair.Key.localScale = pose.Scale; pair.Key.gameObject.SetActive(pose.Active);
             }
-            foreach (var pair in originals) if (pair.Key != null) pair.Key.SetPropertyBlock(pair.Value);
-            foreach (var instance in spawned.Values) if (instance != null) { instance.SetActive(false); Destroy(instance); }
+            if (restoreObjects)
+            {
+                foreach (var pair in originals) if (pair.Key != null) pair.Key.SetPropertyBlock(pair.Value);
+                foreach (var instance in spawned.Values) if (instance != null) { instance.SetActive(false); Destroy(instance); }
+            }
             poses.Clear(); originals.Clear(); spawned.Clear();
             // 场景卸载的组件销毁顺序不固定；主题组件可能已经先于本组件被销毁。
             if (theme != null) theme.ResetTheme();
@@ -79,6 +83,7 @@ namespace Game.Unity
             public readonly bool Active;
             public Pose(Transform node) { Position = node.localPosition; Rotation = node.localRotation; Scale = node.localScale; Active = node.gameObject.activeSelf; }
         }
-        private void OnDestroy() { ResetCapturedState(); }
+        // Scene 卸载已经负责销毁所有子物体，不能在 OnDestroy 中再次 SetActive。
+        private void OnDestroy() { ResetCapturedState(false); }
     }
 }

@@ -6,7 +6,9 @@
     "Game.Application",
     "Game.Unity",
     "Unity.InputSystem",
-    "Unity.ugui"
+    "Unity.ugui",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [
     "Editor"

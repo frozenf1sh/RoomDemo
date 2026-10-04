@@ -58,15 +58,38 @@ Shader "RoomDemo/PaintingSea"
                 float motion = smoothstep(0,.45,_Transition);
                 uv += float2(sin(uv.y*22+t),sin(uv.x*17-t*.7)) * _Distortion * motion * saturate((.52-uv.y)*4);
                 float grain = Noise(uv*180) * .035;
-                half3 paintSky = lerp(half3(.64,.59,.45),half3(.84,.76,.58),uv.y);
+                half3 paintSky = lerp(half3(.43,.57,.54),half3(.77,.79,.67),uv.y);
                 half3 farSky = lerp(half3(.58,.70,.66),half3(.29,.46,.51),uv.y);
                 half3 dry = lerp(farSky,paintSky,_CanvasMode);
                 float hill = .40 + sin(uv.x*5.3)*.05 + Noise(uv*3)*.045;
-                half3 land = lerp(half3(.22,.36,.26),half3(.37,.29,.22),_CanvasMode);
+                half3 land = lerp(half3(.22,.36,.26),half3(.29,.37,.29),_CanvasMode);
                 dry = lerp(dry,land,1-smoothstep(hill-.01,hill+.01,uv.y));
                 float sun = 1-smoothstep(.061,.074,length(uv-float2(.32,.71)));
                 dry = lerp(dry,half3(.89,.75,.48),sun);
                 dry += grain;
+                // 初始画布也有分层笔触和织物纹理；不是一张平整的程序色块。
+                float brush = Noise(uv*float2(76,23))*Noise(uv*float2(12,67));
+                float weave = sin(uv.x*910)*sin(uv.y*1150)*.008;
+                float strokes = sin(uv.x*49+Noise(uv*7)*8+uv.y*113);
+                dry *= .95+brush*.12+weave;
+                dry += strokes*.009;
+                if (_CanvasMode > .5)
+                {
+                    float nearerHill=.23+sin(uv.x*7.4+.8)*.07+Noise(uv*float2(4,13))*.035;
+                    dry=lerp(dry,half3(.18,.27,.25),1-smoothstep(nearerHill-.008,nearerHill+.008,uv.y));
+                    float paintCloud=Noise(uv*float2(5,30))*Noise(uv*float2(19,4));
+                    dry+=smoothstep(.38,.65,paintCloud)*smoothstep(.55,.9,uv.y)*half3(.09,.085,.055);
+                    // 未完成的细长树影保留可见笔触，不在房间中增加可交互谜题。
+                    for (int tree=0;tree<4;tree++)
+                    {
+                        float center=.12+tree*.19;
+                        float top=.48+.035*sin(tree*3.1);
+                        float crown=saturate((top-uv.y)/.29);
+                        float outline=.006+crown*.045;
+                        float pine=(1-smoothstep(outline,outline+.006,abs(uv.x-center)))*step(.18,uv.y)*step(uv.y,top);
+                        dry=lerp(dry,half3(.20,.28,.24)+brush*.06,pine*.65);
+                    }
+                }
                 // 透视压缩浪纹：靠近地平线更密，前景更宽，建立画中空间深度。
                 float depth = saturate((.52-uv.y)/.52);
                 float frequency = lerp(95,19,pow(depth,.55));
@@ -81,6 +104,7 @@ Shader "RoomDemo/PaintingSea"
                 half3 sky = lerp(half3(.69,.79,.72),half3(.29,.47,.53),uv.y);
                 sky += Noise(uv*float2(6,18)+float2(t*.01,0))*.03;
                 half3 sea = lerp(water,sky,smoothstep(.515,.525,originalUV.y));
+                sea *= .94+Noise(uv*float2(80,26)+float2(t*.015,0))*.12;
                 sea += half3(.10,.20,.19) * exp(-abs(originalUV.y-.52)*160);
                 float reflection = exp(-abs(uv.x-.32)*24)*depth*(.02+foam*.18);
                 sea += reflection + _Emission*.15;

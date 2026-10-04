@@ -84,9 +84,9 @@ namespace Game.Unity
         {
             if (lightingBorrowed) return;
             roomLight.color = Color.Lerp(new Color(1, .81f, .62f), new Color(.65f, .89f, .94f), finale);
-            roomLight.intensity = .65f + far * .50f + finale * .35f;
+            roomLight.intensity = .78f + far * .50f + finale * .35f;
             // 灰盒兼容模式允许尚未注入局部灯；正式美术场景由验证器要求全部绑定。
-            if (warmFill != null) { warmFill.color = new Color(1, .64f, .36f); warmFill.intensity = 1.9f - finale * .8f; }
+            if (warmFill != null) { warmFill.color = new Color(1, .74f, .52f); warmFill.intensity = 2.7f - finale * 1.1f; }
             if (windowLight != null) { windowLight.color = Color.Lerp(new Color(.78f, .84f, .82f), new Color(.36f, .80f, .92f), finale); windowLight.intensity = .20f + far * 1.3f + finale * 1.2f; }
             if (seaLight != null)
             {
@@ -96,7 +96,7 @@ namespace Game.Unity
                 seaLight.intensity *= 1 + sea * Mathf.Sin(Time.time * 1.3f) * .06f;
             }
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = Color.Lerp(new Color(.31f, .28f, .24f), new Color(.31f, .43f, .46f), Mathf.Clamp01(far * .30f + finale * .70f));
+            RenderSettings.ambientLight = Color.Lerp(new Color(.36f, .33f, .28f), new Color(.31f, .43f, .46f), Mathf.Clamp01(far * .30f + finale * .70f));
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogDensity = Mathf.Lerp(.008f, .015f, finale);

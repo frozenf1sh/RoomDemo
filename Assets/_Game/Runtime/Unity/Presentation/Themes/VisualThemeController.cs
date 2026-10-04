@@ -15,6 +15,7 @@ namespace Game.Unity
         private bool initialFogEnabled;
         private FogMode initialFogMode;
         private VisualThemeProfile target;
+        private Quaternion initialSunRotation;
         private static readonly int StyleBlend = Shader.PropertyToID("_WorldStyleBlend");
         public void Configure(Light daylight, Light indoor, Light natural, Light ocean, AudioSource sound)
         { sun = daylight; fill = indoor; window = natural; sea = ocean; ambience = sound; }
@@ -24,6 +25,7 @@ namespace Game.Unity
             initialAmbient = RenderSettings.ambientLight; initialFog = RenderSettings.fogColor; initialDensity = RenderSettings.fogDensity;
             initialFogEnabled = RenderSettings.fog; initialFogMode = RenderSettings.fogMode;
             initialSun = sun.color; initialFill = fill.color; sunIntensity = sun.intensity; fillIntensity = fill.intensity; windowIntensity = window.intensity; seaIntensity = sea.intensity;
+            initialSunRotation = sun.transform.rotation;
             target = null;
         }
         /// <summary>只插值既有数据，不每帧创建材质、查找对象或计算世界反应。</summary>
@@ -35,6 +37,7 @@ namespace Game.Unity
             RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogColor = Color.Lerp(initialFog, profile.Fog, t); RenderSettings.fogDensity = Mathf.Lerp(initialDensity, profile.FogDensity, t);
             sun.color = Color.Lerp(initialSun, profile.Sun, t); sun.intensity = Mathf.Lerp(sunIntensity, profile.SunIntensity, t);
+            sun.transform.rotation = Quaternion.Slerp(initialSunRotation, Quaternion.Euler(profile.SunEuler), t);
             fill.color = Color.Lerp(initialFill, profile.Fill, t); fill.intensity = Mathf.Lerp(fillIntensity, profile.FillIntensity, t);
             window.intensity = Mathf.Lerp(windowIntensity, profile.WindowIntensity, t); sea.intensity = Mathf.Lerp(seaIntensity, profile.SeaIntensity, t);
             ambience.volume = .23f * t; Shader.SetGlobalFloat(StyleBlend, profile.StyleBlend * t);
@@ -46,7 +49,7 @@ namespace Game.Unity
             RenderSettings.ambientLight = initialAmbient; RenderSettings.fogColor = initialFog; RenderSettings.fogDensity = initialDensity;
             RenderSettings.fog = initialFogEnabled; RenderSettings.fogMode = initialFogMode;
             // 卸载时灯光或音源可能已经销毁，仍须安全释放全局主题参数。
-            if (sun != null) { sun.color = initialSun; sun.intensity = sunIntensity; }
+            if (sun != null) { sun.color = initialSun; sun.intensity = sunIntensity; sun.transform.rotation = initialSunRotation; }
             if (fill != null) { fill.color = initialFill; fill.intensity = fillIntensity; }
             if (window != null) window.intensity = windowIntensity;
             if (sea != null) sea.intensity = seaIntensity;
