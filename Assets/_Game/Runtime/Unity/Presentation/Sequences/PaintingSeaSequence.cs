@@ -17,6 +17,7 @@ namespace Game.Unity
         [SerializeField] private PlantPresenter plant;
         [SerializeField] private WindowPresenter window;
         [SerializeField] private EndingPresenter ending;
+        [SerializeField] private WindPresenter wind;
         [SerializeField, Min(.1f)] private float anomalyAt = 1.2f;
         [SerializeField, Min(.1f)] private float seaAt = 2.2f;
         [SerializeField, Min(.1f)] private float waterAt = 4.8f;
@@ -42,6 +43,8 @@ namespace Game.Unity
         /// <summary>显式注入五个具体节拍，Presenter 彼此没有引用。</summary>
         public void Configure(PaintingPresenter art, WaterPresenter drops, PlantPresenter leaves, WindowPresenter exterior, EndingPresenter ambience)
         { painting = art; water = drops; plant = leaves; window = exterior; ending = ambience; }
+        /// <summary>注入环境风声表现，导演只调音量，不改变风状态。</summary>
+        public void ConfigureWind(WindPresenter source) { wind = source; }
         /// <summary>更换会话前取消旧演出和监听；预设恢复不会再播一遍。</summary>
         public void Bind(GameSession game, WorldPresenter[] views)
         {
@@ -76,7 +79,7 @@ namespace Game.Unity
         private void Begin()
         {
             startedAt = Time.unscaledTime; elapsed = 0; IsPlaying = true;
-            CurrentBeat = "笔记关系形成";
+            CurrentBeat = "笔记关系形成"; wind.SetAudioDuck(.30f);
             playing = StartCoroutine(Run());
         }
         /// <summary>相对开始时间等待，避免每次等待累积帧误差。</summary>
@@ -90,8 +93,8 @@ namespace Game.Unity
             yield return Until(anomalyAt);
             CurrentBeat = "颜料微动"; painting.PlayAnomaly(); ending.PlaySeaLighting();
             yield return Until(seaAt);
-            CurrentBeat = "画中海形成"; painting.PlaySeaTransition();
-            yield return Until(waterAt);
+            CurrentBeat = "画中海形成"; painting.PlaySeaTransition(); wind.SetAudioDuck(.65f);
+            yield return Until(waterAt); wind.SetAudioDuck(1);
             if (preview || session.State.HasFact(DemoRules.WaterPresent)) { CurrentBeat = "第一滴水"; water.PlayWaterReveal(); }
             yield return Until(plantAt);
             if (preview || session.State.HasFact(DemoRules.PlantAquatic)) { CurrentBeat = "植物自行水生化"; plant.PlayAquaticTransition(); }
@@ -108,6 +111,7 @@ namespace Game.Unity
         {
             if (playing != null) StopCoroutine(playing);
             playing = null; IsPlaying = false; elapsed = 0;
+            if (wind != null) wind.SetAudioDuck(1, true);
         }
         /// <summary>跳过所有等待，直接应用当前领域事实；不新增任何事实。</summary>
         public void ApplyFinalStateImmediately()

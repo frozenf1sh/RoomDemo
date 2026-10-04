@@ -106,6 +106,7 @@ namespace Game.Editor
             var window = root.GetComponentInChildren<WindowPresenter>(true);
             var ending = root.GetComponentInChildren<EndingPresenter>(true);
             ending.ConfigureLighting(root.Find("_Systems/RoomFill").GetComponent<Light>(), windowLight, seaLight);
+            if (new SerializedObject(painting).FindProperty("anomalyAudio").objectReferenceValue == null) painting.ConfigureAnomalyAudio(AudioArtPass.Source(painting.transform, "Anomaly", false, .45f));
             // 仅填充缺失引用；有效的人工作品材质、音频和模型不被替换。
             if (new SerializedObject(water).FindProperty("firstDropAudio").objectReferenceValue == null) water.ConfigureDropAudio(AudioArtPass.Source(water.transform, "Drop", false, .7f));
             if (new SerializedObject(plant).FindProperty("aquaticAudio").objectReferenceValue == null) plant.ConfigureAquaticAudio(AudioArtPass.Source(plant.transform, "Aquatic", false, .45f));
@@ -113,6 +114,7 @@ namespace Game.Editor
             var node = Ensure(Ensure(presentation, "Sequences"), "PaintingSeaSequence");
             var sequence = node.GetComponent<PaintingSeaSequence>(); if (sequence == null) sequence = node.gameObject.AddComponent<PaintingSeaSequence>();
             sequence.Configure(painting, water, plant, window, ending);
+            sequence.ConfigureWind(root.GetComponentInChildren<WindPresenter>(true));
             root.GetComponentInChildren<GameBootstrap>(true).ConfigureSequence(sequence);
             if (new SerializedObject(root.GetComponentInChildren<NotebookView>(true)).FindProperty("paperBody").objectReferenceValue == null) NotebookArtPass.Install(root);
             Save(root);

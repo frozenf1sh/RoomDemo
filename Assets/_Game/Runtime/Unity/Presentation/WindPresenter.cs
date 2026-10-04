@@ -17,6 +17,7 @@ namespace Game.Unity
         private Quaternion plantRotation;
         private Quaternion[] paperRotations;
         private bool activeWind;
+        private float originalVolume, duck = 1, targetDuck = 1;
         /// <summary>已应用的风表现开关，不是独立世界状态。</summary>
         public bool IsWindVisible => activeWind;
         /// <summary>风循环音源，便于验证播放状态。</summary>
@@ -27,9 +28,16 @@ namespace Game.Unity
         private void Awake()
         {
             // 记录旋转和纸张姿态，风停止或 Restart 时恢复原貌。
+            originalVolume = windAudio.volume;
             plantRotation = plantVisual.localRotation;
             paperOrigins = new Vector3[papers.Length]; paperRotations = new Quaternion[papers.Length];
             for (int i = 0; i < papers.Length; i++) { paperOrigins[i] = papers[i].localPosition; paperRotations[i] = papers[i].localRotation; }
+        }
+        /// <summary>演出短暂降低风声以凸显新声源，不影响风的领域事实。</summary>
+        public void SetAudioDuck(float level, bool immediate = false)
+        {
+            targetDuck = Mathf.Clamp01(level);
+            if (immediate) { duck = targetDuck; windAudio.volume = originalVolume * duck; }
         }
         /// <summary>仅接收风进入事实。</summary>
         protected override void OnFact(FactId fact) { if (fact == DemoRules.WindEntering) ApplyState(Session.State, true); }
@@ -42,6 +50,7 @@ namespace Game.Unity
             if (!activeWind) windAudio.Stop();
             if (!animate)
             {
+                SetAudioDuck(1, true);
                 plantVisual.localRotation = plantRotation;
                 for (int i = 0; i < papers.Length; i++) { papers[i].localPosition = paperOrigins[i]; papers[i].localRotation = paperRotations[i]; }
             }
@@ -49,6 +58,7 @@ namespace Game.Unity
         /// <summary>用正弦函数表现轻摆与飘动，不执行世界规则。</summary>
         private void Update()
         {
+            duck = Mathf.MoveTowards(duck, targetDuck, Time.deltaTime * 2); windAudio.volume = originalVolume * duck;
             if (!activeWind) return;
             float t = Time.time;
             plantVisual.localRotation = plantRotation * Quaternion.Euler(0, 0, Mathf.Sin(t * 2.5f) * 5);

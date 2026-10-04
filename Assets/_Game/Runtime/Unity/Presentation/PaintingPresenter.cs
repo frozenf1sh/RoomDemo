@@ -14,6 +14,7 @@ namespace Game.Unity
         [SerializeField] private GameObject ordinaryPainting;
         [SerializeField] private GameObject seaPainting;
         [SerializeField] private AudioSource seaAudio;
+        [SerializeField] private AudioSource anomalyAudio;
         private Renderer surface;
         private Renderer[] frames;
         private Color[] frameColors;
@@ -28,6 +29,8 @@ namespace Game.Unity
         /// <summary>注入独立视觉层与音源，保持旧灰盒配置兼容。</summary>
         public void Configure(GameObject ordinary, GameObject sea, AudioSource audio)
         { ordinaryPainting = ordinary; seaPainting = sea; seaAudio = audio; }
+        /// <summary>注入很短的第一处异常声音，和持续海声分开。</summary>
+        public void ConfigureAnomalyAudio(AudioSource audio) { anomalyAudio = audio; }
         /// <summary>只在初始化查找自身视觉引用和缓存属性块。</summary>
         private void Awake()
         {
@@ -41,7 +44,7 @@ namespace Game.Unity
         /// <summary>先出现很小的颜料扰动与微弱海声，吸引注意力。</summary>
         public void PlayAnomaly()
         {
-            target = .16f;
+            target = .16f; anomalyAudio.Play();
             if (!seaAudio.isPlaying) seaAudio.Play();
         }
         /// <summary>由导演启动海面完整展现，沿现有进度连续前进。</summary>
@@ -53,7 +56,7 @@ namespace Game.Unity
         /// <summary>直接设置预览终态；不产生或修改任何领域事实。</summary>
         public void SetFinalVisual(bool sea)
         {
-            progress = target = sea ? 1 : 0;
+            progress = target = sea ? 1 : 0; anomalyAudio.Stop();
             ordinaryPainting.SetActive(false); seaPainting.SetActive(true);
             if (sea && !seaAudio.isPlaying) seaAudio.Play();
             if (!sea) seaAudio.Stop();
