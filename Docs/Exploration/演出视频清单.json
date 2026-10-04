@@ -1,0 +1,9 @@
+{
+  "screenshot_requests": 137,
+  "written_png_frames": 136,
+  "encoded_fps": 8,
+  "duration_seconds": 17.0,
+  "has_audio": false,
+  "video_bytes": 1255353,
+  "source": "独立原生程序真实帧，末尾截图请求数与落盘数分别记录"
+}

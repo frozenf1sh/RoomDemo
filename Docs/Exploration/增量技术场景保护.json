@@ -1,0 +1,7 @@
+{
+  "before_main_sha256": "79544885682f1341bfb5c267d2d313120f10998ef4dad2c82545b3532da1f9fe",
+  "after_main_sha256": "79544885682f1341bfb5c267d2d313120f10998ef4dad2c82545b3532da1f9fe",
+  "unchanged": true,
+  "operation": "Game.Editor.PresentationArtPass.CreateMissingTechnicalObjects()",
+  "validated": true
+}

@@ -1,0 +1,28 @@
+{
+  "verified_at": "2026-10-04T14:45:06.523398+00:00",
+  "unity": "6000.6.3f1",
+  "compile": "Passed",
+  "scene_validation": "Passed",
+  "tests": {
+    "EditMode": {
+      "total": 53,
+      "passed": 53,
+      "failed": 0
+    },
+    "PlayMode": {
+      "total": 29,
+      "passed": 29,
+      "failed": 0
+    }
+  },
+  "build": {
+    "result": "Succeeded",
+    "output": "/Users/frozenf1sh/unity/RoomDemo/Builds/StandaloneOSX/RoomDemo.app",
+    "target": "StandaloneOSX",
+    "errors": 0,
+    "warnings": 3,
+    "bytes": 97527221
+  },
+  "scene_regenerated": false,
+  "human_first_play_duration": "\u5c1a\u672a\u9a8c\u8bc1"
+}

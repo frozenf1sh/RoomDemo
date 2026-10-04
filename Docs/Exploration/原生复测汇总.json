@@ -1,0 +1,19 @@
+{
+  "result": "Succeeded",
+  "case_a_completed": true,
+  "runs": 10,
+  "all_runs_passed": true,
+  "gpu": "Apple M5",
+  "unity": "6000.6.3f1",
+  "width": 1440,
+  "height": 900,
+  "editor": false,
+  "total_frames": 8632,
+  "total_seconds": 150.07914066314697,
+  "weighted_average_fps": 57.51632080153328,
+  "p99_frame_ms": 20.68004570901394,
+  "maximum_frame_ms": 30.302543193101883,
+  "gen0_collections": 1,
+  "capture_overhead": false,
+  "independent_human_playtest": "待验收"
+}
