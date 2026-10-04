@@ -52,6 +52,21 @@ namespace Game.Tests
             Assert.That(notebook.HasUnreadDiscoveries, Is.True);
             inspection.Exit(); yield return null;
         }
+        [UnityTest] public IEnumerator BookCoverPagesAndQuoteUseInspectionStateAndDomainDiscovery()
+        {
+            var entity = System.Linq.Enumerable.Single(Object.FindObjectsByType<SceneEntity>(), x => x.Id == Game.Domain.DemoRules.Book);
+            Assert.That(inspection.Enter(entity.GetComponent<InspectableObject>()), Is.True); yield return null;
+            Assert.That(inspection.ActOnHotspot("quote"), Is.False);
+            Assert.That(inspection.ActOnHotspot("cover"), Is.True);
+            Assert.That(inspection.ActOnHotspot("quote"), Is.False);
+            Assert.That(inspection.ActOnHotspot("next1"), Is.True); yield return new WaitForSecondsRealtime(.35f);
+            var quote = System.Linq.Enumerable.Single(inspection.CurrentVisual.GetComponentsInChildren<InspectionHotspot>(), x => x.ActionId == "quote"); Physics.SyncTransforms();
+            Assert.That(inspection.ObserveAt(Camera.main.WorldToScreenPoint(quote.transform.position)), Is.True);
+            Assert.That(bootstrap.Session.State.Knows(Game.Domain.ExplorationRules.TowardLight), Is.True);
+            Assert.That(bootstrap.Session.State.Knows(Game.Domain.DemoRules.Growth), Is.False);
+            Assert.That(quote.transform.Find("ObservedUnderline").gameObject.activeSelf, Is.True);
+            inspection.Exit(); yield return null;
+        }
         [UnityTest] public IEnumerator RestartDuringInspectionReleasesOldCopyAndInputLock()
         {
             inspection.InspectDebugCube(); yield return null; var copy = inspection.CurrentVisual;

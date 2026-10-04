@@ -12479,7 +12479,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4762536367291678726, guid: dbf5fdff3de61419fb16bc7fc530ddea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1795308279}
   m_SourcePrefab: {fileID: 100100000, guid: dbf5fdff3de61419fb16bc7fc530ddea, type: 3}
 --- !u!4 &1795308275 stripped
 Transform:
@@ -12497,6 +12500,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f6e120c5073e46e0a5836c7b2e59079, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.Unity::Game.Unity.BookPresenter
+--- !u!1 &1795308277 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4762536367291678726, guid: dbf5fdff3de61419fb16bc7fc530ddea, type: 3}
+  m_PrefabInstance: {fileID: 1795308274}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1795308278 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2186200882661444898, guid: dbf5fdff3de61419fb16bc7fc530ddea, type: 3}
+  m_PrefabInstance: {fileID: 1795308274}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795308277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b3b93637643949c6b13614b01ccdb49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Unity::Game.Unity.SceneEntity
+--- !u!114 &1795308279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795308277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a39fad6328b344d40a441c8b0784f985, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Unity::Game.Unity.InspectableObject
+  entity: {fileID: 1795308278}
+  inspectVisual: {fileID: 5708471333225857037, guid: 4d54ceef3a3b7424f90d0bbd18ac7ea5, type: 3}
 --- !u!1 &1809157342
 GameObject:
   m_ObjectHideFlags: 0

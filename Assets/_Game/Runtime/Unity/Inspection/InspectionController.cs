@@ -119,7 +119,13 @@ namespace Game.Unity
                 var events = session.ObserveDetail(source.Entity.Id, action.ObservationId);
                 var failed = events.OfType<Game.Domain.InspectionFailed>().FirstOrDefault();
                 feedback.text = failed != null ? failed.Reason : events.OfType<Game.Domain.ObjectInspected>().Last().Description;
-                if (failed == null) observeAudio.Play();
+                if (failed == null)
+                {
+                    observeAudio.Play();
+                    // 轻勾短语而非弹“奖励 +1”；标记只存在于这次近景复制体。
+                    foreach (var hotspot in hotspots.Where(x => x.ActionId == id))
+                    { var mark = hotspot.transform.Find("ObservedUnderline"); if (mark != null) mark.gameObject.SetActive(true); }
+                }
             }
             else feedback.text = action.Hint;
             RefreshHotspots(); return true;

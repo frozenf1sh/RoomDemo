@@ -68,6 +68,65 @@ namespace Game.Editor
             root.GetComponentInChildren<GameBootstrap>(true).ConfigureExploration(true);
             PresentationArtPass.Save(root);
         }
+        /// <summary>书本近景采用封面与三层书页，翻页动画只改变视觉，不模拟纸张。</summary>
+        public static void InstallBookInspection()
+        {
+            var root = PresentationArtPass.Room();
+            var node = new GameObject("PF_InspectBook");
+            var paper = Material("Paper", new Color(.9f, .85f, .70f)); var leather = Material("BookCover", new Color(.28f, .12f, .085f));
+            var gold = Material("BookInk", new Color(.48f, .34f, .15f));
+            var cover = new GameObject("Cover"); cover.transform.SetParent(node.transform, false);
+            var closed = Hotspot("Cover", cover.transform, "cover", Vector3.zero, new Vector3(1.65f, 1.85f, .15f), leather, Vector3.back);
+            Text3D("CoverTitle", closed.transform, "关于光的习作", new Vector3(0, .14f, -.56f), .13f, TextAnchor.MiddleCenter);
+            Text3D("CoverHint", closed.transform, "轻触封面", new Vector3(0, -.26f, -.56f), .07f, TextAnchor.MiddleCenter);
+            var pages = new GameObject[3];
+            for (int i = 0; i < 3; i++)
+            {
+                pages[i] = new GameObject("Page" + (i + 1)); pages[i].transform.SetParent(node.transform, false);
+                Primitive("Paper", pages[i].transform, PrimitiveType.Cube, Vector3.zero, new Vector3(3.05f, 1.72f, .10f), paper);
+                Primitive("Spine", pages[i].transform, PrimitiveType.Cube, new Vector3(0, 0, -.065f), new Vector3(.025f, 1.7f, .015f), gold);
+                Text3D("PageNumber", pages[i].transform, "—— " + (i + 1) + " ——", new Vector3(.74f, -.68f, -.072f), .05f, TextAnchor.MiddleCenter);
+                if (i < 2) PageCorner(pages[i].transform, "next" + (i + 1), 1.30f, "→", paper);
+                if (i > 0) PageCorner(pages[i].transform, "previous" + (i + 1), -1.30f, "←", paper);
+                var close = Hotspot("Close", pages[i].transform, "close", new Vector3(0, .73f, -.077f), new Vector3(.55f, .12f, .025f), paper, Vector3.back);
+                Text3D("CloseHint", close.transform, "合上", new Vector3(0, 0, -.7f), .075f, TextAnchor.MiddleCenter);
+            }
+            Text3D("FirstText", pages[0].transform, "一盆静默的绿。\n\n土壤并没有停下。", new Vector3(-1.27f, .36f, -.076f), .09f, TextAnchor.UpperLeft);
+            Text3D("Margin", pages[0].transform, "读下去，\n看看它朝向哪里。", new Vector3(.22f, .2f, -.076f), .08f, TextAnchor.UpperLeft);
+            Text3D("QuoteStart", pages[1].transform, "枝叶仍", new Vector3(-1.28f, .40f, -.076f), .105f, TextAnchor.UpperLeft);
+            Text3D("QuoteWord", pages[1].transform, "向光", new Vector3(-1.28f, .12f, -.092f), .15f, TextAnchor.UpperLeft);
+            Text3D("QuoteEnd", pages[1].transform, "处伸去。", new Vector3(-1.28f, -.20f, -.076f), .105f, TextAnchor.UpperLeft);
+            // 热点放在短语下的细线位置，初始同纸色；悬停才出现轻微墨色反馈。
+            var quote = Hotspot("Quote", pages[1].transform, "quote", new Vector3(-.97f, -.025f, -.085f), new Vector3(.63f, .34f, .018f), paper, Vector3.back);
+            var underline = Primitive("ObservedUnderline", quote.transform, PrimitiveType.Cube, new Vector3(0, -.48f, -.8f), new Vector3(.95f, .035f, .20f), gold); underline.SetActive(false);
+            Text3D("SketchNote", pages[1].transform, "新叶还很小，\n却有自己的方向。", new Vector3(.20f, .35f, -.076f), .08f, TextAnchor.UpperLeft);
+            Text3D("HorizonText", pages[2].transform, "页边没有尽头。", new Vector3(-1.27f, .34f, -.076f), .09f, TextAnchor.UpperLeft);
+            var horizon = Hotspot("Horizon", pages[2].transform, "horizon", new Vector3(.70f, .02f, -.085f), new Vector3(1.05f, .48f, .02f), Material("Horizon", new Color(.41f, .50f, .47f)), Vector3.back);
+            Primitive("HorizonLine", horizon.transform, PrimitiveType.Cube, Vector3.zero, new Vector3(.96f, .025f, 1.1f), gold);
+            Text3D("HorizonCaption", pages[2].transform, "这一页，明天也许会不同。", new Vector3(.12f, -.42f, -.076f), .055f, TextAnchor.UpperLeft);
+            var turn = new GameObject("PagePivot"); turn.transform.SetParent(node.transform, false); turn.transform.localPosition = new Vector3(-1.52f, 0, -.12f);
+            Primitive("TurningPage", turn.transform, PrimitiveType.Cube, new Vector3(.74f, 0, 0), new Vector3(1.48f, 1.72f, .025f), paper);
+            node.AddComponent<InspectionView>().Configure(new[] { "closed", "page1", "page2", "page3" }, new[] { cover, pages[0], pages[1], pages[2] }, turn.transform);
+            var asset = PrefabUtility.SaveAsPrefabAsset(node, Prefabs + "PF_InspectBook.prefab"); Object.DestroyImmediate(node);
+            var entity = System.Linq.Enumerable.Single(root.GetComponentsInChildren<SceneEntity>(true), x => x.Id.Value == "book");
+            var adapter = entity.GetComponent<InspectableObject>(); if (adapter == null) adapter = entity.gameObject.AddComponent<InspectableObject>(); adapter.Configure(entity, asset);
+            PresentationArtPass.Save(root);
+        }
+        private static void PageCorner(Transform page, string action, float x, string symbol, Material material)
+        {
+            var hotspot = Hotspot(action, page, action, new Vector3(x, -.60f, -.077f), new Vector3(.30f, .27f, .025f), material, Vector3.back);
+            Text3D("Arrow", hotspot.transform, symbol, new Vector3(0, 0, -.7f), .14f, TextAnchor.MiddleCenter);
+        }
+        /// <summary>近景书页采用嵌入的中文 TextMesh；文字不是世界热点标签。</summary>
+        public static TextMesh Text3D(string name, Transform parent, string value, Vector3 position, float size, TextAnchor anchor)
+        {
+            var node = new GameObject(name); node.transform.SetParent(parent, false); node.transform.localPosition = position;
+            // 父节点可能是扁平热点；抵消缩放，字体尺寸始终以世界单位指定。
+            node.transform.localScale = new Vector3(1 / parent.localScale.x, 1 / parent.localScale.y, 1 / parent.localScale.z);
+            var text = node.AddComponent<TextMesh>(); text.font = AssetDatabase.LoadAssetAtPath<Font>(DemoSceneBuilder.ChineseFontPath);
+            text.GetComponent<Renderer>().sharedMaterial = text.font.material; text.fontSize = 64; text.characterSize = size; text.anchor = anchor; text.alignment = TextAlignment.Left;
+            text.color = new Color(.21f, .15f, .10f); text.text = value; return text;
+        }
         private static GameObject CubePrefab()
         {
             var node = new GameObject("PF_InspectionCube");
