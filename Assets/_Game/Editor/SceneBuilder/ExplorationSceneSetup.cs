@@ -127,6 +127,26 @@ namespace Game.Editor
             text.GetComponent<Renderer>().sharedMaterial = text.font.material; text.fontSize = 64; text.characterSize = size; text.anchor = anchor; text.alignment = TextAlignment.Left;
             text.color = new Color(.21f, .15f, .10f); text.text = value; return text;
         }
+        /// <summary>将纸面分成事物、观察、概念；不把任何正确组合写进按钮逻辑。</summary>
+        public static void InstallNotebookExploration()
+        {
+            var root = PresentationArtPass.Room(); var notebook = root.GetComponentInChildren<NotebookView>(true);
+            var body = notebook.transform.Find("NotebookPanel");
+            // 现有纸页可能来自 Prefab 覆盖，仍沿用同一个实例与所有事件绑定。
+            if (body == null) body = notebook.GetComponentsInChildren<CanvasGroup>(true)[0].transform;
+            var objects = Rect("Objects", body, new Vector2(.05f, .58f), new Vector2(.31f, .81f));
+            var observations = Rect("Observations", body, new Vector2(.36f, .58f), new Vector2(.64f, .81f));
+            var concepts = Rect("Concepts", body, new Vector2(.69f, .58f), new Vector2(.95f, .81f));
+            var layout = observations.GetComponent<VerticalLayoutGroup>(); if (layout == null) layout = observations.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.childControlWidth = true; layout.childControlHeight = false; layout.childForceExpandHeight = false; layout.spacing = 4;
+            var ink = new Color(.22f, .17f, .11f);
+            Label("ObjectsHeading", body, "看见的事物", new Vector2(.05f, .82f), new Vector2(.31f, .88f), 18).color = ink;
+            Label("ObservationsHeading", body, "记下的细节", new Vector2(.36f, .82f), new Vector2(.64f, .88f), 18).color = ink;
+            Label("ConceptsHeading", body, "想出的意义", new Vector2(.69f, .82f), new Vector2(.95f, .88f), 20).color = ink;
+            var word = Label("InsightWord", body, "", new Vector2(.25f, .44f), new Vector2(.75f, .55f), 42); word.color = ink; word.alignment = TextAnchor.MiddleCenter; word.gameObject.SetActive(false);
+            notebook.ConfigureExploration(observations, word);
+            PresentationArtPass.Save(root);
+        }
         private static GameObject CubePrefab()
         {
             var node = new GameObject("PF_InspectionCube");

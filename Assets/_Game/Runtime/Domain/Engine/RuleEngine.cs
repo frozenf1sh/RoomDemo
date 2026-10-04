@@ -170,7 +170,7 @@ namespace Game.Domain
 
             // 碎片不会被消耗；成功只记录配方并添加其输出事实。
             state.Complete(recipe.Id);
-            events.Add(new CombinationSucceeded(recipe.Id));
+            events.Add(new CombinationSucceeded(recipe.Id, recipe.ProducesClues));
             // 两类输出都由数据驱动；线索先发布，随后事实进入同一个反应闭包。
             GrantClues(state, recipe.ProducesClues, events);
             AddFacts(state, recipe.ProducesFacts, events);

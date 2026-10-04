@@ -67,6 +67,19 @@ namespace Game.Tests
             Assert.That(quote.transform.Find("ObservedUnderline").gameObject.activeSelf, Is.True);
             inspection.Exit(); yield return null;
         }
+        [UnityTest] public IEnumerator GrowthInsightStaysOnPaperAndDoesNotChangeWorld()
+        {
+            bootstrap.JumpTo(Game.Domain.ExplorationPresets.BeforeGrowthInsight);
+            notebook.SetOpen(true); notebook.SelectClue(Game.Domain.ExplorationRules.Sprout); notebook.SelectClue(Game.Domain.ExplorationRules.TowardLight); notebook.InterpretSelected();
+            Assert.That(notebook.ConceptFormationPlaying, Is.True);
+            yield return new WaitForSecondsRealtime(1.8f);
+            Assert.That(notebook.IsOpen, Is.True); Assert.That(bootstrap.Session.State.Facts, Is.Empty);
+            Assert.That(bootstrap.Session.State.Knows(Game.Domain.DemoRules.Growth), Is.True);
+            var word = System.Linq.Enumerable.Single(Object.FindObjectsByType<UnityEngine.UI.Text>(FindObjectsInactive.Include), x => x.name == "InsightWord");
+            Assert.That(word.text, Is.EqualTo("生长"));
+            notebook.SelectClue(Game.Domain.DemoRules.Clue("growth")); notebook.SelectClue(Game.Domain.DemoRules.Clue("plant"));
+            Assert.That(notebook.SelectedClues.Count, Is.EqualTo(2));
+        }
         [UnityTest] public IEnumerator RestartDuringInspectionReleasesOldCopyAndInputLock()
         {
             inspection.InspectDebugCube(); yield return null; var copy = inspection.CurrentVisual;

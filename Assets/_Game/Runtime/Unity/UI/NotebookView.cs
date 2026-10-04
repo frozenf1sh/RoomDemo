@@ -18,6 +18,14 @@ namespace Game.Unity
         [SerializeField] private GameObject panel;
         [SerializeField] private Transform objectList;
         [SerializeField] private Transform conceptList;
+        [SerializeField] private Transform observationList;
+        [SerializeField] private Text insightWord;
+        private string formedWord;
+        private bool clearedInsightSlots;
+        /// <summary>仅为当前纸面书写演出，不是“生长已解锁”的第二份状态。</summary>
+        public bool ConceptFormationPlaying => formedWord != null && Time.unscaledTime - connectedAt < 2;
+        /// <summary>把观察和概念分开展示，灰盒兼容场景可以继续只用旧两列。</summary>
+        public void ConfigureExploration(Transform observations, Text word) { observationList = observations; insightWord = word; }
         [SerializeField] private Button rowTemplate;
         [SerializeField] private Button interpretButton;
         [SerializeField] private Button openButton;
@@ -76,7 +84,7 @@ namespace Game.Unity
         {
             // 重开或预设跳转时先解绑旧会话，避免旧事件修改新界面。
             if (session != null) session.EventRaised -= OnEvent;
-            session = game; session.EventRaised += OnEvent; closeAt = -1; ClearSelection();
+            session = game; session.EventRaised += OnEvent; closeAt = -1; formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); ClearSelection();
             // 重开与预设跳转不播放翻页声，也不能留下上一会话的声音。
             paperAudio.Stop(); inkAudio.Stop(); scratchAudio.Stop(); SetOpen(false, false);
             // 只缓存一次原始按钮样式；重开时不能把上一会话的闪烁颜色当作初始颜色。
@@ -119,6 +127,7 @@ namespace Game.Unity
         public void SelectClue(ClueId clue)
         {
             if (!session.State.Knows(clue)) return;
+            if (formedWord != null) { ClearSelection(); formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); }
             closeAt = -1; connectedAt = -1; relationLine.enabled = false;
             // 同一碎片只能占一个槽，再次点击会取消；这只是输入组织。
             int existing = System.Array.FindIndex(selected, x => x.HasValue && x.Value == clue);
@@ -146,7 +155,7 @@ namespace Game.Unity
             if (e is InspectionFailed inspectFailed) feedbackText.text = inspectFailed.Reason;
             if (e is CombinationFailed failed) { feedbackText.text = failed.Reason; selectionText.color = new Color(.42f, .35f, .27f); closeAt = -1; relationLine.enabled = false; scratchAudio.Play(); }
             // 成功时世界已经开始响应；界面强调后短暂延时收起。
-            if (e is CombinationSucceeded)
+            if (e is CombinationSucceeded success)
             {
                 feedbackText.text = "笔迹相连。看看房间正在回应什么。";
                 connectedAt = Time.unscaledTime; relationLine.enabled = true; inkAudio.Play();
@@ -154,7 +163,16 @@ namespace Game.Unity
                 relationLine.rectTransform.anchorMin = new Vector2(1f / 6, .27f);
                 relationLine.rectTransform.anchorMax = new Vector2(1f / 6 + (SelectedClues.Count - 1) / 3f, .274f);
                 selectionText.text = string.Join("  ─  ", SelectedClues.Select(Label)); selectionText.color = new Color(.75f, .43f, .10f);
-                closeAt = Time.unscaledTime + .65f; RenderHistory();
+                var concepts = success.ProducedClues.Where(c => session.Rules.Clues.Single(x => x.Id == c).Category == ClueCategory.Concept).ToArray();
+                if (concepts.Length > 0)
+                {
+                    // 仅根据实际输出事件改变反馈；没有在 UI 匹配输入或复制配方答案。
+                    formedWord = string.Join(" · ", concepts.Select(Label)); clearedInsightSlots = false; closeAt = -1;
+                    if (insightWord != null) { insightWord.text = ""; insightWord.gameObject.SetActive(true); }
+                    feedbackText.text = "两个细节之间，你想到了一个词。";
+                }
+                else closeAt = Time.unscaledTime + .65f;
+                RenderHistory();
             }
         }
         /// <summary>聚合同一轮新发现，显示中文名称并启动未读闪烁。</summary>
@@ -203,19 +221,21 @@ namespace Game.Unity
         /// <summary>根据 KnownClues 重建分类列表和解释历史。</summary>
         private void Render()
         {
-            ClearRows(objectList); ClearRows(conceptList);
+            ClearRows(objectList); ClearRows(conceptList); if (observationList != null) ClearRows(observationList);
             foreach (var definition in session.Rules.Clues.Where(x => session.State.Knows(x.Id)))
             {
                 // 捕获本条碎片的 ID，生成的按钮仅提交选择。
                 var id = definition.Id; bool objectClue = definition.Category == ClueCategory.Object;
-                AddRow(objectClue ? objectList : conceptList, (objectClue ? "Object_" : "Concept_") + id.Value, (definition.Category == ClueCategory.Observation ? "观察 · " : "") + definition.DisplayName, () => SelectClue(id));
+                bool observation = definition.Category == ClueCategory.Observation;
+                var list = objectClue ? objectList : observation && observationList != null ? observationList : conceptList;
+                AddRow(list, (objectClue ? "Object_" : observation ? "Observation_" : "Concept_") + id.Value, definition.DisplayName, () => SelectClue(id));
             }
             RenderSelection(); RenderHistory();
         }
         /// <summary>只显示领域记录的已完成配方，不自行维护历史。</summary>
         private void RenderHistory()
         {
-            completedText.text = "已建立的解释\n" + string.Join("\n", session.Rules.Recipes.Where(x => session.State.HasCompleted(x.Id)).Select(x => string.Join(" ─ ", x.Inputs.Select(Label))));
+            completedText.text = "留下的联系\n" + string.Join("\n", session.Rules.Recipes.Where(x => session.State.HasCompleted(x.Id)).Select(x => string.Join(" ─ ", x.Inputs.Select(Label)) + (x.ProducesClues.Count > 0 ? " → " + string.Join("、", x.ProducesClues.Select(Label)) : "")));
         }
         /// <summary>先隐藏旧按钮再延迟销毁，避免同一帧残留可点击项。</summary>
         private static void ClearRows(Transform list) { foreach (Transform child in list) { child.gameObject.SetActive(false); Destroy(child.gameObject); } }
@@ -225,8 +245,9 @@ namespace Game.Unity
         /// <summary>刷新槽位与提交许可，只校验输入数量。</summary>
         private void RenderSelection()
         {
+            if (formedWord != null) return;
             relationLine.enabled = false;
-            selectionText.text = "组合已收集的意义"; selectionText.color = new Color(.1f, .15f, .19f);
+            selectionText.text = "把观察联系起来，或用概念解释事物"; selectionText.color = new Color(.1f, .15f, .19f);
             for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) + "  ×" : i == 2 ? "+ 可选碎片" : "+ 选择碎片";
             interpretButton.interactable = SelectedClues.Count >= 2;
         }
@@ -245,6 +266,17 @@ namespace Game.Unity
         {
             UpdateDiscoveryFeedback();
             UpdatePaperRitual();
+            if (formedWord != null)
+            {
+                float elapsed = Time.unscaledTime - connectedAt;
+                if (insightWord != null) insightWord.text = formedWord.Substring(0, Mathf.Clamp(Mathf.FloorToInt((elapsed - .4f) * 4), 0, formedWord.Length));
+                if (elapsed > 1.6f && !clearedInsightSlots)
+                {
+                    clearedInsightSlots = true; ClearSelection(); interpretButton.interactable = false;
+                    foreach (var slot in slotButtons) slot.GetComponentInChildren<Text>().text = "+ 选择碎片";
+                    feedbackText.text = "“" + formedWord + "”。现在试着用它重新看待一件事物。";
+                }
+            }
             if (closeAt > 0 && Time.unscaledTime >= closeAt) { closeAt = -1; SetOpen(false); ClearSelection(); RenderSelection(); }
             var keyboard = Keyboard.current; if (keyboard == null) return;
             var focused = UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject;

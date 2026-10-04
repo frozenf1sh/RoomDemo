@@ -20,7 +20,10 @@ namespace Game.Domain
     {
         /// <summary>本次成功的稳定配方 ID。</summary>
         public string RecipeId { get; }
-        public CombinationSucceeded(string id) { RecipeId = id; }
+        /// <summary>本次配方实际输出的线索快照；UI 可据类别呈现灵感，不能用它判定输入。</summary>
+        public System.Collections.Generic.IReadOnlyList<ClueId> ProducedClues { get; }
+        public CombinationSucceeded(string id, System.Collections.Generic.IReadOnlyList<ClueId> producedClues = null)
+        { RecipeId = id; ProducedClues = System.Array.AsReadOnly(System.Linq.Enumerable.ToArray(producedClues ?? System.Array.Empty<ClueId>())); }
         public override string ToString() => $"[配方] 成功，配方={RecipeId}";
     }
     /// <summary>玩家组合失败，不消费碎片、不产生事实。</summary>
