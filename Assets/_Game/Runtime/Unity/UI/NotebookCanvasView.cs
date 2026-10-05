@@ -1,7 +1,7 @@
 // =============================================================================
 // 文件：NotebookCanvasView.cs
 // 职责：管理纸面最多三个词条的拖动、归还、近邻淡线与联想／解释入口。
-// 边界：位置和活动卡片都是临时 UI 状态；配方提示通过会话只读查询取得。
+// 边界：位置和活动卡片都是临时 UI 状态；近邻反馈只看摆放，提交以后才由领域判定意义。
 // =============================================================================
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +18,9 @@ namespace Game.Unity
         [SerializeField] private Button cardTemplate, action;
         [SerializeField] private Image[] lines;
         [SerializeField] private Text invitation;
+        [SerializeField] private bool blindComposition;
+        /// <summary>叙事纸面不预告正确答案；历史灰盒仍可保留旧配方提示。</summary>
+        public void ConfigureBlindComposition(bool enabled) { blindComposition = enabled; }
         private readonly Dictionary<ClueId, RectTransform> cards = new Dictionary<ClueId, RectTransform>();
         private GameSession session;
         private NotebookView notebook;
@@ -25,7 +28,7 @@ namespace Game.Unity
         private float successUntil;
         private Image[] inkMotes;
         private Vector2 moteOrigin;
-        /// <summary>当前相邻配方的输入；尚无配方时提交全部词条，由领域返回轻失败。</summary>
+        /// <summary>当前近邻词条的输入；没有近邻时提交全部词条，由领域判定。</summary>
         public IReadOnlyList<ClueId> CombinationInput => candidateInputs.Length > 0 ? candidateInputs : cards.Keys.ToArray();
         /// <summary>活动卡片的数量，不是已知线索数量。</summary>
         public int ActiveCardCount => cards.Count;
@@ -135,22 +138,27 @@ namespace Game.Unity
                 foreach(var group in groups)
                 {
                     if (group.Any(a => group.Any(b => Vector2.Distance(cards[a].anchoredPosition,cards[b].anchoredPosition)>205))) continue;
+                    if (blindComposition) { candidateInputs = group; break; }
                     recipe = session.PreviewCombination(group);
                     if (recipe != null) { candidateInputs = group; break; }
                 }
             }
             foreach(var line in lines) line.enabled = false;
-            action.gameObject.SetActive(recipe != null);
+            bool canTry = blindComposition ? candidateInputs.Length >= 2 : recipe != null;
+            action.gameObject.SetActive(canTry);
             invitation.text = cards.Count == 0 ? "把记下的细节拖到这里" : "";
-            if (recipe == null) return;
+            if (!canTry) return;
             Vector2 center = Vector2.zero;
             foreach(var clue in candidateInputs) center += cards[clue].anchoredPosition / candidateInputs.Length;
             ((RectTransform)action.transform).anchoredPosition = center + new Vector2(0,-62);
-            action.GetComponentInChildren<Text>().text = recipe.ProducesClues.Count > 0 ? "联想" : "解释";
+            // 按输入的语义重量提供动词，不查询这组词是否存在答案。
+            bool containsObject = candidateInputs.Any(c => session.Rules.Clues.Single(x => x.Id == c).Category == ClueCategory.Object);
+            action.GetComponentInChildren<Text>().text = blindComposition ? (containsObject ? "解释" : "联想")
+                : recipe.ProducesClues.Count > 0 ? "联想" : "解释";
             for(int i=0;i<candidateInputs.Length-1;i++)
             {
                 Vector2 a=cards[candidateInputs[i]].anchoredPosition,b=cards[candidateInputs[i+1]].anchoredPosition;
-                var line=lines[i]; line.enabled=true; line.color=new Color(.58f,.49f,.27f,.28f);
+                var line=lines[i]; line.enabled=true; line.color=new Color(.58f,.49f,.27f,blindComposition ? .14f : .28f);
                 line.rectTransform.anchoredPosition=(a+b)*.5f;
                 line.rectTransform.sizeDelta=new Vector2(Vector2.Distance(a,b),1.3f);
                 line.rectTransform.localRotation=Quaternion.Euler(0,0,Mathf.Atan2(b.y-a.y,b.x-a.x)*Mathf.Rad2Deg);

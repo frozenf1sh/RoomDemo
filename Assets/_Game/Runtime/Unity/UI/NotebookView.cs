@@ -1,6 +1,6 @@
 // =============================================================================
 // 文件：NotebookView.cs
-// 职责：显示分类碎片、有限语义画布、组合结果与既有解释；兼容旧灰盒槽位。
+// 职责：显示思想材料、有限语义画布、组合结果与既有解释；兼容旧灰盒槽位。
 // 边界：仅持有界面选择和开关状态；不持有配方答案或世界事实。
 // =============================================================================
 using System.Collections.Generic;
@@ -23,6 +23,10 @@ namespace Game.Unity
         [SerializeField] private Transform conceptList;
         [SerializeField] private Transform observationList;
         [SerializeField] private Text insightWord;
+        [SerializeField] private Transform unifiedWords;
+        [SerializeField] private Text canvasMarks;
+        /// <summary>所有材料共用左侧列表，区别只体现在字重；旧灰盒继续使用原列。</summary>
+        public void ConfigureUnifiedWords(Transform words, Text marks) { unifiedWords = words; canvasMarks = marks; }
         private string formedWord;
         private bool clearedInsightSlots;
         /// <summary>仅为当前纸面书写演出，不是“生长已解锁”的第二份状态。</summary>
@@ -71,7 +75,7 @@ namespace Game.Unity
         private void Awake()
         {
             // 纸面分类淡出只是灵感书写的构图；灰盒没有分列 CanvasGroup 时照常工作。
-            columnCanvas = new[] { objectList, observationList, conceptList }.Where(x => x != null)
+            columnCanvas = new[] { unifiedWords != null ? unifiedWords : objectList, observationList, conceptList }.Where(x => x != null)
                 .Select(x => x.GetComponent<CanvasGroup>()).Where(x => x != null).ToArray();
         }
         /// <summary>注入列表、模板、反馈和提交按钮。</summary>
@@ -203,10 +207,12 @@ namespace Game.Unity
         {
             // 连续发现共享一张通知，避免盆栽与生长在同一命令中互相覆盖。
             if (Time.unscaledTime >= discoveryUntil) recentDiscoveries.Clear();
-            recentDiscoveries.Add(clue);
+            // 房间第一次成为词条时仅留一声与小笔记记号，避免弹窗替玩家解释题眼。
+            bool quiet = session.Rules.Clues.Single(x=>x.Id==clue).QuietDiscovery;
+            if (!quiet) recentDiscoveries.Add(clue);
             discoveryText.text = "新发现\n" + string.Join("、", recentDiscoveries.Select(Label)) + "\n已记入笔记本 · 按 N 查看";
             discoveryUntil = Time.unscaledTime + 5f;
-            discoveryPanel.SetActive(true);
+            if (!quiet) discoveryPanel.SetActive(true);
             if (!IsOpen)
             {
                 if (!HasUnreadDiscoveries) blinkStartedAt = Time.unscaledTime;
@@ -244,19 +250,33 @@ namespace Game.Unity
         private void Render()
         {
             ClearRows(objectList); ClearRows(conceptList); if (observationList != null) ClearRows(observationList);
-            foreach (var definition in session.Rules.Clues.Where(x => session.State.Knows(x.Id)))
+            if (unifiedWords != null) ClearRows(unifiedWords);
+            // 依获得顺序排列，不把思想材料重新分成物品栏和技能栏。
+            var definitions = unifiedWords != null ? session.State.KnownClues.Select(id => session.Rules.Clues.Single(x=>x.Id==id))
+                : session.Rules.Clues.Where(x => session.State.Knows(x.Id));
+            foreach (var definition in definitions)
             {
                 // 捕获本条碎片的 ID，生成的按钮仅提交选择。
                 var id = definition.Id; bool objectClue = definition.Category == ClueCategory.Object;
                 bool observation = definition.Category == ClueCategory.Observation;
-                var list = objectClue ? objectList : observation && observationList != null ? observationList : conceptList;
+                var list = unifiedWords != null ? unifiedWords : objectClue ? objectList : observation && observationList != null ? observationList : conceptList;
                 AddRow(list, (objectClue ? "Object_" : observation ? "Observation_" : "Concept_") + id.Value, definition.DisplayName, definition.Category, () => SelectClue(id));
             }
             RenderSelection(); RenderHistory();
+            RefreshCanvasMarks();
         }
         /// <summary>只显示领域记录的已完成配方，不自行维护历史。</summary>
+        private void RefreshCanvasMarks()
+        {
+            if (canvasMarks == null) return;
+            // 旧笔迹表达习惯；偏离后渐淡，不显示听话／反抗计数。
+            float importance = Mathf.Clamp01(1 - session.State.DeviationCount * .45f);
+            canvasMarks.color = new Color(.45f,.37f,.24f,.52f * importance);
+            canvasMarks.text = session.State.Knows(new ClueId("painting")) ? "↖  这里。" : "";
+        }
         private void RenderHistory()
         {
+            RefreshCanvasMarks();
             var relations=session.Rules.Recipes.Where(x=>session.State.HasCompleted(x.Id))
                 .Select(x=>string.Join(" ─ ",x.Inputs.Select(Label))+(x.ProducesClues.Count>0 ? " → "+string.Join("、",x.ProducesClues.Select(Label)) : "")).ToArray();
             // 两列都是同一份领域历史的视图，没有另外保存已建立关系。

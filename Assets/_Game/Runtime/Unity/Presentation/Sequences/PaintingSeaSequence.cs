@@ -25,6 +25,9 @@ namespace Game.Unity
         [SerializeField, Min(.1f)] private float windowAt = 10.2f;
         [SerializeField, Min(.1f)] private float atmosphereAt = 13.5f;
         [SerializeField, Min(.1f)] private float finishAt = 17.0f;
+        [SerializeField] private bool canvasNarrative;
+        /// <summary>画布路线只有真实外溢后才借用房间演出；不改变世界事实。</summary>
+        public void ConfigureCanvasNarrative(bool enabled) { canvasNarrative = enabled; }
         private GameSession session;
         private WorldPresenter[] presenters;
         private Coroutine playing;
@@ -33,7 +36,7 @@ namespace Game.Unity
         /// <summary>只表示协程正在展现，并不代表世界规则尚未计算。</summary>
         public bool IsPlaying { get; private set; }
         /// <summary>已成立的海画尚未展现完成，用于避免 UI 提前剧透结果。</summary>
-        public bool IsBenchmarkPending => session != null && session.State.HasFact(DemoRules.PaintingSea) && !finalShown;
+        public bool IsBenchmarkPending => session != null && session.State.HasFact(DemoRules.PaintingSea) && (!canvasNarrative || session.State.HasFact(DemoRules.WaterPresent)) && !finalShown;
         /// <summary>当前节拍的中文名称，供表现调试显示。</summary>
         public string CurrentBeat { get; private set; } = "静止";
         /// <summary>以非缩放时间记录进度；暂停游戏时间不会挂起调试取消操作。</summary>
@@ -65,12 +68,15 @@ namespace Game.Unity
         /// <summary>只监听海画事实；完整反应闭包已经在此之前由领域计算完毕。</summary>
         private void OnEvent(DomainEvent e)
         {
-            if (e is FactAdded fact && fact.Fact == DemoRules.PaintingSea) PlayAnimated();
+            // 海可以先留在矩形里；后来旧解释使水成立时，才开始外溢的节奏。
+            if (e is FactAdded fact && (fact.Fact == DemoRules.PaintingSea || fact.Fact == DemoRules.WaterPresent))
+                if (!canvasNarrative || session.State.HasFact(DemoRules.WaterPresent)) PlayAnimated();
         }
         /// <summary>播放已经成立的海画解释，不在导演中补充缺少的前置状态。</summary>
         public void PlayAnimated()
         {
             if ((IsPlaying && !preview) || session == null || !session.State.HasFact(DemoRules.PaintingSea)) return;
+            if (canvasNarrative && !session.State.HasFact(DemoRules.WaterPresent)) return;
             // 若玩家在调试预览中提交真实解释，取消预览并转交正式演出。
             if (preview) ResetPresentation();
             preview = false; finalShown = false; Begin();

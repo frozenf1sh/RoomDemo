@@ -15,6 +15,9 @@ namespace Game.Unity
         [SerializeField] private GameObject seaPainting;
         [SerializeField] private AudioSource seaAudio;
         [SerializeField] private AudioSource anomalyAudio;
+        [SerializeField] private bool canvasNarrative;
+        /// <summary>正式画布叙事只在外溢后恢复动态海，普通作品由独立画布视觉承载。</summary>
+        public void ConfigureCanvasNarrative(bool enabled) { canvasNarrative = enabled; }
         private Renderer surface;
         private Renderer[] frames;
         private Color[] frameColors;
@@ -65,8 +68,9 @@ namespace Game.Unity
         /// <summary>恢复时立即设置最终参数，取消尚未完成的过渡目标。</summary>
         public override void ApplyState(GameState state, bool animate)
         {
-            if (!animate) SetFinalVisual(state.HasFact(DemoRules.PaintingSea));
-            else if (state.HasFact(DemoRules.PaintingSea)) PlaySeaTransition();
+            bool overflowing = state.HasFact(DemoRules.PaintingSea) && (!canvasNarrative || state.HasFact(DemoRules.WaterPresent));
+            if (!animate) SetFinalVisual(overflowing);
+            else if (overflowing) PlaySeaTransition();
         }
         /// <summary>只推进 Shader 和音量目标；没有延时添加 Fact。</summary>
         private void Update()

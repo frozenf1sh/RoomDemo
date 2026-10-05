@@ -5,6 +5,7 @@
 // =============================================================================
 using System.Linq;
 using Game.Application;
+using Game.Domain;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -23,6 +24,7 @@ namespace Game.Unity
         private bool previousInspectable;
         private bool previousKnown;
         private bool hasHoverSnapshot;
+        private bool previousConstricted;
         /// <summary>注入射线相机与悬停文本。</summary>
         public void ConfigureInspection(InspectionController controller) { inspection = controller; }
         /// <summary>注入射线相机与悬停文本。</summary>
@@ -52,15 +54,18 @@ namespace Game.Unity
             // 统一判断 UI 遮挡，避免点击按钮同时调查其后的世界物体。
             bool blocked = notebook.IsOpen || notebook.ExternalInputBlocked || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
+            // 未到可发现的叙事门槛前，房间边界保持普通背景，不提前提示题眼。
+            if (target != null && session.Rules.Discoveries.Any(x => x.Source == target.Entity.Id && x.MinimumDeviations > session.State.DeviationCount)) target = null;
+            bool constricted = session.State.CanvasLocked;
             // 中文显示来源于内容定义；业务许可来源于状态查询。
             bool inspectable = target != null && session.IsInspectable(target.Entity.Id);
             bool known = target != null && session.State.Knows(target.Entity.Id);
             // 只在目标或可调查状态变化时生成文字，避免悬停期间每帧 LINQ 与字符串分配。
-            if (!hasHoverSnapshot || target != previousTarget || inspectable != previousInspectable || known != previousKnown)
+            if (!hasHoverSnapshot || target != previousTarget || inspectable != previousInspectable || known != previousKnown || constricted != previousConstricted)
             {
-                hasHoverSnapshot = true; previousTarget = target; previousInspectable = inspectable; previousKnown = known;
+                previousConstricted = constricted; hasHoverSnapshot = true; previousTarget = target; previousInspectable = inspectable; previousKnown = known;
                 // 未成功观察前不替物体命名；名字是亲自看过之后留在笔记里的奖励。
-                hoverText.text = target == null ? "" : !inspectable ? "这里还藏着什么。"
+                hoverText.text = target == null || (constricted && target.Entity.Id != DemoRules.Painting) ? "" : !inspectable ? "这里还藏着什么。"
                     : !known ? (target.GetComponent<InspectableObject>() != null ? "拿近看看" : "仔细看看")
                     : "再看看 · " + session.Rules.Discoveries.First(x => x.Source == target.Entity.Id).DisplayName;
             }

@@ -55,7 +55,7 @@ namespace Game.Unity
             // 检视与笔记先消费 Esc，不能在退出它们的同一帧误打开暂停菜单。
             bool uiWasOpen = lastNotebook || lastInspection || notebook.IsOpen || inspection.IsOpen;
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && !uiWasOpen &&
-                (paused || !notebook.ExternalInputBlocked)) SetPaused(!paused);
+                (paused || !notebook.ExternalInputBlocked || bootstrap.Session.State.HasFact(Game.Domain.NarrativeRules.BanalComplete))) SetPaused(!paused);
             lastNotebook = notebook.IsOpen; lastInspection = inspection.IsOpen;
         }
         private void LateUpdate()
