@@ -16,6 +16,11 @@ namespace Game.Unity
         /// <summary>缓存当前 SceneEntity，仅提供交互身份。</summary>
         public SceneEntity Entity => entity != null ? entity : (entity = GetComponent<SceneEntity>());
         /// <summary>仅提交实体 ID，由 Session 决定能否发现内容。</summary>
-        public void Inspect(GameSession session) { session.Inspect(Entity.Id); }
+        public void Inspect(GameSession session)
+        {
+            session.Inspect(Entity.Id);
+            var details = GetComponent<WorldObservationSource>();
+            if (details != null) details.ObserveAvailable(session, Entity.Id);
+        }
     }
 }

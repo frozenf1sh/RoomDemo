@@ -18,6 +18,9 @@ namespace Game.Unity
         [SerializeField] private Light windowLight;
         [SerializeField] private Light seaLight;
         private bool lightingBorrowed;
+        private bool suppressEnding;
+        /// <summary>主线继续进行时保留氛围变化，收起历史样板结束面板。</summary>
+        public void SuppressBenchmarkEnding(bool hide) { suppressEnding=hide; if(hide) endingPanel.SetActive(false); }
         /// <summary>具体世界导演借用整体光照，避免两个表现消费者每帧互相覆盖。</summary>
         public void SetLightingOverride(bool borrowed) { lightingBorrowed = borrowed; }
         private float far, sea, finale, targetFar, targetSea, targetFinale;
@@ -44,14 +47,14 @@ namespace Game.Unity
         public void PlayAtmosphere()
         {
             targetFinale = 1;
-            endingPanel.SetActive(true);
+            endingPanel.SetActive(!suppressEnding);
             if (!ambience.isPlaying) ambience.Play();
         }
         /// <summary>调试只设置光照表现，不创建或改写领域状态。</summary>
         public void SetPresentation(bool farVisible, bool seaVisible, bool completeVisible)
         {
             targetFar = far = farVisible ? 1 : 0; targetSea = sea = seaVisible ? 1 : 0; targetFinale = finale = completeVisible ? 1 : 0;
-            endingPanel.SetActive(completeVisible);
+            endingPanel.SetActive(completeVisible && !suppressEnding);
             if (completeVisible && !ambience.isPlaying) ambience.Play(); if (!completeVisible) ambience.Stop();
             SetLighting();
         }
@@ -61,7 +64,7 @@ namespace Game.Unity
             targetFar = state.HasFact(DemoRules.WindowFar) ? 1 : 0;
             targetSea = state.HasFact(DemoRules.PaintingSea) ? 1 : 0;
             targetFinale = state.HasFact(DemoRules.Complete) ? 1 : 0;
-            endingPanel.SetActive(targetFinale > 0);
+            endingPanel.SetActive(targetFinale > 0 && !suppressEnding);
             if (targetFinale > 0 && !ambience.isPlaying) ambience.Play();
             if (targetFinale == 0) ambience.Stop();
             if (!animate)
