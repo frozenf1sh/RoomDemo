@@ -60,7 +60,7 @@ namespace Game.Tests
             Assert.That(room.WallBack.gameObject.activeSelf || room.WindowBoundary.gameObject.activeSelf || room.Floor.gameObject.activeSelf, Is.False);
             Assert.That(exterior.Environment.activeSelf && exterior.SkyDome.activeSelf && exterior.FloorPatch.activeSelf, Is.True);
             Assert.That(mutation.SpawnedCount, Is.EqualTo(1)); Assert.That(table.position, Is.EqualTo(tablePosition));
-            Assert.That(Object.FindObjectsByType<SceneEntity>().Length, Is.EqualTo(5));
+            Assert.That(Object.FindObjectsByType<SceneEntity>().Length, Is.EqualTo(7));
         }
         /// <summary>独立演出预览不能写世界；重开中断后旧协程不能继续隐藏新房间。</summary>
         [UnityTest] public IEnumerator PreviewIsReadOnlyAndRestartCancelsAllBorrowedVisuals()
