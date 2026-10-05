@@ -126,7 +126,7 @@ namespace Game.Tests
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             Assert.That(notebook.IsOpen);
             FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
-            FindButton("Interpret").onClick.Invoke();
+            FindButton("CanvasAction").onClick.Invoke();
             yield return new WaitForSeconds(1.4f);
             Assert.That(plant.GrowthProgress, Is.GreaterThan(0)); Assert.That(plant.Visual.localScale, Is.EqualTo(initialScale));
             var book = Object.FindAnyObjectByType<BookPresenter>();
@@ -139,7 +139,7 @@ namespace Game.Tests
             Assert.That(ClickObject(DemoRules.Window));
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_window").onClick.Invoke(); FindButton("Concept_far").onClick.Invoke();
-            FindButton("Interpret").onClick.Invoke(); yield return null;
+            FindButton("CanvasAction").onClick.Invoke(); yield return null;
             var wind = Object.FindAnyObjectByType<WindPresenter>();
             Assert.That(Object.FindAnyObjectByType<WindowPresenter>().FarBackground.activeSelf);
             Assert.That(wind.IsWindVisible); Assert.That(wind.WindAudio.isPlaying);
@@ -159,7 +159,7 @@ namespace Game.Tests
             Assert.That(ClickObject(DemoRules.Painting));
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Concept_sea").onClick.Invoke(); FindButton("Object_painting").onClick.Invoke();
-            FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(Object.FindAnyObjectByType<PaintingSeaSequence>().Duration + .2f);
+            FindButton("CanvasAction").onClick.Invoke(); yield return new WaitForSeconds(Object.FindAnyObjectByType<PaintingSeaSequence>().Duration + .2f);
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(bootstrap.Session.State.CompletedRecipes.Count, Is.EqualTo(3));
             Assert.That(bootstrap.Session.State.FiredReactions.Count, Is.EqualTo(8));
             Assert.That(plant.AquaticVisual.activeSelf); Assert.That(plant.AquaticProgress, Is.EqualTo(1));
@@ -200,7 +200,7 @@ namespace Game.Tests
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
             var events = new System.Collections.Generic.List<DomainEvent>(); bootstrap.Session.EventRaised += events.Add;
-            FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(1.4f);
+            FindButton("CanvasAction").onClick.Invoke(); yield return new WaitForSeconds(1.4f);
             Assert.That(events.OfType<CombinationSucceeded>().Count(), Is.EqualTo(1)); Assert.That(plant.GrowthProgress, Is.GreaterThan(0));
         }
         /// <summary>使用实际调试按钮验证授予、跳转、非法事实与重置。</summary>
@@ -214,14 +214,18 @@ namespace Game.Tests
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.Complete)); Assert.That(Object.FindAnyObjectByType<PlantPresenter>().AquaticProgress, Is.EqualTo(1));
             FindButton("DebugReset").onClick.Invoke(); yield return null; Assert.That(bootstrap.Session.State.Facts, Is.Empty);
         }
-        /// <summary>多余第三槽不能误命中二元配方，清除后正常完成。</summary>
-        [UnityTest] public IEnumerator ThirdNotebookSlotRejectsExtraClueWithoutConsumingIt()
+        /// <summary>三个相邻词不能误命中二词配方，移回多余卡片后正常完成。</summary>
+        [UnityTest] public IEnumerator ThirdCanvasWordRejectsExtraClueWithoutConsumingIt()
         {
             bootstrap.Session.DebugGrantAllClues(); FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke(); FindButton("Concept_sea").onClick.Invoke();
-            Assert.That(notebook.SelectedClues.Count, Is.EqualTo(3)); FindButton("Interpret").onClick.Invoke(); yield return null;
+            Assert.That(notebook.SelectedClues.Count, Is.EqualTo(3));
+            var submit = Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Single(x=>x.name=="CanvasAction");
+            Assert.That(submit.gameObject.activeInHierarchy, Is.False, "多余第三词不能显示二词解释入口。");
+            // 同时保留命令防线：即使外部提交非法输入，事实仍不能改变。
+            notebook.InterpretSelected(); yield return null;
             Assert.That(bootstrap.Session.State.Facts, Is.Empty); Assert.That(bootstrap.Session.State.KnownClues.Count, Is.EqualTo(7)); Assert.That(notebook.IsOpen);
-            FindButton("Slot2").onClick.Invoke(); FindButton("Interpret").onClick.Invoke(); yield return new WaitForSeconds(.8f);
+            FindButton("CanvasClue_sea").onClick.Invoke(); FindButton("CanvasAction").onClick.Invoke(); yield return new WaitForSeconds(.8f);
             Assert.That(bootstrap.Session.State.HasFact(DemoRules.PlantGrown)); Assert.That(notebook.IsOpen, Is.False);
         }
         /// <summary>错误组合保持事实为空，窗景也不应改变。</summary>
@@ -230,7 +234,9 @@ namespace Game.Tests
             ClickObject(DemoRules.Plant); ClickObject(DemoRules.Window);
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_window").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
-            FindButton("Interpret").onClick.Invoke(); yield return null;
+            var submit = Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Single(x=>x.name=="CanvasAction");
+            Assert.That(submit.gameObject.activeInHierarchy, Is.False);
+            notebook.InterpretSelected(); yield return null;
             Assert.That(bootstrap.Session.State.Facts, Is.Empty);
             Assert.That(Object.FindAnyObjectByType<WindowPresenter>().FarBackground.activeSelf, Is.False);
         }
