@@ -19,6 +19,20 @@ namespace Game.Domain
         private readonly Dictionary<string, PendingDeferredEffect> pending = new Dictionary<string, PendingDeferredEffect>();
         /// <summary>显式游戏日序，初始为第一天，不与真实时间关联。</summary>
         public int DayIndex { get; private set; } = 1;
+        /// <summary>重要成功解释的服从次数；失败和重复配方不会增加。</summary>
+        public int CompliantCount { get; private set; }
+        /// <summary>重要成功解释的偏离次数，不作为玩家可见的奖励。</summary>
+        public int DeviationCount { get; private set; }
+        /// <summary>连续服从次数；中性联想不打断连续性，偏离会清零。</summary>
+        public int ConsecutiveCompliance { get; private set; }
+        /// <summary>一旦发现了画布之外的解释，后续服从不再强制收束路线。</summary>
+        public bool HasDeviated => DeviationCount > 0;
+        /// <summary>连续三个核心解释交给画且从未偏离，进入明确的画布收束。</summary>
+        public bool CanvasLocked => !HasDeviated && ConsecutiveCompliance >= 3;
+        /// <summary>内部旁白阶段从唯一状态派生，不保存另一份路线状态。</summary>
+        public NarrativeStage NarrativeStage => CanvasLocked ? NarrativeStage.CanvasLockIn : DeviationCount >= 3 ? NarrativeStage.LosingAuthority : DeviationCount >= 2 ? NarrativeStage.Concerned : HasDeviated ? NarrativeStage.SlightlyConfused : NarrativeStage.Normal;
+        /// <summary>锁入画布后拒绝新的偏离解释；联想与画布解释仍可执行。</summary>
+        public bool Allows(NarrativeDisposition disposition) => !CanvasLocked || disposition != NarrativeDisposition.Deviant;
         /// <summary>无分配的等待查询，UI 许可不必创建队列快照。</summary>
         public bool HasPendingDeferredEffects => pending.Count > 0;
         /// <summary>已登记但尚未到日的效果快照，外部不能修改队列。</summary>
@@ -60,7 +74,22 @@ namespace Game.Domain
         /// <summary>领域内部标记反应，阻止循环或重复执行。</summary>
         internal bool Fire(string id) => reactions.Add(id);
         /// <summary>领域内部记录已完成的玩家配方。</summary>
-        internal bool Complete(string id) => recipes.Add(id);
+        internal bool Complete(string id, NarrativeDisposition disposition = NarrativeDisposition.Neutral)
+        {
+            // 先去重后计数；失败提交、重复解释和中性联想都不能刷路线次数。
+            if (!recipes.Add(id)) return false;
+            if (disposition == NarrativeDisposition.Compliant)
+            {
+                CompliantCount++;
+                ConsecutiveCompliance++;
+            }
+            else if (disposition == NarrativeDisposition.Deviant)
+            {
+                DeviationCount++;
+                ConsecutiveCompliance = 0;
+            }
+            return true;
+        }
         /// <summary>领域内部推进日序，不发布事件；事件由引擎统一组织。</summary>
         internal void AdvanceDay() { DayIndex = checked(DayIndex + 1); }
         /// <summary>仅全新预设恢复使用；恢复日序不代表玩家结束了一天。</summary>

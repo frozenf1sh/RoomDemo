@@ -103,7 +103,7 @@ namespace Game.Domain
                 // 历史必须与世界一致，不能记录一个尚未产生其输出的配方。
                 if (!recipe.ProducesFacts.All(state.HasFact) || !recipe.ProducesClues.All(state.Knows))
                     throw new ArgumentException("预设的已完成配方必须与其产出的线索和事实一致。");
-                state.Complete(id);
+                state.Complete(id, recipe.Disposition);
             }
         }
 
@@ -112,7 +112,7 @@ namespace Game.Domain
         {
             var definition = rules.Discoveries.FirstOrDefault(x => x.Source == command.Object);
             // 物体可以在场景中可见，但尚未满足调查条件；Collider 不决定业务许可。
-            if (definition == null || !definition.Requires.All(state.HasFact))
+            if (definition == null || !rules.CanDiscover(state, definition))
             {
                 events.Add(new InspectionFailed(command.Object,
                     definition == null ? "未知物体。" : definition.LockedDescription));
@@ -164,6 +164,7 @@ namespace Game.Domain
             string reason = clues.Any(x => !state.Knows(x)) ? "请先观察房间，收集这些碎片。"
                 : recipe == null ? "没有形成新的解释。"
                 : !recipe.Requires.All(state.HasFact) ? "所需的世界事实尚未成立。"
+                : !state.Allows(recipe.Disposition) ? "先把画中最后的天空补完。"
                 : state.HasCompleted(recipe.Id) ? "这个解释已经存在于房间中。" : null;
             if (reason != null)
             {
@@ -172,7 +173,7 @@ namespace Game.Domain
             }
 
             // 碎片不会被消耗；成功只记录配方并添加其输出事实。
-            state.Complete(recipe.Id);
+            state.Complete(recipe.Id, recipe.Disposition);
             events.Add(new CombinationSucceeded(recipe.Id, recipe.ProducesClues));
             // 两类输出都由数据驱动；线索先发布，随后事实进入同一个反应闭包。
             GrantClues(state, recipe.ProducesClues, events);
@@ -208,7 +209,9 @@ namespace Game.Domain
                 fired = false;
                 foreach (var rule in rules.Reactions)
                 {
-                    if (state.HasFired(rule.Id) || !rule.Requires.All(state.HasFact)) continue;
+                    // 未满足叙事门槛时不消耗一次性身份，旧海画可以在后来的偏离出现后外溢。
+                    if (state.HasFired(rule.Id) || !rule.Requires.All(state.HasFact)
+                        || state.DeviationCount < rule.MinimumDeviations || (rule.RequiresNoDeviation && state.HasDeviated)) continue;
                     // 先标记后产出，保证循环 A→B→A 也无法重复触发同一反应。
                     state.Fire(rule.Id);
                     if (rule.DelayDays == 0)
