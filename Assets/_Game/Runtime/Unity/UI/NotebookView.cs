@@ -176,7 +176,7 @@ namespace Game.Unity
             {
                 if (semanticCanvas != null) semanticCanvas.ShowSuccess();
                 feedbackText.text = "笔迹落下，房间开始回应。";
-                connectedAt = Time.unscaledTime; relationLine.enabled = true; inkAudio.Play();
+                connectedAt = Time.unscaledTime; relationLine.enabled = true; if (semanticCanvas == null) inkAudio.Play();
                 // 只根据实际输入数量连接已填槽位，不读取配方答案。
                 if (semanticCanvas != null) relationLine.enabled = false;
                 relationLine.rectTransform.anchorMin = new Vector2(1f / 6, .350f);
