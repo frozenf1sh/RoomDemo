@@ -148,9 +148,9 @@ namespace Game.Unity
                 var events = session.ObserveDetail(source.Entity.Id, action.ObservationId);
                 var failed = events.OfType<Game.Domain.InspectionFailed>().FirstOrDefault();
                 feedback.text = failed != null ? failed.Reason : "这一刻，记在纸上。";
-                if (failed == null)
+                if (failed == null && events.OfType<Game.Domain.ClueDiscovered>().Any())
                 {
-                    observeAudio.Play();
+                    // 通用声音由内容 Cue 路由；局部书写只在首次发现时播放。
                     // 轻勾短语而非弹“奖励 +1”；标记只存在于这次近景复制体。
                     foreach (var hotspot in hotspots.Where(x => x.ActionId == id))
                         hotspot.MarkObserved();

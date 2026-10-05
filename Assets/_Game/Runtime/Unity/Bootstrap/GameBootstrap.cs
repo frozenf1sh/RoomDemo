@@ -24,6 +24,9 @@ namespace Game.Unity
         [SerializeField] private DayTransitionController dayTransition;
         [SerializeField] private StarryWorldSequence starrySequence;
         [SerializeField] private bool developmentMode;
+        [SerializeField] private ContentFeedback contentFeedback;
+        /// <summary>主线微反馈的显式绑定；历史灰盒可以没有本组件。</summary>
+        public void ConfigureFeedback(ContentFeedback feedback) { contentFeedback = feedback; }
         [SerializeField] private TextMesh[] worldLabels;
         [SerializeField] private PresentationDebugView presentationDebug;
         [SerializeField] private WorldDebugView worldDebug;
@@ -77,12 +80,12 @@ namespace Game.Unity
             Restart(); UnityEngine.Application.targetFrameRate = 60; UnityEngine.Application.runInBackground = true;
         }
         /// <summary>创建全新会话并同步恢复所有表现。</summary>
-        public void Restart() => Bind(new GameSession(explorationEnabled && !legacyRegression ? ExplorationRules.Create() : DemoRules.Create()));
+        public void Restart() => Bind(new GameSession(explorationEnabled && !legacyRegression ? MainlineRules.Create() : DemoRules.Create()));
         /// <summary>先恢复新会话，再用它替换当前会话。</summary>
         public void JumpTo(DebugPreset preset)
         {
             bool exploration = explorationEnabled && !legacyRegression;
-            Bind(GameSession.FromPreset(exploration ? ExplorationRules.Create() : DemoRules.Create(), exploration ? ExplorationPresets.AdaptLegacy(preset) : preset));
+            Bind(GameSession.FromPreset(exploration ? MainlineRules.Create() : DemoRules.Create(), exploration ? ExplorationPresets.AdaptLegacy(preset) : preset));
         }
         /// <summary>通过应用层添加事实，然后立即恢复最终表现。</summary>
         public void AddDebugFact(FactId fact)
@@ -125,10 +128,15 @@ namespace Game.Unity
             Session = session;
             // 所有表现消费同一 Session；不让 Prefab 直接调用其他 Prefab。
             Func<FactId, bool> filter = fact => (dayTransition == null || !dayTransition.IsTransitioning) && (sequence == null || sequence.ShouldPresentImmediately(fact));
-            foreach (var view in presenters) view.Bind(Session, filter);
+            foreach (var view in presenters)
+            {
+                if(view is EndingPresenter ending) ending.SuppressBenchmarkEnding(explorationEnabled && !legacyRegression);
+                view.Bind(Session, filter);
+            }
             if (sequence != null) sequence.Bind(Session, presenters);
             if (starrySequence != null) starrySequence.Bind(Session);
             notebook.Bind(Session);
+            if (contentFeedback != null) contentFeedback.Bind(Session);
             if (inspection != null) inspection.Bind(Session, notebook);
             if (dayTransition != null) dayTransition.Bind(Session, notebook, RestorePresenters);
             debugView.Bind(Session, Restart, JumpTo, AddDebugFact, sequence); interaction.Bind(Session, notebook);

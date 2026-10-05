@@ -28,6 +28,9 @@ namespace Game.Unity
         [SerializeField] private InputField factInput;
         [SerializeField] private Button[] presetButtons;
         [SerializeField] private Text controlsText;
+        [SerializeField] private OneLineSubtitle transientHint;
+        /// <summary>提示与解释共用单行显示，不创建常驻任务区。</summary>
+        public void ConfigureHint(OneLineSubtitle caption) { transientHint = caption; }
         private bool developmentMode;
         private GameSession session;
         // 保留少量事件便于排查；不以日志或界面文字作为世界真相。
@@ -107,6 +110,24 @@ namespace Game.Unity
             stateText.text += "\n\n日序：第 " + s.DayIndex + " 天\n等待次日\n" + string.Join("\n", s.PendingDeferredEffects.Select(x => DemoText.Reaction(x.ReactionId) + " → 第 " + x.DueDay + " 天"));
             if (UnityEngine.Application.isEditor || Debug.isDebugBuild)
                 stateText.text += "\n\n当前可用的配方\n" + string.Join("\n", session.Rules.AvailableRecipes(s).Select(RecipeName));
+            // 主线后半段的临时帮助；只有玩家按 H 时才实际显示。
+            if (s.HasFact(MainlineRules.Complete)) { objectiveText.text="营火留在星空下，熟悉的房间已经没有边界。"; return; }
+            if (s.HasFact(MainlineRules.CeilingStarry))
+            {
+                objectiveText.text=s.Knows(MainlineRules.Forest) ? "把森林与亲自观察过的房间放在一起。"
+                    : s.Knows(MainlineRules.TreeShadow) && s.Knows(MainlineRules.WindSound) ? "树影和风声，可以联系成一个新的想法。"
+                    : "重新看看窗外，再看看脚下的房间。星空带来了新的细节。";
+                return;
+            }
+            if(s.HasFact(MainlineRules.NightArrived))
+            {
+                objectiveText.text=s.Knows(MainlineRules.Starry) ? "用星空重新解释头顶的天花板。"
+                    : s.Knows(MainlineRules.Night) && s.Knows(MainlineRules.Boundless) ? "夜色与无边。让它们在笔记中靠近。"
+                    : "第三天，抬头观察天花板，再看看窗外的尽头。";
+                return;
+            }
+            if(s.HasFact(DemoRules.PaintingSea) && session.CanAdvanceDay)
+            { objectiveText.text="让海留在画里。按 Esc，选择结束今天，明天再看房间。"; return; }
             if (session.Rules.Observations.Count > 0 && !s.HasFact(DemoRules.BookFallen))
             {
                 objectiveText.text = s.HasFact(ExplorationRules.PlantStartsGrowing) ? "解释已留下。今天先到这里，明天再看看它。"
@@ -151,7 +172,7 @@ namespace Game.Unity
             var keyboard = Keyboard.current; if (keyboard == null || factInput.isFocused) return;
             if (developmentMode && keyboard.f6Key.wasPressedThisFrame) jumpTo(DebugPresets.BeforeSea);
             if (developmentMode && keyboard.f3Key.wasPressedThisFrame) panel.SetActive(!panel.activeSelf);
-            if (keyboard.hKey.wasPressedThisFrame) { showHint = !showHint; Render(); }
+            if (keyboard.hKey.wasPressedThisFrame) { showHint = true; Render(); if (transientHint != null) { transientHint.Clear(); transientHint.Show(objectiveText.text); } }
         }
         /// <summary>解除会话事件监听。</summary>
         private void OnDestroy() { if (session != null) session.EventRaised -= OnEvent; }
