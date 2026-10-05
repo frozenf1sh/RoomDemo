@@ -1,6 +1,6 @@
 // =============================================================================
 // 文件：NotebookView.cs
-// 职责：显示已收集碎片、三个组合槽、组合结果与既有解释。
+// 职责：显示分类碎片、有限语义画布、组合结果与既有解释；兼容旧灰盒槽位。
 // 边界：仅持有界面选择和开关状态；不持有配方答案或世界事实。
 // =============================================================================
 using System.Collections.Generic;
@@ -128,6 +128,12 @@ namespace Game.Unity
         }
         /// <summary>切换界面开关，不改变游戏事实。</summary>
         public void Toggle() { SetOpen(!IsOpen); }
+        /// <summary>新的纸面拖动开始时结束上一段概念书写，不清除这次拖动的卡片。</summary>
+        public void PrepareCanvasInput()
+        {
+            formedWord=null; closeAt=-1; connectedAt=-1; relationLine.enabled=false;
+            if(insightWord!=null) insightWord.gameObject.SetActive(false);
+        }
         /// <summary>旧物体选择入口，适配为统一碎片选择。</summary>
         public void SelectObject(ObjectId id) => SelectClue(new ClueId(id.Value));
         /// <summary>旧概念选择入口，适配为统一碎片选择。</summary>
