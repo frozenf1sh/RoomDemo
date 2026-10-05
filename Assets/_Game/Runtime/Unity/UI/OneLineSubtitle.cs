@@ -16,20 +16,28 @@ namespace Game.Unity
         [SerializeField] private CanvasGroup opacity;
         private readonly Queue<string> queue = new Queue<string>();
         private Coroutine playing;
-        public void Configure(Text label, CanvasGroup group) { line=label; opacity=group; }
+        /// <summary>绑定显示节点；文本与透明度节点由场景拥有。</summary>
+        public void Configure(Text label, CanvasGroup group)
+        {
+            line = label;
+            opacity = group;
+        }
         /// <summary>排入一条短字幕；只保留最近四条，空文本被忽略。</summary>
         public void Show(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
-            if(queue.Count>=4) queue.Dequeue(); queue.Enqueue(text);
-            if(playing==null) playing=StartCoroutine(Play());
+            // 只淘汰尚未播放的旧提示，正在阅读的一行不会被后来的提示覆盖。
+            if (queue.Count >= 4) queue.Dequeue();
+            queue.Enqueue(text);
+            if (playing == null) playing = StartCoroutine(Play());
         }
         private IEnumerator Play()
         {
             // 每条字幕独立计时，不因后来的事件覆写正在阅读的文字。
             while(queue.Count>0)
             {
-                line.text=queue.Dequeue(); float start=Time.unscaledTime;
+                line.text = queue.Dequeue();
+                float start = Time.unscaledTime;
                 while(Time.unscaledTime-start<3.1f)
                 {
                     float t=Time.unscaledTime-start;
@@ -37,10 +45,19 @@ namespace Game.Unity
                     yield return null;
                 }
             }
-            opacity.alpha=0; line.text=""; playing=null;
+            opacity.alpha = 0;
+            line.text = "";
+            playing = null;
         }
         /// <summary>取消旧局字幕；领域恢复不会重复播放解释台词。</summary>
         public void Clear()
-        { if(playing!=null) StopCoroutine(playing); playing=null; queue.Clear(); opacity.alpha=0; line.text=""; }
+        {
+            // 先取消协程再清空画面，旧的淡出步骤不能影响新局第一条字幕。
+            if (playing != null) StopCoroutine(playing);
+            playing = null;
+            queue.Clear();
+            opacity.alpha = 0;
+            line.text = "";
+        }
     }
 }
