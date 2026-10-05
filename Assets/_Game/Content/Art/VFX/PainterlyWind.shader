@@ -5,7 +5,7 @@ Shader "Game/PainterlyWind"
     Properties
     {
         _BaseMap ("表面纹理", 2D) = "white" {}
-        _BaseColor ("自然色彩", Color) = (0.14,0.28,0.22,1)
+        [MainColor] _BaseColor ("自然色彩", Color) = (0.14,0.28,0.22,1)
         _ShadowColor ("阴影色彩", Color) = (0.055,0.10,0.15,1)
         _TrunkColor ("近地枝干色彩", Color) = (0.20,0.14,0.09,1)
         _TrunkHeight ("树干范围：负数关闭", Float) = -1
@@ -31,6 +31,7 @@ Shader "Game/PainterlyWind"
             #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "PainterlyPigment.hlsl"
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST, _BaseColor, _ShadowColor, _TrunkColor;
@@ -66,9 +67,10 @@ Shader "Game/PainterlyWind"
                 albedo*=lerp(1,.80+grain*.43,_BrushStrength);
                 if(_TrunkHeight>0) albedo=lerp(_TrunkColor.rgb,albedo,smoothstep(_TrunkHeight*.58,_TrunkHeight,v.positionWS.y));
                 half3 normal=normalize(v.normalWS);
+                albedo=PainterlyPigment(albedo,v.positionWS,normal);
                 Light sun=GetMainLight(TransformWorldToShadowCoord(v.positionWS));
                 float diffuse=saturate(dot(normal,sun.direction));
-                float softSteps=lerp(diffuse,floor(diffuse*5+.5)/5,.34);
+                float softSteps=lerp(diffuse,floor(diffuse*7+.5)/7,lerp(.15,.52,_PainterlyIntensity));
                 float3 light=SampleSH(normal)+sun.color*(softSteps*.8+.2)*sun.distanceAttenuation*sun.shadowAttenuation;
                 #ifdef _ADDITIONAL_LIGHTS
                 InputData inputData=(InputData)0;
@@ -83,7 +85,7 @@ Shader "Game/PainterlyWind"
                 LIGHT_LOOP_END
                 #endif
                 float3 color=albedo*max(light,float3(.045,.06,.08));
-                color+=_ShadowColor.rgb*.17*(1-diffuse);
+                color+=_ShadowColor.rgb*lerp(.17,.31,_PainterlyIntensity)*(1-diffuse);
                 return half4(MixFog(color,v.fog),1);
             }
             ENDHLSL

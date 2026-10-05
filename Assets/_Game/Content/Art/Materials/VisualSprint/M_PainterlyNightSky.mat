@@ -22,15 +22,20 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _PainterlySky:
+        m_Texture: {fileID: 2800000, guid: cdf89eceb4ef04546ab0d6ed35c4812e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _Moon: 1.1
-    - _Nebula: 1.35
-    - _Stars: 1.55
+    - _Nebula: 1.25
+    - _SkyTextureBlend: 0.96
+    - _Stars: 0.92
     m_Colors:
-    - _CloudColor: {r: 0.22, g: 0.33, b: 0.48, a: 1}
-    - _Horizon: {r: 0.09, g: 0.15, b: 0.21, a: 1}
-    - _Zenith: {r: 0.015, g: 0.025, b: 0.068, a: 1}
+    - _CloudColor: {r: 0.19, g: 0.31, b: 0.37, a: 1}
+    - _Horizon: {r: 0.13, g: 0.23, b: 0.27, a: 1}
+    - _Zenith: {r: 0.032, g: 0.047, b: 0.085, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

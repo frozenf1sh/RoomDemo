@@ -39,7 +39,9 @@ namespace Game.Unity
         {
             surface = seaPainting.GetComponentInChildren<Renderer>(true);
             frames = ordinaryPainting.transform.parent.GetComponentsInChildren<Renderer>(true).Where(x => x.name.StartsWith("Frame") || x.name.StartsWith("Gilt")).ToArray();
-            frameColors = frames.Select(x => x.sharedMaterial.color).ToArray();
+            // 部分专用材质用 _BaseColor，不能假定旧 _Color 协议仍存在。
+            frameColors = frames.Select(x => x.sharedMaterial.HasProperty(ShaderIds.BaseColor)
+                ? x.sharedMaterial.GetColor(ShaderIds.BaseColor) : x.sharedMaterial.color).ToArray();
             block = new MaterialPropertyBlock(); originalVolume = seaAudio.volume;
         }
         /// <summary>非导演场景可直接播放完整连续过渡。</summary>

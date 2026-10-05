@@ -27,6 +27,7 @@ Shader "RoomDemo/PaintingSea"
             #pragma fragment Frag
             #pragma multi_compile_fog
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "PainterlyPigment.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 float _Transition, _Distortion, _WaveStrength, _WaveSpeed;
                 float _Wetness, _Emission, _EdgeBlend, _CanvasMode;
@@ -105,6 +106,8 @@ Shader "RoomDemo/PaintingSea"
                 sky += Noise(uv*float2(6,18)+float2(t*.01,0))*.03;
                 half3 sea = lerp(water,sky,smoothstep(.515,.525,originalUV.y));
                 sea *= .94+Noise(uv*float2(80,26)+float2(t*.015,0))*.12;
+                float pigment=Noise(uv*float2(27,125)+float2(t*.025,0));
+                sea=lerp(sea,sea*lerp(float3(.86,.93,1.12),float3(1.1,1.06,.84),pigment),_PainterlyIntensity*.8);
                 sea += half3(.10,.20,.19) * exp(-abs(originalUV.y-.52)*160);
                 float reflection = exp(-abs(uv.x-.32)*24)*depth*(.02+foam*.18);
                 sea += reflection + _Emission*.15;

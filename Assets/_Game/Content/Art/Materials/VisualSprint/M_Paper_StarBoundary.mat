@@ -31,12 +31,12 @@ Material:
     m_Floats:
     - _BrushStrength: 0.12
     - _Dissolve: 0
-    - _EdgeWidth: 0.095
+    - _EdgeWidth: 0.13
     - _NoiseScale: 1.2
     - _StarExposure: 0
     - _WindStrength: 0
     m_Colors:
     - _BaseColor: {r: 0.82, g: 0.76, b: 0.61, a: 1}
-    - _EdgeColor: {r: 1.25, g: 1.62, b: 2, a: 1}
+    - _EdgeColor: {r: 0.85, g: 1, b: 0.77, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

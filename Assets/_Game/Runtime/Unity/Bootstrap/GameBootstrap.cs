@@ -29,6 +29,9 @@ namespace Game.Unity
         [SerializeField] private NarrationSystem narration;
         [SerializeField] private CanvasRoutePresenter canvasRoute;
         [SerializeField] private CanvasEndingSequence canvasEnding;
+        [SerializeField] private PainterlyWorldPresenter painterly;
+        /// <summary>注入表现层的全局笔触消费者，不把风格强度放进领域。</summary>
+        public void ConfigurePainterly(PainterlyWorldPresenter world) { painterly = world; }
         /// <summary>正式叙事场景的显式引用；灰盒和历史回归仍使用各自内容表。</summary>
         public bool NarrativeEnabled => narrativeEnabled;
         /// <summary>增量接入画布叙事，消费者只接收同一个会话，不互相控制。</summary>
@@ -81,6 +84,7 @@ namespace Game.Unity
             else foreach (var view in presenters) view.ApplyState(Session.State, false);
             if (starrySequence != null) starrySequence.ApplyFinalStateImmediately();
             if (canvasRoute != null && canvasRoute.gameObject.activeSelf) canvasRoute.Restore();
+            if (painterly != null && painterly.gameObject.activeSelf) painterly.Restore();
         }
         /// <summary>在表现组件缓存初始姿态后创建会话，并设置帧率。</summary>
         private void Awake()
@@ -166,6 +170,11 @@ namespace Game.Unity
             {
                 canvasEnding.gameObject.SetActive(useNarrative);
                 if (useNarrative) canvasEnding.Bind(Session);
+            }
+            if (painterly != null)
+            {
+                painterly.gameObject.SetActive(useNarrative);
+                if (useNarrative) painterly.Bind(Session);
             }
             if (inspection != null) inspection.Bind(Session, notebook);
             if (dayTransition != null) dayTransition.Bind(Session, notebook, RestorePresenters);
