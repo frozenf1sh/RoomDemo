@@ -50,6 +50,15 @@ namespace Game.Application
         /// <returns>组合结果与规则闭包的完整事件序列。</returns>
         public IReadOnlyList<DomainEvent> Combine(IReadOnlyList<ClueId> clues) => Dispatch(new Combine(clues));
 
+        /// <summary>只读预览当前可成立的精确配方；画布用结果提示，不复制匹配规则。</summary>
+        /// <param name="clues">画布中相互靠近的两个或三个线索。</param>
+        /// <returns>尚未完成且前置条件成立的配方，或空引用；不产生事件或状态修改。</returns>
+        public SemanticRecipe PreviewCombination(IReadOnlyList<ClueId> clues)
+        {
+            // 与命令共享同一个匹配方法及可用性查询；最终提交仍由领域再次校验。
+            return Rules.AvailableRecipes(State).SingleOrDefault(recipe => recipe.Matches(clues));
+        }
+
         /// <summary>查询物体当前是否可调查，不读取或改变场景 Collider。</summary>
         public bool IsInspectable(ObjectId id) => Rules.IsInspectable(State, id);
 
