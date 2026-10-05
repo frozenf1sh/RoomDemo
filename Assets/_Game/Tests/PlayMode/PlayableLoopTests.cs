@@ -253,10 +253,12 @@ namespace Game.Tests
             bootstrap.JumpTo(DebugPresets.Emergence);
             notebook.SetOpen(true);
             yield return null;
-            // 完成三次组合后的历史需要四行，检查实际布局没有截掉最后一个解释。
+            // 两列合起来保留全部中文关系，两列都检查实际行高与字形。
             Canvas.ForceUpdateCanvases();
             var history = notebook.transform.Find("NotebookPanel/Notebook/CompletedRecipes").GetComponent<Text>();
-            Assert.That(history.text, Does.Contain("画 ─ 海"));
+            var historySecond=notebook.transform.Find("NotebookPanel/Notebook/CompletedRecipesSecond").GetComponent<Text>();
+            Assert.That(history.text+historySecond.text, Does.Contain("画 ─ 海"));
+            Assert.That(historySecond.preferredHeight, Is.LessThanOrEqualTo(historySecond.rectTransform.rect.height+.1f));
             Assert.That(history.preferredHeight, Is.LessThanOrEqualTo(history.rectTransform.rect.height + .1f), "中文解释历史发生截断。");
             var texts = Object.FindObjectsByType<Text>(FindObjectsInactive.Include);
             Assert.That(texts.Select(x => x.text), Has.Some.Contains("房间记得"));
