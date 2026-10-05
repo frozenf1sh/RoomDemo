@@ -46,6 +46,9 @@ namespace Game.Unity
             // 每次生成新数组与条目，场景序列化不会改动另一局的内容记录。
             return new[] {
             new RecipePresentation("recipe.insight.growth", "", "concept_form", "inspiration"),
+            new RecipePresentation("recipe.painting.growth", "画里有枝叶。", "interpretation_soft", "ink"),
+            new RecipePresentation("recipe.painting.far", "画中是远方。", "interpretation_soft", "ink"),
+            new RecipePresentation("recipe.painting.starry", "画中的夜空完成了。", "interpretation_soft", "ink"),
             new RecipePresentation("recipe.plant.growth", "枝叶开始向光伸去。", "interpretation_soft", "ink"),
             new RecipePresentation("recipe.window.far", "窗外，是远方。", "interpretation_soft", "ink"),
             new RecipePresentation("recipe.painting.sea", "画里有海。", "interpretation_soft", "ink"),

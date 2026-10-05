@@ -17,6 +17,9 @@ namespace Game.Unity
         [SerializeField] private Light warmFill;
         [SerializeField] private Light windowLight;
         [SerializeField] private Light seaLight;
+        [SerializeField] private bool canvasNarrative;
+        /// <summary>画中有海不等于房间变蓝，只有外溢的海才影响整体光照。</summary>
+        public void ConfigureCanvasNarrative(bool enabled) { canvasNarrative = enabled; }
         private bool lightingBorrowed;
         private bool suppressEnding;
         /// <summary>主线继续进行时保留氛围变化，收起历史样板结束面板。</summary>
@@ -62,7 +65,7 @@ namespace Game.Unity
         public override void ApplyState(GameState state, bool animate)
         {
             targetFar = state.HasFact(DemoRules.WindowFar) ? 1 : 0;
-            targetSea = state.HasFact(DemoRules.PaintingSea) ? 1 : 0;
+            targetSea = state.HasFact(DemoRules.PaintingSea) && (!canvasNarrative || state.HasFact(DemoRules.WaterPresent)) ? 1 : 0;
             targetFinale = state.HasFact(DemoRules.Complete) ? 1 : 0;
             endingPanel.SetActive(targetFinale > 0 && !suppressEnding);
             if (targetFinale > 0 && !ambience.isPlaying) ambience.Play();

@@ -15,6 +15,9 @@ namespace Game.Unity
     /// <summary>具体十八秒样板，不引入通用电影框架或新的世界变换规则。</summary>
     public sealed class StarryWorldSequence : MonoBehaviour
     {
+        [SerializeField] private bool canvasNarrative;
+        /// <summary>服从路线的日序仍推进，但夜色只留在画中，不借用现实主题。</summary>
+        public void ConfigureCanvasNarrative(bool enabled) { canvasNarrative = enabled; }
         [SerializeField] private RoomModules room;
         [SerializeField] private WorldExterior exterior;
         [SerializeField] private WorldMutation mutation;
@@ -333,7 +336,7 @@ namespace Game.Unity
             bool oldFull = session.State.HasFact(ExplorationRules.WorldStarry);
             bool forest = session.State.HasFact(MainlineRules.WorldForest);
             bool roof = session.State.HasFact(MainlineRules.CeilingStarry);
-            bool night = session.State.HasFact(MainlineRules.NightArrived);
+            bool night = session.State.HasFact(MainlineRules.NightArrived) && (!canvasNarrative || session.State.HasDeviated);
             if (!oldFull && !forest && !roof && !night) return;
             Prepare(false);
             stage = oldFull ? Stage.Benchmark : forest ? Stage.Forest : roof ? Stage.Roof : Stage.Night;

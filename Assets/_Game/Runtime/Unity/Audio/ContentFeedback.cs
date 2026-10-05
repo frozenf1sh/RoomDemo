@@ -53,6 +53,9 @@ namespace Game.Unity
             viewCamera = camera;
             motes = glints;
         }
+        /// <summary>只替换集中内容和 Cue，保留已绑定的相机、微粒与字幕。</summary>
+        public void ConfigureContent(RecipePresentation[] content, AudioCueDefinition[] sounds)
+        { definitions = content; cues = sounds; }
         /// <summary>重绑清理上一局声音、字幕、微粒和监听；预设只恢复视觉，不播获得反馈。</summary>
         public void Bind(GameSession game)
         {

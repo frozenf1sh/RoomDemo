@@ -25,6 +25,15 @@ namespace Game.Unity
         [SerializeField] private StarryWorldSequence starrySequence;
         [SerializeField] private bool developmentMode;
         [SerializeField] private ContentFeedback contentFeedback;
+        [SerializeField] private bool narrativeEnabled;
+        [SerializeField] private NarrationSystem narration;
+        [SerializeField] private CanvasRoutePresenter canvasRoute;
+        [SerializeField] private CanvasEndingSequence canvasEnding;
+        /// <summary>正式叙事场景的显式引用；灰盒和历史回归仍使用各自内容表。</summary>
+        public bool NarrativeEnabled => narrativeEnabled;
+        /// <summary>增量接入画布叙事，消费者只接收同一个会话，不互相控制。</summary>
+        public void ConfigureNarrative(NarrationSystem voice, CanvasRoutePresenter canvas, CanvasEndingSequence ending)
+        { narrativeEnabled = true; narration = voice; canvasRoute = canvas; canvasEnding = ending; }
         /// <summary>主线微反馈的显式绑定；历史灰盒可以没有本组件。</summary>
         public void ConfigureFeedback(ContentFeedback feedback) { contentFeedback = feedback; }
         [SerializeField] private TextMesh[] worldLabels;
@@ -71,6 +80,7 @@ namespace Game.Unity
             if (sequence != null) sequence.ApplyFinalStateImmediately();
             else foreach (var view in presenters) view.ApplyState(Session.State, false);
             if (starrySequence != null) starrySequence.ApplyFinalStateImmediately();
+            if (canvasRoute != null && canvasRoute.gameObject.activeSelf) canvasRoute.Restore();
         }
         /// <summary>在表现组件缓存初始姿态后创建会话，并设置帧率。</summary>
         private void Awake()
@@ -80,12 +90,14 @@ namespace Game.Unity
             Restart(); UnityEngine.Application.targetFrameRate = 60; UnityEngine.Application.runInBackground = true;
         }
         /// <summary>创建全新会话并同步恢复所有表现。</summary>
-        public void Restart() => Bind(new GameSession(explorationEnabled && !legacyRegression ? MainlineRules.Create() : DemoRules.Create()));
+        public void Restart() => Bind(new GameSession(CurrentRules()));
+        private RuleSet CurrentRules() => explorationEnabled && !legacyRegression
+            ? (narrativeEnabled ? NarrativeRules.Create() : MainlineRules.Create()) : DemoRules.Create();
         /// <summary>先恢复新会话，再用它替换当前会话。</summary>
         public void JumpTo(DebugPreset preset)
         {
             bool exploration = explorationEnabled && !legacyRegression;
-            Bind(GameSession.FromPreset(exploration ? MainlineRules.Create() : DemoRules.Create(), exploration ? ExplorationPresets.AdaptLegacy(preset) : preset));
+            Bind(GameSession.FromPreset(CurrentRules(), exploration ? ExplorationPresets.AdaptLegacy(preset) : preset));
         }
         /// <summary>通过应用层添加事实，然后立即恢复最终表现。</summary>
         public void AddDebugFact(FactId fact)
@@ -125,6 +137,7 @@ namespace Game.Unity
             if (inspection != null) inspection.Exit(false);
             if (starrySequence != null) starrySequence.Cancel();
             if (sequence != null) sequence.Cancel();
+            if (canvasEnding != null) canvasEnding.Cancel();
             Session = session;
             // 所有表现消费同一 Session；不让 Prefab 直接调用其他 Prefab。
             Func<FactId, bool> filter = fact => (dayTransition == null || !dayTransition.IsTransitioning) && (sequence == null || sequence.ShouldPresentImmediately(fact));
@@ -137,6 +150,23 @@ namespace Game.Unity
             if (starrySequence != null) starrySequence.Bind(Session);
             notebook.Bind(Session);
             if (contentFeedback != null) contentFeedback.Bind(Session);
+            bool useNarrative = narrativeEnabled && !legacyRegression;
+            if (canvasRoute != null)
+            {
+                canvasRoute.gameObject.SetActive(useNarrative);
+                if (useNarrative) canvasRoute.Bind(Session);
+                else canvasRoute.Hide();
+            }
+            if (narration != null)
+            {
+                narration.gameObject.SetActive(useNarrative);
+                if (useNarrative) narration.Bind(Session);
+            }
+            if (canvasEnding != null)
+            {
+                canvasEnding.gameObject.SetActive(useNarrative);
+                if (useNarrative) canvasEnding.Bind(Session);
+            }
             if (inspection != null) inspection.Bind(Session, notebook);
             if (dayTransition != null) dayTransition.Bind(Session, notebook, RestorePresenters);
             debugView.Bind(Session, Restart, JumpTo, AddDebugFact, sequence); interaction.Bind(Session, notebook);
