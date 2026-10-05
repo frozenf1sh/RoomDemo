@@ -16,6 +16,9 @@ namespace Game.Unity
     public sealed class NotebookView : MonoBehaviour
     {
         [SerializeField] private GameObject panel;
+        [SerializeField] private NotebookCanvasView semanticCanvas;
+        /// <summary>安装有限语义画布；旧灰盒仍可使用三个槽。</summary>
+        public void ConfigureCanvas(NotebookCanvasView canvas) { semanticCanvas = canvas; }
         [SerializeField] private Transform objectList;
         [SerializeField] private Transform conceptList;
         [SerializeField] private Transform observationList;
@@ -61,7 +64,7 @@ namespace Game.Unity
         /// <summary>检视／跨日过渡的临时输入锁；不进入世界状态。</summary>
         public bool ExternalInputBlocked { get; set; }
         /// <summary>本次界面选择的输入快照，不代表已完成配方。</summary>
-        public IReadOnlyList<ClueId> SelectedClues => selected.Where(x => x.HasValue).Select(x => x.Value).ToArray();
+        public IReadOnlyList<ClueId> SelectedClues => semanticCanvas != null ? semanticCanvas.CombinationInput : selected.Where(x => x.HasValue).Select(x => x.Value).ToArray();
         private void Awake()
         {
             // 纸面分类淡出只是灵感书写的构图；灰盒没有分列 CanvasGroup 时照常工作。
@@ -91,7 +94,7 @@ namespace Game.Unity
         {
             // 重开或预设跳转时先解绑旧会话，避免旧事件修改新界面。
             if (session != null) session.EventRaised -= OnEvent;
-            session = game; session.EventRaised += OnEvent; closeAt = -1; formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); ClearSelection();
+            session = game; if (semanticCanvas != null) semanticCanvas.Bind(game, this); session.EventRaised += OnEvent; closeAt = -1; formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); ClearSelection();
             // 重开与预设跳转不播放翻页声，也不能留下上一会话的声音。
             paperAudio.Stop(); inkAudio.Stop(); scratchAudio.Stop(); SetOpen(false, false);
             // 只缓存一次原始按钮样式；重开时不能把上一会话的闪烁颜色当作初始颜色。
@@ -136,6 +139,7 @@ namespace Game.Unity
             if (!session.State.Knows(clue)) return;
             if (formedWord != null) { ClearSelection(); formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); }
             closeAt = -1; connectedAt = -1; relationLine.enabled = false;
+            if (semanticCanvas != null) { semanticCanvas.Toggle(clue); return; }
             // 同一碎片只能占一个槽，再次点击会取消；这只是输入组织。
             int existing = System.Array.FindIndex(selected, x => x.HasValue && x.Value == clue);
             if (existing >= 0) selected[existing] = null;
@@ -147,7 +151,7 @@ namespace Game.Unity
         /// <summary>将槽中的输入交给 Session，UI 不判断配方答案。</summary>
         public void InterpretSelected() { if (SelectedClues.Count >= 2) session.Combine(SelectedClues); }
         /// <summary>清空三个临时槽，不移除任何已知碎片。</summary>
-        private void ClearSelection() { for (int i = 0; i < selected.Length; i++) selected[i] = null; }
+        private void ClearSelection() { if (semanticCanvas != null) semanticCanvas.Clear(); for (int i = 0; i < selected.Length; i++) selected[i] = null; }
         /// <summary>从内容定义取得中文显示名。</summary>
         private string Label(ClueId id) => session.Rules.Clues.Single(x => x.Id == id).DisplayName;
         /// <summary>处理发现与组合反馈；成功后短暂强调并自动收起。</summary>
@@ -164,9 +168,11 @@ namespace Game.Unity
             // 成功时世界已经开始响应；界面强调后短暂延时收起。
             if (e is CombinationSucceeded success)
             {
+                if (semanticCanvas != null) semanticCanvas.ShowSuccess();
                 feedbackText.text = "笔迹落下，房间开始回应。";
                 connectedAt = Time.unscaledTime; relationLine.enabled = true; inkAudio.Play();
                 // 只根据实际输入数量连接已填槽位，不读取配方答案。
+                if (semanticCanvas != null) relationLine.enabled = false;
                 relationLine.rectTransform.anchorMin = new Vector2(1f / 6, .350f);
                 relationLine.rectTransform.anchorMax = new Vector2(1f / 6 + (SelectedClues.Count - 1) / 3f, .354f);
                 selectionText.text = string.Join("  ─  ", SelectedClues.Select(Label)); selectionText.color = new Color(.48f, .37f, .18f);
@@ -262,6 +268,7 @@ namespace Game.Unity
             row.GetComponent<LayoutElement>().preferredHeight = concept ? 44 : observation ? 32 : 36;
             row.targetGraphic = text;
             row.onClick.AddListener(select);
+            if (semanticCanvas != null) row.gameObject.AddComponent<NotebookClueDrag>().Configure(semanticCanvas, new ClueId(name.Substring(name.IndexOf('_')+1)), false);
         }
         /// <summary>刷新槽位与提交许可，只校验输入数量。</summary>
         private void RenderSelection()
