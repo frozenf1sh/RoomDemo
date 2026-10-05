@@ -18,6 +18,10 @@ VERSION = (ROOT / 'ProjectSettings/ProjectVersion.txt').read_text().splitlines()
 
 def live(command, *args, timeout=240):
     """调用连接式 CLI，解析稳定 JSON 协议并检查嵌套失败结果。"""
+    # CLI 的 HTTP 等待秒数与 eval 的主线程预算毫秒数是两层限制。
+    # 显式传入后者，避免大型美术场景在默认五秒预算内误报失败。
+    if command in ('eval', 'eval_file'):
+        args = (*args, '30000')
     run = subprocess.run(['unity', 'command', command, '--project-path', str(ROOT), '--format', 'json', '--timeout', str(timeout), *args], cwd=ROOT, capture_output=True, text=True, timeout=timeout + 20)
     try:
         result = json.loads(run.stdout)
