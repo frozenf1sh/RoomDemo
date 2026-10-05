@@ -18,6 +18,7 @@ Shader "Game/AtmosphereParticle"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "PainterlyPigment.hlsl"
             CBUFFER_START(UnityPerMaterial)
             float4 _Tint; float _Mode, _Softness;
             CBUFFER_END
@@ -28,7 +29,8 @@ Shader "Game/AtmosphereParticle"
             half4 Frag(Varyings v) : SV_Target
             {
                 float2 p=v.uv*2-1;
-                float radial=saturate(1-dot(p,p));
+                p.x+=sin(p.y*3.1)*.10*_PainterlyIntensity;
+                float radial=saturate(1-dot(p,p*float2(1,lerp(1,.65,_PainterlyIntensity))));
                 float alpha=pow(radial,_Softness);
                 if(_Mode>.5 && _Mode<1.5)
                 {

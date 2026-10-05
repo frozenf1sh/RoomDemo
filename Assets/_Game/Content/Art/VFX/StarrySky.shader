@@ -1,9 +1,11 @@
 // 文件：StarrySky.shader。职责：用层叠星点、月轮、银河和缓慢笔触组成完整夜空。
-// 边界：原创数学图案，不复制具体画作；只服务绘画世界的天空表现。
+// 边界：专用生成底图与原创数学运动叠加，不复制具体画作；只消费表现层参数。
 Shader "Game/StarrySky"
 {
     Properties
     {
+        _PainterlySky ("绘画星夜底图", 2D) = "black" {}
+        _SkyTextureBlend ("绘画底图权重", Range(0,1)) = 0
         _Zenith ("天顶夜色", Color) = (0.015,0.025,0.068,1)
         _Horizon ("远处夜色", Color) = (0.09,0.15,0.21,1)
         _Stars ("星点亮度", Range(0,3)) = 1.45
@@ -22,11 +24,13 @@ Shader "Game/StarrySky"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "PainterlyPigment.hlsl"
             struct Attributes { float4 positionOS : POSITION; };
             struct Varyings { float4 positionCS : SV_POSITION; float3 direction : TEXCOORD0; };
+            TEXTURE2D(_PainterlySky); SAMPLER(sampler_PainterlySky);
             CBUFFER_START(UnityPerMaterial)
             float4 _Zenith, _Horizon, _CloudColor;
-            float _Stars, _Nebula, _Moon;
+            float _Stars, _Nebula, _Moon, _SkyTextureBlend;
             CBUFFER_END
             Varyings Vert(Attributes v)
             {
@@ -53,7 +57,7 @@ Shader "Game/StarrySky"
                 float distance=length(local-center), antialias=max(fwidth(distance),.008);
                 float core=(1-smoothstep(radius,radius+antialias,distance));
                 float halo=exp(-distance*distance/(radius*radius*18))*.14;
-                float twinkle=.78+.22*sin(_Time.y*.39+seed*48);
+                float twinkle=.89+.11*sin(_Time.y*.16+seed*48);
                 float3 tint=lerp(float3(.64,.80,1),float3(1,.86,.64),Hash(cell+127));
                 return (core+halo)*step(cutoff,seed)*brightness*twinkle*tint;
             }
@@ -65,7 +69,7 @@ Shader "Game/StarrySky"
                 float3 color=lerp(_Zenith.rgb,_Horizon.rgb,horizon);
                 float skyFade=smoothstep(-.02,.20,d.y);
                 // 银河不是均匀星点图：倾斜弧带具有暗尘、长笔触与局部彩色云气。
-                float drift=_Time.y*.00028;
+                float drift=_Time.y*.00075;
                 float2 brushUv=float2(uv.x*7+drift,uv.y*24+sin(uv.x*11)*.36);
                 float clouds=Fbm(brushUv), detail=Fbm(brushUv*2.7+9);
                 float bandHeight=.385+.065*sin((uv.x-.12)*6.28318);
@@ -76,11 +80,25 @@ Shader "Game/StarrySky"
                 float3 nebulaTint=lerp(_CloudColor.rgb,float3(.30,.22,.43),detail);
                 color+=nebulaTint*nebula*strokes*_Nebula*skyFade;
                 color+=band*pow(saturate(detail-.48)*2.2,3)*float3(.16,.26,.28)*_Nebula;
-                float3 stars=StarLayer(uv,float2(420,210),.946,.016,.58);
-                stars+=StarLayer(uv+.173,float2(810,405),.975,.012,.31);
-                stars+=StarLayer(uv+.531,float2(140,70),.976,.034,1.7);
-                stars+=StarLayer(uv+.271,float2(960,480),.962,.012,.35)*band;
+                // 稀疏星点退到流动颜料之后，避免天空成为科幻噪声背景。
+                float2 moving=uv+float2(drift*.10,sin(uv.x*6+drift)*.0008);
+                float3 stars=StarLayer(moving,float2(250,125),.986,.023,.51);
+                stars+=StarLayer(moving+.173,float2(510,255),.994,.016,.24);
+                stars+=StarLayer(moving+.531,float2(85,42),.982,.046,1.25);
+                float2 bend=uv-float2(.20,.33);
+                float curl=atan2(bend.y*1.35,bend.x)+length(bend)*12-drift*3;
+                float sweep=pow(saturate(.5+.5*sin(curl*3+clouds*2)),3);
+                float ribbon=exp(-pow((uv.y-(.30+.11*sin(uv.x*7+clouds*1.3)))*15,2));
+                float bristle=Noise(float2(uv.x*110,uv.y*370+clouds*5));
+                float3 ink=lerp(float3(.14,.26,.34),float3(.52,.44,.25),sweep);
+                color+=ink*ribbon*(.28+.72*bristle)*_Nebula*skyFade*lerp(.35,.95,_PainterlyIntensity);
+                color+=sweep*nebula*float3(.17,.29,.28)*_PainterlyIntensity;
                 color+=stars*_Stars*skyFade;
+                // 专用底图提供有设计的长笔触，极慢偏移仅让颜料呼吸，不形成旋涡灾难。
+                float2 paintUv=float2(uv.x,1-uv.y);
+                paintUv+=float2(sin(uv.y*10+_Time.y*.028),sin(uv.x*9-_Time.y*.019))*.0015;
+                float3 painted=SAMPLE_TEXTURE2D(_PainterlySky,sampler_PainterlySky,paintUv).rgb*1.38;
+                color=lerp(color,painted,_SkyTextureBlend);
                 float3 moonDirection=normalize(float3(-.31,.36,.88));
                 float moonDot=dot(d,moonDirection);
                 float disc=smoothstep(.99913,.99922,moonDot);

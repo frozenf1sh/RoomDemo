@@ -21,6 +21,7 @@ Shader "Game/ArtistPlant"
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        #include "PainterlyPigment.hlsl"
         CBUFFER_START(UnityPerMaterial)
         float4 _BaseColor, _TipColor, _EmissionColor;
         float _Reveal, _Unfurl, _Fade, _WindStrength, _LeafMode, _Smoothness;
@@ -93,6 +94,7 @@ Shader "Game/ArtistPlant"
                 float brush=Noise(i.uv*float2(40,8));
                 float variation=saturate(i.uv.y*.36+brush*.19+veins*.26);
                 half3 albedo=lerp(_BaseColor.rgb,_TipColor.rgb,variation*_LeafMode+.12*(1-_LeafMode));
+                albedo=PainterlyPigment(albedo,i.positionWS,normal);
                 float diffuse=saturate(dot(normal,key.direction));
                 diffuse=lerp(diffuse,floor(diffuse*5+.5)/5,.24);
                 half3 illumination=SampleSH(normal)*.82+key.color*(.18+diffuse*.82)*key.shadowAttenuation;

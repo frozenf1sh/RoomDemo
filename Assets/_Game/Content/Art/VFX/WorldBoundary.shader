@@ -32,6 +32,7 @@ Shader "Game/WorldBoundary"
             #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "PainterlyPigment.hlsl"
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST, _BaseColor, _EdgeColor;
@@ -61,12 +62,13 @@ Shader "Game/WorldBoundary"
             half4 Frag(Varyings v) : SV_Target
             {
                 float3 p=v.positionWS*_NoiseScale;
-                float field=Field(p);
+                float field=Field(p*float3(.72,2.1,.72)+float3(0,sin(p.x*.8+p.z*.7)*.28,0));
                 float threshold=lerp(-.075,1.10,_Dissolve);
                 clip(field-threshold);
                 float edge=(1-smoothstep(0,_EdgeWidth,field-threshold))*smoothstep(0,.05,_Dissolve);
                 float3 base=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,v.uv).rgb*_BaseColor.rgb;
                 float brush=Noise(p*float3(7,2,7)); base*=lerp(1, .81+brush*.34,_BrushStrength);
+                base=PainterlyPigment(base,v.positionWS,normalize(v.normalWS));
                 half3 n=normalize(v.normalWS);
                 Light main=GetMainLight(TransformWorldToShadowCoord(v.positionWS));
                 half3 irradiance=SampleSH(n)+main.color*(saturate(dot(n,main.direction))*.82+.18)*main.distanceAttenuation*main.shadowAttenuation;
@@ -86,9 +88,10 @@ Shader "Game/WorldBoundary"
                 // 噪声脊线如颜料裂隙，先有星纹，再有破口；不是把墙染成蓝色。
                 float ridge=1-smoothstep(.017,.044,abs(field-.49));
                 float speck=pow(saturate(Noise(p*29)-.58)*2.38,12);
-                float3 starSurface=lerp(float3(.025,.038,.075),float3(.10,.16,.25),field)+ridge*.55*float3(.36,.63,1.0)+speck*.9;
+                float stroke=.5+.5*sin(p.y*9+sin(p.x*1.2+p.z)*2.2);
+                float3 starSurface=lerp(float3(.05,.08,.15),float3(.14,.24,.29),field)+ridge*.26*lerp(float3(.37,.54,.65),float3(.87,.69,.34),stroke)+speck*.42;
                 lit=lerp(lit,starSurface,saturate(_StarExposure)*.87);
-                lit+=edge*_EdgeColor.rgb*(.6+.4*sin(_Time.y*2+field*38));
+                lit+=edge*_EdgeColor.rgb*(.26+.16*sin(_Time.y*.23+field*15));
                 lit=MixFog(lit,v.fog);
                 return half4(lit,1);
             }
@@ -138,6 +141,7 @@ Shader "Game/WorldBoundary"
             {
                 // 星光侵蚀也打开阴影：天空不能已经显露，地面却仍有完整天花板的阴影。
                 float3 p=v.positionWS*_NoiseScale;
+                p=p*float3(.72,2.1,.72)+float3(0,sin(p.x*.8+p.z*.7)*.28,0);
                 float field=ShadowNoise(p)*.57+ShadowNoise(p*2.17+13)*.28+ShadowNoise(p*4.31+27)*.15;
                 clip(field-lerp(-.075,1.10,_Dissolve)); return 0;
             }

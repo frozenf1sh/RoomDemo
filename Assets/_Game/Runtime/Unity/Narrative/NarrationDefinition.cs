@@ -14,11 +14,31 @@ namespace Game.Unity
     [Serializable]
     public sealed class NarrationDefinition
     {
-        public string Id, Text, TriggerId, AudioBeep = "narration_type";
+        /// <summary>用于一次性去重的稳定旁白身份。</summary>
+        public string Id;
+        /// <summary>简体中文短句，可包含不显示的 [pause=秒数] 标记。</summary>
+        public string Text;
+        /// <summary>配方、事实或线索的稳定 ID；开场为空。</summary>
+        public string TriggerId;
+        /// <summary>中央声音表中的轻打字声 Cue，资源不散落在播放器。</summary>
+        public string AudioBeep = "narration_type";
+        /// <summary>消费哪一种已有会话事件；没有剧情分支树。</summary>
         public NarrationTrigger Trigger;
-        public float CharacterInterval = .085f, Pause = 1.8f, Delay;
-        public int Priority, MinimumDeviations, MaximumDeviations = 100;
-        public bool OnceOnly = true, RequireLockIn;
+        /// <summary>逐字间隔秒数；用户设置很小时仍保持有限节奏。</summary>
+        public float CharacterInterval = .085f;
+        /// <summary>句子播放完后的停留秒数。</summary>
+        public float Pause = 1.8f;
+        /// <summary>收到事件到进入队列的表现等待，不延迟领域事实。</summary>
+        public float Delay;
+        /// <summary>短队列中的播放优先级，不是配方优先级。</summary>
+        public int Priority;
+        /// <summary>可播放时已成立的偏离次数范围，仅作内容过滤。</summary>
+        public int MinimumDeviations, MaximumDeviations = 100;
+        /// <summary>同一局只播放一次，重开时清除。</summary>
+        public bool OnceOnly = true;
+        /// <summary>只在领域已收束画布路线时播放，不在旁白里决定锁定。</summary>
+        public bool RequireLockIn;
+        /// <summary>如何处理当前短句与排队短句。</summary>
         public NarrationInterruptPolicy InterruptPolicy = NarrationInterruptPolicy.Queue;
         /// <summary>构造短句内容；所有时序与触发条件都可以在此附近修改。</summary>
         public NarrationDefinition(string id, NarrationTrigger trigger, string key, string text, float delay = 0, int priority = 0)
