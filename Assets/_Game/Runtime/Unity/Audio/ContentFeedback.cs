@@ -15,8 +15,11 @@ namespace Game.Unity
     /// <summary>可配置声音条目，资源与音量统一在场景安装器中绑定。</summary>
     [Serializable] public sealed class AudioCueDefinition
     {
+        /// <summary>稳定的声音 Cue ID，供内容记录引用。</summary>
         public string Id;
+        /// <summary>场景拥有的声音资源；反馈组件不加载或销毁该资源。</summary>
         public AudioClip Clip;
+        /// <summary>单次轻反馈的音量，不改变环境声源的音量。</summary>
         [Range(0,1)] public float Volume=.15f;
     }
     /// <summary>三类通用反馈的小型路由器，不是通用事件框架。</summary>
@@ -38,22 +41,44 @@ namespace Game.Unity
         /// <summary>绑定项目内容、明确资源和已有消费者；声音片段不散落在热点中。</summary>
         public void Configure(AudioSource audio, AudioCueDefinition[] sounds, RecipePresentation[] content,
             OneLineSubtitle caption, NotebookView book, InspectionController closeup, StarryWorldSequence director, Camera camera, ParticleSystem glints)
-        { voice=audio; cues=sounds; definitions=content; subtitles=caption; notebook=book; inspection=closeup; worldSequence=director; viewCamera=camera; motes=glints; }
+        {
+            // 这里只保存显式绑定，不搜索场景，也不订阅尚未创建的游戏会话。
+            voice = audio;
+            cues = sounds;
+            definitions = content;
+            subtitles = caption;
+            notebook = book;
+            inspection = closeup;
+            worldSequence = director;
+            viewCamera = camera;
+            motes = glints;
+        }
         /// <summary>重绑清理上一局声音、字幕、微粒和监听；预设只恢复视觉，不播获得反馈。</summary>
         public void Bind(GameSession game)
         {
-            if(session!=null) session.EventRaised-=OnEvent;
-            StopAllCoroutines(); voice.Stop(); subtitles.Clear(); motes.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
-            recipeOutputs.Clear(); sources.Clear(); sequences.Clear(); session=game;
-            foreach(var entity in transform.root.GetComponentsInChildren<SceneEntity>(true)) sources[entity.Id]=entity.transform;
-            sequences.Add("ceiling_starry",worldSequence.PlayCeilingFromContent);
-            sequences.Add("forest_world",worldSequence.PlayForestFromContent);
-            session.EventRaised+=OnEvent;
+            // 先退订旧局，再取消延迟字幕与声音，避免重开后收到上一局的反馈。
+            if (session != null) session.EventRaised -= OnEvent;
+            StopAllCoroutines();
+            voice.Stop();
+            subtitles.Clear();
+            motes.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            recipeOutputs.Clear();
+            sources.Clear();
+            sequences.Clear();
+            session = game;
+
+            // 来源只缓存一次，之后的发现不在每帧搜索物体；入口只消费已成立的事实。
+            foreach (var entity in transform.root.GetComponentsInChildren<SceneEntity>(true))
+                sources[entity.Id] = entity.transform;
+            sequences.Add("ceiling_starry", worldSequence.PlayCeilingFromContent);
+            sequences.Add("forest_world", worldSequence.PlayForestFromContent);
+            session.EventRaised += OnEvent;
         }
         private void OnEvent(DomainEvent value)
         {
             if(value is CombinationSucceeded success)
             {
+                // 概念产出随后也会发送发现事件；记住这些 ID，防止同一奖励叠播两类声音。
                 foreach(var produced in success.ProducedClues) recipeOutputs.Add(produced);
                 var content=definitions.FirstOrDefault(x=>x.RecipeId==success.RecipeId);
                 if(content!=null)
@@ -66,7 +91,8 @@ namespace Game.Unity
             }
             if(value is ClueDiscovered clue && !recipeOutputs.Contains(clue.Clue))
             {
-                PlayCue("clue_discover_soft"); EmitGlints(3,clue.Clue);
+                PlayCue("clue_discover_soft");
+                EmitGlints(3,clue.Clue);
             }
         }
         private IEnumerator AfterNotebook(string text)
@@ -100,8 +126,15 @@ namespace Game.Unity
                 if(!source.HasValue) source=session.Rules.Discoveries.FirstOrDefault(x=>x.Grants.Contains(discovered.Value))?.Source;
                 if(source.HasValue && sources.TryGetValue(source.Value,out var target)) point=target.position;
             }
-            motes.gameObject.layer=layer; motes.transform.position=point; motes.Emit(count);
+            // 同一个少量粒子源服务房间和检视层；切换渲染层后才发射，避免背景串出光点。
+            motes.gameObject.layer = layer;
+            motes.transform.position = point;
+            motes.Emit(count);
         }
-        private void OnDestroy() { if(session!=null) session.EventRaised-=OnEvent; }
+        private void OnDestroy()
+        {
+            // 会话寿命可能长于组件，销毁时解除监听，防止悬挂引用。
+            if (session != null) session.EventRaised -= OnEvent;
+        }
     }
 }
