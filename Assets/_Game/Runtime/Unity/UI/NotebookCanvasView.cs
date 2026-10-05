@@ -59,6 +59,7 @@ namespace Game.Unity
         public RectTransform Add(ClueId clue, Vector2 localPosition)
         {
             if (!session.State.Knows(clue)) return null;
+            notebook.PrepareCanvasInput();
             if (cards.TryGetValue(clue, out var existing)) return existing;
             if (cards.Count >= 3) return null;
             var definition = session.Rules.Clues.Single(x => x.Id == clue);
@@ -82,7 +83,7 @@ namespace Game.Unity
         }
         /// <summary>移动活动词条，重新请求近邻的只读提示。</summary>
         public void Move(ClueId clue, Vector2 position)
-        { if (cards.TryGetValue(clue, out var card)) { card.anchoredPosition = position; Refresh(); } }
+        { if (cards.TryGetValue(clue, out var card)) { notebook.PrepareCanvasInput(); card.anchoredPosition = position; Refresh(); } }
         /// <summary>拖到纸面外即归还边栏；已知线索不会被消费。</summary>
         public void EndDrag(ClueId clue, Vector2 screen, Camera camera)
         {
@@ -127,8 +128,10 @@ namespace Game.Unity
             // 先考虑三词精确组合；第三词远离时允许独立的两词近邻提示。
             if (all.Length >= 2)
             {
-                var groups = new List<ClueId[]>(); if (all.Length == 3) groups.Add(all);
-                for (int i=0;i<all.Length;i++) for(int j=i+1;j<all.Length;j++) groups.Add(new[] {all[i],all[j]});
+                var groups = new List<ClueId[]>();
+                bool threeTogether=all.Length==3 && all.All(a=>all.All(b=>Vector2.Distance(cards[a].anchoredPosition,cards[b].anchoredPosition)<=205));
+                if(threeTogether) groups.Add(all);
+                else for (int i=0;i<all.Length;i++) for(int j=i+1;j<all.Length;j++) groups.Add(new[] {all[i],all[j]});
                 foreach(var group in groups)
                 {
                     if (group.Any(a => group.Any(b => Vector2.Distance(cards[a].anchoredPosition,cards[b].anchoredPosition)>205))) continue;
