@@ -33,6 +33,9 @@ namespace Game.Unity
         [SerializeField] private WorldBoundaryDissolve rightDissolve;
         [SerializeField] private WorldBoundaryDissolve windowDissolve;
         [SerializeField] private WorldBoundaryDissolve natureReveal;
+        [SerializeField] private GameObject treeShadowHint;
+        /// <summary>星空之后只露出窗边树影，完整树林仍由下一次解释显现。</summary>
+        public void ConfigureObservationVisual(GameObject shadow) { treeShadowHint = shadow; }
         private GameSession session;
         private Coroutine playing;
         private float startedAt, elapsed, cameraFar;
@@ -40,7 +43,7 @@ namespace Game.Unity
         private Vector3 windowScale;
         private CampfireVisual spawnedFire;
         // 模式仅决定展示哪一段；主线事实各自独立，历史完整预览仍然保留。
-        private enum Stage { Benchmark, Roof, Forest }
+        private enum Stage { Benchmark, Night, Roof, Forest }
         private Stage stage;
         private float PlayingDuration => stage == Stage.Roof ? 6 : duration;
 
@@ -51,7 +54,7 @@ namespace Game.Unity
         /// <summary>开发面板使用的短节拍名，正式屏幕不常驻说明文字。</summary>
         public string CurrentBeat { get; private set; } = "房间仍有边界";
         /// <summary>具体样板时长，供开发者录像与调试读取。</summary>
-        public float Duration => duration;
+        public float Duration => PlayingDuration;
         /// <summary>从开始到当前的实际演出时间，使用非缩放时间保证暂停恢复一致。</summary>
         public float Elapsed => IsPlaying ? Time.unscaledTime - startedAt : elapsed;
 
@@ -111,7 +114,7 @@ namespace Game.Unity
         public void PlayAnimated()
         {
             if (session == null || !session.State.HasFact(ExplorationRules.WorldStarry)
-                || IsPlaying || IsFinalPresenting) return;
+                || IsPlaying || (IsFinalPresenting && stage == Stage.Benchmark)) return;
             Prepare(false);
             stage = Stage.Benchmark;
             playing = StartCoroutine(Run());
@@ -192,11 +195,13 @@ namespace Game.Unity
         /// <summary>连续进度驱动表面、微粒与光源；不让建筑整体移动成为变化主体。</summary>
         private void ApplyFrame(float time, bool particles)
         {
+            if (stage == Stage.Night)
+            { mutation.TransitionTheme(starryTheme,.32f); return; }
             if (stage == Stage.Roof)
             {
                 ApplyRoof(time, particles);
                 // 只打开天花板，保留墙、地板、窗与室内家具。
-                mutation.TransitionTheme(starryTheme, Progress(time, 1.8f, 6) * .45f);
+                mutation.TransitionTheme(starryTheme, Mathf.Lerp(.32f,.45f,Progress(time,1.8f,6)));
                 return;
             }
             if (stage == Stage.Forest)
@@ -242,11 +247,12 @@ namespace Game.Unity
                 ApplyDissolve(natureReveal, 1 - nature, 0, false);
                 CurrentBeat = "木台之外，树林从夜色中显现";
             }
-            if (time >= 12.4f)
+            float fireAt = stage == Stage.Forest ? 15.8f : 12.4f;
+            if (time >= fireAt)
             {
                 var fire = mutation.Spawn("StarryCampfire", exterior.CampfirePrefab, exterior.CampfireAnchor);
                 if (spawnedFire == null) spawnedFire = fire.GetComponent<CampfireVisual>();
-                if (spawnedFire != null) spawnedFire.SetIgnition(Progress(time, 12.4f, 15.3f));
+                if (spawnedFire != null) spawnedFire.SetIgnition(Progress(time, fireAt, fireAt + 2.9f));
                 CurrentBeat = "木柴点燃，暖火照亮留下的房间";
             }
             if (time >= 6.8f)
@@ -267,7 +273,7 @@ namespace Game.Unity
             float stars = Progress(time, .55f, 1.8f);
             float roof = Progress(time, 1.45f, 3.8f);
             ApplyDissolve(ceilingDissolve, roof, stars, particles);
-            if (roof >= 1) mutation.Hide(room.Ceiling.gameObject);
+            if (roof >= 1) { mutation.Hide(room.Ceiling.gameObject); if(treeShadowHint != null) mutation.Show(treeShadowHint); }
             CurrentBeat = "星纹扩散，天花板成为天空";
         }
 
@@ -327,9 +333,10 @@ namespace Game.Unity
             bool oldFull = session.State.HasFact(ExplorationRules.WorldStarry);
             bool forest = session.State.HasFact(MainlineRules.WorldForest);
             bool roof = session.State.HasFact(MainlineRules.CeilingStarry);
-            if (!oldFull && !forest && !roof) return;
+            bool night = session.State.HasFact(MainlineRules.NightArrived);
+            if (!oldFull && !forest && !roof && !night) return;
             Prepare(false);
-            stage = oldFull ? Stage.Benchmark : forest ? Stage.Forest : Stage.Roof;
+            stage = oldFull ? Stage.Benchmark : forest ? Stage.Forest : roof ? Stage.Roof : Stage.Night;
             ApplyFrame(PlayingDuration, false);
             IsPlaying = false;
             IsFinalPresenting = true;

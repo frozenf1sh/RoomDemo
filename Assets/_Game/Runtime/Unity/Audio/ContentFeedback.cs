@@ -86,7 +86,15 @@ namespace Game.Unity
         {
             Vector3 point=viewCamera.transform.position+viewCamera.transform.forward*1.5f;
             int layer=inspection.IsOpen ? InspectionController.InspectionLayer : 0;
-            if(discovered.HasValue && !inspection.IsOpen)
+            if(discovered.HasValue && inspection.IsOpen)
+            {
+                var detail=session.Rules.Observations.FirstOrDefault(x=>x.Grants.Contains(discovered.Value));
+                var action=inspection.Model.Definition.Actions.FirstOrDefault(x=>x.ObservationId==detail?.DetailId);
+                var hotspot=inspection.CurrentVisual.GetComponentsInChildren<InspectionHotspot>(true).FirstOrDefault(x=>x.ActionId==action?.Id);
+                // 光点落在被亲点的文字／新芽旁，保持局部；不能漂到镜头中央当作掉落奖励。
+                if(hotspot!=null) point=hotspot.transform.position-viewCamera.transform.forward*.025f;
+            }
+            else if(discovered.HasValue)
             {
                 var source=session.Rules.Observations.FirstOrDefault(x=>x.Grants.Contains(discovered.Value))?.Source;
                 if(!source.HasValue) source=session.Rules.Discoveries.FirstOrDefault(x=>x.Grants.Contains(discovered.Value))?.Source;

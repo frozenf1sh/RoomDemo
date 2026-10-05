@@ -72,9 +72,12 @@ namespace Game.Editor
                 }
                 // 同时检查数量、唯一性与内容覆盖，重复 ID 也必须阻止构建。
                 var entities = root.GetComponentsInChildren<SceneEntity>(true);
-                if (entities.Length != 5 || entities.Select(x => x.Id).Distinct().Count() != 5 ||
-                    DemoRules.Create().Objects.Any(x => !entities.Any(e => e.Id == x.Id)))
-                    throw new InvalidOperationException("场景应恰好包含盆栽、书、窗户、画、纸张，且标识符不得重复。");
+                if (entities.Length != 7 || entities.Select(x => x.Id).Distinct().Count() != 7 ||
+                    MainlineRules.Create().Objects.Any(x => !entities.Any(e => e.Id == x.Id)))
+                    throw new InvalidOperationException("场景应包含七个核心观察身份（含天花板、房间），且标识符不得重复。");
+                if(root.GetComponentsInChildren<NotebookCanvasView>(true).Length!=1 ||
+                    root.GetComponentsInChildren<ContentFeedback>(true).Length!=1 || root.GetComponentsInChildren<OneLineSubtitle>(true).Length!=1)
+                    throw new InvalidOperationException("主线语义画布、反馈路由或单行字幕缺失／重复。");
                 var required = new[] { typeof(PlantPresenter), typeof(BookPresenter), typeof(WindowPresenter), typeof(WindPresenter), typeof(PaintingPresenter), typeof(PaperPresenter), typeof(WaterPresenter), typeof(EndingPresenter) };
                 var presenters = root.GetComponentsInChildren<WorldPresenter>(true);
                 if (required.Any(t => presenters.Count(p => p.GetType() == t) != 1)) throw new InvalidOperationException("核心表现组件缺失或重复。");

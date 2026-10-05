@@ -10,10 +10,13 @@ namespace Game.Domain
     /// <summary>正式主线内容；历史探索表继续作为旧演出回归样本。</summary>
     public static class MainlineRules
     {
+        /// <summary>需要亲自点击的新增空间身份，不能由灵感配方授予。</summary>
         public static readonly ObjectId Ceiling = new ObjectId("ceiling"), Room = new ObjectId("room");
+        /// <summary>后半程的四个具体观察与两个抽象概念；稳定 ID 不随显示语言变化。</summary>
         public static readonly ClueId Night = DemoRules.Clue("night"), Boundless = DemoRules.Clue("boundless"),
             Starry = DemoRules.Clue("starry"), TreeShadow = DemoRules.Clue("tree_shadow"),
             WindSound = DemoRules.Clue("wind_sound"), Forest = DemoRules.Clue("forest");
+        /// <summary>跨日和独立世界变化的事实协议；演出时长不在领域中。</summary>
         public static readonly FactId NightArrived = new FactId("night.arrived"), CeilingStarry = new FactId("ceiling.starry"),
             WorldForest = new FactId("world.forest"), CampfirePresent = new FactId("campfire.present"), Complete = new FactId("mainline.complete");
 

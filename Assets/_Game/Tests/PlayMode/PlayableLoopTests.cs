@@ -170,9 +170,9 @@ namespace Game.Tests
             Assert.That(notebook.IsOpen, Is.False);
         }
         /// <summary>验证核心实体与表现组件数量，并确认书可见但初始不可调查。</summary>
-        [UnityTest] public IEnumerator SceneBootstrapsAllFiveEntitiesAndEightPresenters()
+        [UnityTest] public IEnumerator SceneBootstrapsAllSevenEntitiesAndEightPresenters()
         {
-            Assert.That(Object.FindObjectsByType<SceneEntity>().Length, Is.EqualTo(5));
+            Assert.That(Object.FindObjectsByType<SceneEntity>().Length, Is.EqualTo(7));
             Assert.That(Object.FindObjectsByType<WorldPresenter>().Length, Is.EqualTo(8));
             Assert.That(notebook, Is.Not.Null); Assert.That(input, Is.Not.Null);
             Assert.That(ClickObject(DemoRules.Book)); Assert.That(bootstrap.Session.State.Knows(DemoRules.Book), Is.False);
