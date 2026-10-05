@@ -17,6 +17,11 @@ namespace Game.Unity
             ["plant.grown"] = "盆栽已生长",
             ["plant.starts_growing"] = "盆栽开始舒展",
             ["plant.overgrown"] = "盆栽次日繁茂",
+            ["night.arrived"] = "第三天的夜色到来",
+            ["ceiling.starry"] = "屋顶成为星空",
+            ["world.forest"] = "森林进入房间",
+            ["campfire.present"] = "营火已点燃",
+            ["mainline.complete"] = "房间的边界退去",
             ["world.starry"] = "房间成为星空世界",
             ["book.fallen"] = "书已落下",
             ["book.inspectable"] = "书可以调查",
@@ -42,6 +47,9 @@ namespace Game.Unity
             ["painting-leaks-water"] = "画框渗出海水",
             ["plant-becomes-aquatic"] = "海水改变盆栽",
             ["window-becomes-ocean"] = "海水改变远方",
+            ["sea-remembers-next-night"] = "海画把夜色留到次日",
+            ["forest-shelters-fire"] = "森林留下营火",
+            ["mainline-remembers"] = "房间记住星空与森林",
             ["room-remembers"] = "房间记住解释"
         };
 

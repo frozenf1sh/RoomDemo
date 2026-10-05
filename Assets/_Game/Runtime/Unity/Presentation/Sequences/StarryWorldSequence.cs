@@ -39,6 +39,10 @@ namespace Game.Unity
         private bool ownsPresentation, windowWasEnabled, preview;
         private Vector3 windowScale;
         private CampfireVisual spawnedFire;
+        // 模式仅决定展示哪一段；主线事实各自独立，历史完整预览仍然保留。
+        private enum Stage { Benchmark, Roof, Forest }
+        private Stage stage;
+        private float PlayingDuration => stage == Stage.Roof ? 6 : duration;
 
         /// <summary>演出正在进行；领域事实早已成立。</summary>
         public bool IsPlaying { get; private set; }
@@ -92,13 +96,15 @@ namespace Game.Unity
             if (session != null) session.EventRaised -= OnEvent;
             session = game;
             session.EventRaised += OnEvent;
-            if (session.State.HasFact(ExplorationRules.WorldStarry)) ApplyFinalStateImmediately();
+            ApplyFinalStateImmediately();
         }
 
         private void OnEvent(DomainEvent value)
         {
             // 领域负责去重与闭包；导演只接收已经发生的事实。
-            if (value is FactAdded added && added.Fact == ExplorationRules.WorldStarry) PlayAnimated();
+            if (!(value is FactAdded added)) return;
+            if (added.Fact == ExplorationRules.WorldStarry) PlayAnimated();
+
         }
 
         /// <summary>播放已成立事实的表现，重复事件不重新借用房间。</summary>
@@ -107,6 +113,7 @@ namespace Game.Unity
             if (session == null || !session.State.HasFact(ExplorationRules.WorldStarry)
                 || IsPlaying || IsFinalPresenting) return;
             Prepare(false);
+            stage = Stage.Benchmark;
             playing = StartCoroutine(Run());
         }
 
@@ -114,6 +121,23 @@ namespace Game.Unity
         public void PlayBenchmarkPreview()
         {
             Prepare(true);
+            stage = Stage.Benchmark;
+            playing = StartCoroutine(Run());
+        }
+
+        /// <summary>主线的两次解释分别开始屋顶和森林段落；不提交任何领域命令。</summary>
+        public void PlayCeilingFromContent()
+        { if(session != null && session.State.HasFact(MainlineRules.CeilingStarry)) PlayMainline(Stage.Roof); }
+        /// <summary>森林解释的内容入口，领域已计算好最后营火事实。</summary>
+        public void PlayForestFromContent()
+        { if(session != null && session.State.HasFact(MainlineRules.WorldForest)) PlayMainline(Stage.Forest); }
+
+        private void PlayMainline(Stage next)
+        {
+            Prepare(false);
+            stage = next;
+            // 森林段从已经打开的屋顶开始，重绑恢复不重新演一次天花板。
+            if (next == Stage.Forest) { ApplyRoof(6, false); mutation.TransitionTheme(starryTheme, .45f); }
             playing = StartCoroutine(Run());
         }
 
@@ -141,7 +165,7 @@ namespace Game.Unity
         {
             bool roofSound = false;
             bool outsideSound = false;
-            while (Time.unscaledTime - startedAt < duration)
+            while (Time.unscaledTime - startedAt < PlayingDuration)
             {
                 float time = Time.unscaledTime - startedAt;
                 if (!roofSound && time >= .65f)
@@ -149,7 +173,7 @@ namespace Game.Unity
                     openingAudio.Play();
                     roofSound = true;
                 }
-                if (!outsideSound && time >= 6)
+                if (stage != Stage.Roof && !outsideSound && time >= 6)
                 {
                     exteriorAudio.Play();
                     outsideSound = true;
@@ -157,27 +181,30 @@ namespace Game.Unity
                 ApplyFrame(time, true);
                 yield return null;
             }
-            ApplyFrame(duration, true);
-            elapsed = duration;
+            ApplyFrame(PlayingDuration, true);
+            elapsed = PlayingDuration;
             IsPlaying = false;
             IsFinalPresenting = true;
             playing = null;
-            CurrentBeat = preview ? "星空预览完成（领域未改变）" : "房间已经失去边界";
+            CurrentBeat = preview ? "星空预览完成（领域未改变）" : stage == Stage.Roof ? "屋顶是星空，墙仍在原处" : "房间已经失去边界";
         }
 
         /// <summary>连续进度驱动表面、微粒与光源；不让建筑整体移动成为变化主体。</summary>
         private void ApplyFrame(float time, bool particles)
         {
-            if (time >= .55f)
+            if (stage == Stage.Roof)
             {
-                mutation.Show(exterior.SkyDome);
-                roomCamera.farClipPlane = Mathf.Max(cameraFar, 180);
-                float stars = Progress(time, .55f, 1.8f);
-                float roof = Progress(time, 1.45f, 3.8f);
-                ApplyDissolve(ceilingDissolve, roof, stars, particles);
-                if (roof >= 1) mutation.Hide(room.Ceiling.gameObject);
-                CurrentBeat = "星纹扩散，天花板成为天空";
+                ApplyRoof(time, particles);
+                // 只打开天花板，保留墙、地板、窗与室内家具。
+                mutation.TransitionTheme(starryTheme, Progress(time, 1.8f, 6) * .45f);
+                return;
             }
+            if (stage == Stage.Forest)
+            {
+                ApplyRoof(6, false);
+                time += 3.8f;
+            }
+            else ApplyRoof(time, particles);
             if (time >= 3.8f)
             {
                 float back = Progress(time, 3.8f, 6.8f);
@@ -215,20 +242,33 @@ namespace Game.Unity
                 ApplyDissolve(natureReveal, 1 - nature, 0, false);
                 CurrentBeat = "木台之外，树林从夜色中显现";
             }
-            if (time >= 10.7f)
+            if (time >= 12.4f)
             {
                 var fire = mutation.Spawn("StarryCampfire", exterior.CampfirePrefab, exterior.CampfireAnchor);
                 if (spawnedFire == null) spawnedFire = fire.GetComponent<CampfireVisual>();
-                if (spawnedFire != null) spawnedFire.SetIgnition(Progress(time, 10.7f, 13.4f));
+                if (spawnedFire != null) spawnedFire.SetIgnition(Progress(time, 12.4f, 15.3f));
                 CurrentBeat = "木柴点燃，暖火照亮留下的房间";
             }
             if (time >= 6.8f)
             {
                 // 月光先建立外部空间；暖火随后成为人仍在这里的中心。
-                mutation.TransitionTheme(starryTheme, Progress(time, 6.8f, duration));
+                mutation.TransitionTheme(starryTheme, stage == Stage.Forest ? Mathf.Lerp(.45f,1,Progress(time,6.8f,duration+3.8f)) : Progress(time,6.8f,duration));
                 if (time >= 13.4f) CurrentBeat = "冷月光、暖火与笔触夜色重新融合";
             }
             caption.text = "";
+        }
+
+        /// <summary>屋顶独立节拍；不会展示树林、隐藏墙或生成营火。</summary>
+        private void ApplyRoof(float time, bool particles)
+        {
+            if (time < .55f) return;
+            mutation.Show(exterior.SkyDome);
+            roomCamera.farClipPlane = Mathf.Max(cameraFar, 180);
+            float stars = Progress(time, .55f, 1.8f);
+            float roof = Progress(time, 1.45f, 3.8f);
+            ApplyDissolve(ceilingDissolve, roof, stars, particles);
+            if (roof >= 1) mutation.Hide(room.Ceiling.gameObject);
+            CurrentBeat = "星纹扩散，天花板成为天空";
         }
 
         private static void ApplyDissolve(WorldBoundaryDissolve surface, float progress, float stars, bool particles)
@@ -283,12 +323,17 @@ namespace Game.Unity
         public void ApplyFinalStateImmediately()
         {
             Cancel();
-            if (session == null || !session.State.HasFact(ExplorationRules.WorldStarry)) return;
+            if (session == null) return;
+            bool oldFull = session.State.HasFact(ExplorationRules.WorldStarry);
+            bool forest = session.State.HasFact(MainlineRules.WorldForest);
+            bool roof = session.State.HasFact(MainlineRules.CeilingStarry);
+            if (!oldFull && !forest && !roof) return;
             Prepare(false);
-            ApplyFrame(duration, false);
+            stage = oldFull ? Stage.Benchmark : forest ? Stage.Forest : Stage.Roof;
+            ApplyFrame(PlayingDuration, false);
             IsPlaying = false;
             IsFinalPresenting = true;
-            elapsed = duration;
+            elapsed = PlayingDuration;
             CurrentBeat = "星空最终状态（即时恢复）";
         }
 
@@ -296,6 +341,7 @@ namespace Game.Unity
         public void ApplyFinalPreview()
         {
             Prepare(true);
+            stage = Stage.Benchmark;
             ApplyFrame(duration, false);
             IsPlaying = false;
             IsFinalPresenting = true;
