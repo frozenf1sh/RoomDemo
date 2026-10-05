@@ -37,6 +37,9 @@ namespace Game.Unity
         [SerializeField] private Text feedbackText;
         [SerializeField] private Button[] slotButtons;
         [SerializeField] private Text completedText;
+        [SerializeField] private Text completedTextSecondary;
+        /// <summary>关系增多后用两列保留全部记录，不缩小到不可读或静默裁切。</summary>
+        public void ConfigureHistoryColumns(Text first, Text second) { completedText=first; completedTextSecondary=second; }
         [SerializeField] private GameObject discoveryPanel;
         [SerializeField] private Text discoveryText;
         [SerializeField] private RectTransform paperBody;
@@ -254,7 +257,12 @@ namespace Game.Unity
         /// <summary>只显示领域记录的已完成配方，不自行维护历史。</summary>
         private void RenderHistory()
         {
-            completedText.text = "留下的联系\n" + string.Join("\n", session.Rules.Recipes.Where(x => session.State.HasCompleted(x.Id)).Select(x => string.Join(" ─ ", x.Inputs.Select(Label)) + (x.ProducesClues.Count > 0 ? " → " + string.Join("、", x.ProducesClues.Select(Label)) : "")));
+            var relations=session.Rules.Recipes.Where(x=>session.State.HasCompleted(x.Id))
+                .Select(x=>string.Join(" ─ ",x.Inputs.Select(Label))+(x.ProducesClues.Count>0 ? " → "+string.Join("、",x.ProducesClues.Select(Label)) : "")).ToArray();
+            // 两列都是同一份领域历史的视图，没有另外保存已建立关系。
+            int split=completedTextSecondary!=null ? (relations.Length+1)/2 : relations.Length;
+            completedText.text="留下的联系\n"+string.Join("\n",relations.Take(split));
+            if(completedTextSecondary!=null) completedTextSecondary.text="\n"+string.Join("\n",relations.Skip(split));
         }
         /// <summary>先隐藏旧按钮再延迟销毁，避免同一帧残留可点击项。</summary>
         private static void ClearRows(Transform list) { foreach (Transform child in list) { child.gameObject.SetActive(false); Destroy(child.gameObject); } }

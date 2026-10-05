@@ -80,8 +80,13 @@ namespace Game.Editor
                 Place((RectTransform)body.Find(columns[i]),new Vector2(x,.255f),new Vector2(x+.155f,.767f));
             }
             foreach(var name in new[]{"Slot0","Slot1","Slot2","Interpret","Selection","InkRelation"}) body.Find(name).gameObject.SetActive(false);
-            var history=body.Find("CompletedRecipes").GetComponent<Text>(); history.fontSize=12;
-            Place(history.rectTransform,new Vector2(.055f,.035f),new Vector2(.95f,.233f));
+            var history=body.Find("CompletedRecipes").GetComponent<Text>(); history.fontSize=13;
+            Place(history.rectTransform,new Vector2(.055f,.055f),new Vector2(.50f,.238f));
+            var historySecond=Label("CompletedRecipesSecond",body,"",new Vector2(.535f,.055f),new Vector2(.957f,.238f),13);
+            historySecond.color=history.color; historySecond.alignment=TextAnchor.UpperLeft; historySecond.lineSpacing=history.lineSpacing;
+            notebook.ConfigureHistoryColumns(history,historySecond);
+            var footer=body.Find("Feedback").GetComponent<Text>(); footer.fontSize=11;
+            Place(footer.rectTransform,new Vector2(.06f,.008f),new Vector2(.95f,.037f));
             history.horizontalOverflow=HorizontalWrapMode.Wrap; history.verticalOverflow=VerticalWrapMode.Truncate;
             Place((RectTransform)body.Find("InsightWord"),new Vector2(.54f,.48f),new Vector2(.97f,.63f));
             var notes=body.Find("ManuscriptMarks/MarginNote"); if(notes!=null) notes.gameObject.SetActive(false);

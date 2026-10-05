@@ -194,7 +194,10 @@ namespace Game.Tests
             notebook.SetOpen(true); yield return null; Canvas.ForceUpdateCanvases();
             var history = body.Find("CompletedRecipes").GetComponent<UnityEngine.UI.Text>();
             Assert.That(history.text, Does.Contain("新芽 ─ 向光 → 生长"));
-            Assert.That(history.preferredHeight, Is.LessThanOrEqualTo(history.rectTransform.rect.height + .1f), "完整探索关系被裁切。");
+            Assert.That(history.preferredHeight, Is.LessThanOrEqualTo(history.rectTransform.rect.height + .1f), "左列关系被裁切。");
+            var second=body.Find("CompletedRecipesSecond").GetComponent<UnityEngine.UI.Text>();
+            Assert.That(second.text, Does.Contain("森林 ─ 房间"));
+            Assert.That(second.preferredHeight, Is.LessThanOrEqualTo(second.rectTransform.rect.height + .1f), "右列关系被裁切。");
         }
     }
 }
