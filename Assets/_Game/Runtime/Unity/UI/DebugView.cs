@@ -111,6 +111,21 @@ namespace Game.Unity
             if (UnityEngine.Application.isEditor || Debug.isDebugBuild)
                 stateText.text += "\n\n当前可用的配方\n" + string.Join("\n", session.Rules.AvailableRecipes(s).Select(RecipeName));
             // 主线后半段的临时帮助；只有玩家按 H 时才实际显示。
+            bool narrative = session.Rules.Recipes.Any(x=>x.Disposition!=NarrativeDisposition.Neutral);
+            if (narrative && !s.HasFact(MainlineRules.CeilingStarry) && !s.HasFact(MainlineRules.Complete))
+            {
+                objectiveText.text = s.HasFact(NarrativeRules.BanalComplete) ? "作品已经完成。"
+                    : s.HasFact(MainlineRules.NightArrived) ? (s.Knows(MainlineRules.Starry) ? "天空可以留在画里。也可以再看看头顶。" : "抬头看看夜色，再去窗边看一眼尽头。")
+                    : session.CanAdvanceDay ? "今天的解释留下了。按 Esc，结束今天，再回来看看。"
+                    : s.Knows(DemoRules.Sea) && !s.HasFact(DemoRules.PaintingSea) ? "画架还在等那片海。先亲自看一眼画。"
+                    : s.HasFact(DemoRules.PaperRevealed) ? "画架前显露了一张旧草稿。拿近看看。"
+                    : s.Knows(DemoRules.Far) ? "背景需要距离。你会把远方留在哪里？"
+                    : s.HasFact(NarrativeRules.DayTwo) ? "再翻一遍旧书，读读后面的地平线。"
+                    : s.Knows(DemoRules.Growth) ? "把生长留给画布。或重新看待别的东西。"
+                    : s.Knows(ExplorationRules.Sprout) && s.Knows(ExplorationRules.TowardLight) ? "新芽，向光。让这两个细节在纸面靠近。"
+                    : "拿近看看盆栽和旧书，亲自读到值得记下的细节。";
+                return;
+            }
             if (s.HasFact(MainlineRules.Complete)) { objectiveText.text="营火留在星空下，熟悉的房间已经没有边界。"; return; }
             if (s.HasFact(MainlineRules.CeilingStarry))
             {

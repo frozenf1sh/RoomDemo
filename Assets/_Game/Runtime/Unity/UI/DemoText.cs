@@ -14,6 +14,11 @@ namespace Game.Unity
         // 世界事实已经由领域层产生；这里仅将标识符映射为人能读懂的名称。
         private static readonly Dictionary<string, string> Facts = new Dictionary<string, string>
         {
+            ["painting.growth"] = "画中有枝叶",
+            ["painting.far"] = "画中有远方",
+            ["painting.starry"] = "画中夜空完成",
+            ["studio.day_two"] = "次日探索开放",
+            ["ending.canvas_complete"] = "画作完成",
             ["plant.grown"] = "盆栽已生长",
             ["plant.starts_growing"] = "盆栽开始舒展",
             ["plant.overgrown"] = "盆栽次日繁茂",
@@ -38,6 +43,10 @@ namespace Game.Unity
         // 反应名称与事实名称分开：前者表示发生的联系，后者表示已经成立的状态。
         private static readonly Dictionary<string, string> Reactions = new Dictionary<string, string>
         {
+            ["canvas-opens-next-day"] = "画布解释留下次日探索",
+            ["growth-opens-next-day"] = "现实生长留下次日探索",
+            ["canvas-distance-reveals-study"] = "画中远方显露海的草稿",
+            ["canvas-is-complete"] = "画中风景完成",
             ["growth-continues-next-day"] = "解释在次日继续生长",
             ["overgrowth-is-grown"] = "繁茂承接既有生长联系",
             ["plant-knocks-book"] = "盆栽碰落书本",

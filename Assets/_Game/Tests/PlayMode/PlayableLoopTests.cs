@@ -221,7 +221,7 @@ namespace Game.Tests
             FindButton("Object_plant").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke(); FindButton("Concept_sea").onClick.Invoke();
             Assert.That(notebook.SelectedClues.Count, Is.EqualTo(3));
             var submit = Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Single(x=>x.name=="CanvasAction");
-            Assert.That(submit.gameObject.activeInHierarchy, Is.False, "多余第三词不能显示二词解释入口。");
+            Assert.That(submit.gameObject.activeInHierarchy, Is.True, "纸面不提前预告答案，三个词也允许尝试。");
             // 同时保留命令防线：即使外部提交非法输入，事实仍不能改变。
             notebook.InterpretSelected(); yield return null;
             Assert.That(bootstrap.Session.State.Facts, Is.Empty); Assert.That(bootstrap.Session.State.KnownClues.Count, Is.EqualTo(7)); Assert.That(notebook.IsOpen);
@@ -235,7 +235,7 @@ namespace Game.Tests
             FindButton("OpenNotebook").onClick.Invoke(); yield return null;
             FindButton("Object_window").onClick.Invoke(); FindButton("Concept_growth").onClick.Invoke();
             var submit = Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Single(x=>x.name=="CanvasAction");
-            Assert.That(submit.gameObject.activeInHierarchy, Is.False);
+            Assert.That(submit.gameObject.activeInHierarchy, Is.True);
             notebook.InterpretSelected(); yield return null;
             Assert.That(bootstrap.Session.State.Facts, Is.Empty);
             Assert.That(Object.FindAnyObjectByType<WindowPresenter>().FarBackground.activeSelf, Is.False);

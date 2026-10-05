@@ -112,7 +112,7 @@ namespace Game.Unity
             if(a==ExplorationRules.Sprout)
             {
                 Drag(DemoRules.Clue("book"),new Vector2(0,-50));
-                Require(!action.gameObject.activeInHierarchy,"三词靠近不能误提示两词配方");
+                Require(action.gameObject.activeInHierarchy,"三词可以尝试，配方由提交判定");
                 var card=notebook.GetComponentsInChildren<Button>(true).Single(x=>x.name=="CanvasClue_book"); Click(card);
                 Require(action.gameObject.activeInHierarchy,"归还第三词后恢复两词联想");
                 yield return Capture("笔记本V2_拖动与淡线");
