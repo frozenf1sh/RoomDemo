@@ -96,6 +96,9 @@ namespace Game.Domain
             // 种子事实走正式闭包，后续事实与反应由规则产生；返回事件在此有意丢弃。
             state.RestoreDay(preset.DayIndex);
             DebugGrantClues(state, preset.Known);
+            // 先恢复解释历史再计算闭包，条件反应不能误把有过偏离的预设当成服从路线。
+            foreach (var id in preset.CompletedRecipes)
+                state.Complete(id, rules.Recipes.Single(r => r.Id == id).Disposition);
             DebugAddFacts(state, preset.Facts);
             foreach (var id in preset.CompletedRecipes)
             {
@@ -103,7 +106,6 @@ namespace Game.Domain
                 // 历史必须与世界一致，不能记录一个尚未产生其输出的配方。
                 if (!recipe.ProducesFacts.All(state.HasFact) || !recipe.ProducesClues.All(state.Knows))
                     throw new ArgumentException("预设的已完成配方必须与其产出的线索和事实一致。");
-                state.Complete(id, recipe.Disposition);
             }
         }
 

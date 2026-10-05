@@ -77,6 +77,18 @@ namespace Game.Tests
             Assert.That(s.State.HasFact(MainlineRules.Complete), Is.True);
             Assert.That(s.State.HasFact(NarrativeRules.BanalComplete), Is.False);
         }
+        /// <summary>恢复闭包必须先知道历史倾向，不能在混合路线中误生成普通结局。</summary>
+        [Test] public void RestoreUsesNarrativeHistoryBeforeReactionClosure()
+        {
+            var rules = NarrativeRules.Create();
+            var preset = new DebugPreset("mixed", new[] { DemoRules.Clue("growth"),DemoRules.Clue("plant"),DemoRules.Clue("painting"),DemoRules.Clue("far"),DemoRules.Clue("sea"),MainlineRules.Starry },
+                new[] { ExplorationRules.PlantStartsGrowing,NarrativeRules.CanvasGrowth,NarrativeRules.CanvasFar,DemoRules.PaintingSea,NarrativeRules.CanvasStarry },
+                new[] { "recipe.plant.growth","recipe.painting.growth","recipe.painting.far","recipe.painting.sea","recipe.painting.starry" }, "混合路线");
+            var s = GameSession.FromPreset(rules,preset);
+            Assert.That(s.State.HasDeviated, Is.True);
+            Assert.That(s.State.HasFact(DemoRules.WaterPresent), Is.True);
+            Assert.That(s.State.HasFact(NarrativeRules.BanalComplete), Is.False);
+        }
         [Test] public void PriorDeviationPreventsLaterCanvasLockAndDuplicateCounts()
         {
             var s = new GameSession(NarrativeRules.Create());
