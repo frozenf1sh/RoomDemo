@@ -27,7 +27,7 @@ namespace Game.Unity
         [SerializeField] private RoomModules room;
         [SerializeField] private WorldExterior exterior;
         private string output;
-        private bool quit, running, compliant;
+        private bool quit, running, compliant, capture;
         private int checks;
         private string steps="";
         /// <summary>编辑工具显式绑定已有玩家入口，不创建另一条解谜通道。</summary>
@@ -39,13 +39,13 @@ namespace Game.Unity
             var args=Environment.GetCommandLineArgs(); int index=Array.IndexOf(args,"-roomDemoNarrativeReview");
             if(index<0) return;
             quit=Array.IndexOf(args,"-roomDemoQuitAfterReview")>=0;
-            Begin(index+1<args.Length ? args[index+1] : Path.Combine(UnityEngine.Application.persistentDataPath,"NarrativeReview"),Array.IndexOf(args,"-roomDemoCanvasRoute")>=0);
+            Begin(index+1<args.Length ? args[index+1] : Path.Combine(UnityEngine.Application.persistentDataPath,"NarrativeReview"),Array.IndexOf(args,"-roomDemoCanvasRoute")>=0,Array.IndexOf(args,"-roomDemoNarrativeCapture")>=0);
         }
         /// <summary>明确开发请求才开始；输出几张实际截图和简短操作记录。</summary>
-        public void Begin(string folder, bool canvasRoute = false)
+        public void Begin(string folder, bool canvasRoute = false, bool record = false)
         {
             if(running) return;
-            compliant=canvasRoute; output=folder; Directory.CreateDirectory(output); running=true; checks=0; steps="";
+            compliant=canvasRoute; capture=record; output=folder; Directory.CreateDirectory(output); running=true; checks=0; steps="";
             // 仅隔离这次自动输入，不修改项目的 Input Actions 或正式键位。
             if(Mouse.current!=null) InputSystem.DisableDevice(Mouse.current);
             if(Keyboard.current!=null) InputSystem.DisableDevice(Keyboard.current);
@@ -70,6 +70,7 @@ namespace Game.Unity
             yield return Capture("灵感_生长");
             Require(RoomClick(DemoRules.Painting),"亲点画架获得画");
             yield return Combine(DemoRules.Clue("growth"),DemoRules.Clue(compliant?"painting":"plant"),"解释"); yield return Wait(6);
+            if(!compliant) yield return Capture("旁白_那不是画布");
             Require(bootstrap.Session.State.DeviationCount==(compliant?0:1),"只有首次正式解释记入叙事倾向");
             Require(!bootstrap.Session.State.HasFact(DemoRules.BookFallen),"当天书尚未落下");
             EndDay(); yield return Wait(3);
@@ -103,6 +104,7 @@ namespace Game.Unity
                 yield return Capture("画布路线_完成的普通作品");
                 yield return Wait(11);
                 Require(FindAnyObjectByType<CanvasEndingSequence>().IsFinished,"旁白之后安静淡出到完成");
+                yield return Capture("画布路线_结束");
                 WriteResult(); yield break;
             }
             Require(!room.Ceiling.gameObject.activeSelf && room.WallBack.gameObject.activeSelf && !exterior.Environment.activeSelf,"星空只打开屋顶，森林尚未出现");
@@ -119,6 +121,7 @@ namespace Game.Unity
             Require(!notebook.IsOpen && !room.WallBack.gameObject.activeSelf,"最后返回干净玩家画面，房间边界退去");
             // 回到初始朝向比较房间和最终世界；只使用受限转头入口。
             Face(new Vector3(0,2,3)); yield return Wait(.4f); yield return Capture("森林营地_最终玩家画面");
+            if(capture) yield return Wait(1);
             WriteResult();
         }
         private void WriteResult()
@@ -140,6 +143,9 @@ namespace Game.Unity
                 Require(action.gameObject.activeInHierarchy,"归还第三词后恢复两词联想");
                 yield return Capture("笔记本V2_拖动与淡线");
             }
+            if(capture && a==MainlineRules.Starry && !compliant) StartCoroutine(Record(7,"屋顶"));
+            if(capture && a==MainlineRules.Forest && !compliant)
+            { Face(new Vector3(0,2,3)); StartCoroutine(Record(20,"森林")); }
             Click(action); yield return Wait(label=="联想" ? 2.1f : 1.1f);
         }
         private void Drag(ClueId clue,Vector2 position)
@@ -180,6 +186,20 @@ namespace Game.Unity
             return inspection.ObserveAt(Camera.main.WorldToScreenPoint(hotspot.transform.position));
         }
         private static WaitForSecondsRealtime Wait(float seconds)=>new WaitForSecondsRealtime(seconds);
+        /// <summary>仅显式录像参数取样真实构建画面，不记录音轨，也不用于性能验收。</summary>
+        private IEnumerator Record(float seconds,string beat)
+        {
+            string folder=Path.Combine(output,beat+"帧"); Directory.CreateDirectory(folder);
+            float started=Time.unscaledTime, next=0;
+            int index=0;
+            while(Time.unscaledTime-started<seconds)
+            {
+                yield return new WaitForEndOfFrame();
+                if(Time.unscaledTime-started<next) continue;
+                ScreenCapture.CaptureScreenshot(Path.Combine(folder,"frame_"+(index++).ToString("D4")+".png"));
+                next+=.2f;
+            }
+        }
         private IEnumerator Capture(string label)
         { yield return new WaitForEndOfFrame(); ScreenCapture.CaptureScreenshot(Path.Combine(output,label+".png")); yield return Wait(.2f); }
         private void Require(bool success,string description)
