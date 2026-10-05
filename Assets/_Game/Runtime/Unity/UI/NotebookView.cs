@@ -272,7 +272,9 @@ namespace Game.Unity
             // 旧笔迹表达习惯；偏离后渐淡，不显示听话／反抗计数。
             float importance = Mathf.Clamp01(1 - session.State.DeviationCount * .45f);
             canvasMarks.color = new Color(.45f,.37f,.24f,.52f * importance);
-            canvasMarks.text = session.State.Knows(new ClueId("painting")) ? "↖  这里。" : "";
+            // 旧笔迹明确指向“画”，不会因词栏按发现顺序增长而误指第一行的盆栽。
+            var painting = new ClueId("painting");
+            canvasMarks.text = session.State.Knows(painting) ? Label(painting) + "  ← 这里。" : "";
         }
         private void RenderHistory()
         {
