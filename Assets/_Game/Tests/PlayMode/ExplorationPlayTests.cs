@@ -186,10 +186,11 @@ namespace Game.Tests
             var body = notebook.transform.Find("NotebookPanel/Notebook");
             foreach (string list in new[] { "Objects", "Observations", "Concepts" }) Assert.That(body.Find(list), Is.Not.Null);
             Assert.That(notebook.transform.Find("NotebookPanel/Observations"), Is.Null, "分类列不得挂在全屏遮罩上。");
-            // 检查正式主线全部八条关系，不只检查历史海画版的几行。
+            // 完整布局夹具从当前配方输出取种子事实，新增画布层后也保持历史与世界一致。
             var rules = bootstrap.Session.Rules;
             bootstrap.JumpTo(new Game.Domain.DebugPreset("layout", System.Linq.Enumerable.Select(rules.Clues, x => x.Id).ToArray(),
-                new[] { Game.Domain.ExplorationRules.PlantStartsGrowing, Game.Domain.ExplorationRules.PlantOvergrown, Game.Domain.DemoRules.WindowFar, Game.Domain.DemoRules.PaintingSea, Game.Domain.MainlineRules.NightArrived, Game.Domain.MainlineRules.CeilingStarry, Game.Domain.MainlineRules.WorldForest },
+                System.Linq.Enumerable.Distinct(System.Linq.Enumerable.Concat(System.Linq.Enumerable.SelectMany(rules.Recipes, x => x.ProducesFacts),
+                    new[] { Game.Domain.ExplorationRules.PlantOvergrown, Game.Domain.MainlineRules.NightArrived })).ToArray(),
                 System.Linq.Enumerable.Select(rules.Recipes, x => x.Id).ToArray(), "完整笔记布局", 3));
             notebook.SetOpen(true); yield return null; Canvas.ForceUpdateCanvases();
             var history = body.Find("CompletedRecipes").GetComponent<UnityEngine.UI.Text>();

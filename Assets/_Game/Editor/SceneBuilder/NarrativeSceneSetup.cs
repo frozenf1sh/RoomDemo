@@ -108,7 +108,14 @@ namespace Game.Editor
             var body=notes.transform.Find("NotebookPanel/Notebook");
             foreach(var name in new[]{"ObjectsHeading","ObservationsHeading","ConceptsHeading","Objects","Observations","Concepts"})
                 body.Find(name).gameObject.SetActive(false);
-            var list=Rect("ThoughtMaterials",body,new Vector2(.06f,.28f),new Vector2(.295f,.79f));
+            // 双路线增加了三条画内关系；为完整历史留出底部空间，不缩小中文到难以辨认。
+            foreach(var name in new[]{"CompletedRecipes","CompletedRecipesSecond"})
+            {
+                var history=(RectTransform)body.Find(name);
+                history.anchorMax=new Vector2(history.anchorMax.x,.305f);
+                history.offsetMin=history.offsetMax=Vector2.zero;
+            }
+            var list=Rect("ThoughtMaterials",body,new Vector2(.06f,.335f),new Vector2(.295f,.79f));
             var image=list.GetComponent<Image>(); if(image==null) image=list.gameObject.AddComponent<Image>();
             image.color=new Color(.68f,.58f,.38f,.025f); image.raycastTarget=true;
             if(list.GetComponent<RectMask2D>()==null) list.gameObject.AddComponent<RectMask2D>();
@@ -127,7 +134,7 @@ namespace Game.Editor
             notes.ConfigureUnifiedWords(content,marks);
             var canvas=notes.GetComponentInChildren<NotebookCanvasView>(true);
             var area=(RectTransform)canvas.transform;
-            area.anchorMin=new Vector2(.35f,.265f); area.anchorMax=new Vector2(.96f,.80f); area.offsetMin=area.offsetMax=Vector2.zero;
+            area.anchorMin=new Vector2(.35f,.327f); area.anchorMax=new Vector2(.96f,.80f); area.offsetMin=area.offsetMax=Vector2.zero;
             canvas.ConfigureBlindComposition(true);
             var word=(RectTransform)body.Find("InsightWord"); word.anchorMin=new Vector2(.38f,.48f); word.anchorMax=new Vector2(.94f,.64f); word.offsetMin=word.offsetMax=Vector2.zero;
         }
