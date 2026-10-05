@@ -74,13 +74,19 @@ namespace Game.Domain
         public IReadOnlyList<FactId> Produces { get; }
         /// <summary>0 表示立即执行；正整数表示登记到后续日序，仍只执行一次。</summary>
         public int DelayDays { get; }
+        /// <summary>少量叙事门槛仍是纯条件数据，不包含演出逻辑。</summary>
+        public int MinimumDeviations { get; }
+        /// <summary>普通完成结局只接受从未偏离的成功历史。</summary>
+        public bool RequiresNoDeviation { get; }
         /// <summary>校验反应 ID 并保存只读条件与产出。</summary>
-        public ReactionRule(string id, FactId[] requires, FactId[] produces, int delayDays = 0)
+        public ReactionRule(string id, FactId[] requires, FactId[] produces, int delayDays = 0, int minimumDeviations = 0, bool requiresNoDeviation = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("反应标识符不能为空。");
             if (delayDays < 0 || (delayDays > 0 && produces.Length == 0)) throw new ArgumentException("延迟日数不能为负，延迟反应必须有事实产出。");
             // 注册延迟也会占用一次性反应身份，避免每天重复登记。
             DelayDays = delayDays;
+            MinimumDeviations = minimumDeviations;
+            RequiresNoDeviation = requiresNoDeviation;
             Id = id; Requires = Array.AsReadOnly((FactId[])requires.Clone()); Produces = Array.AsReadOnly((FactId[])produces.Clone());
         }
     }

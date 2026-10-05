@@ -19,15 +19,19 @@ namespace Game.Domain
         public string DisplayName { get; }
         /// <summary>碎片的显示分类，不决定配方是否合法。</summary>
         public ClueCategory Category { get; }
+        /// <summary>轻声发现只闪烁小笔记提醒，不使用大的发现面板。</summary>
+        public bool QuietDiscovery { get; }
         /// <summary>创建包含中文显示名的碎片定义。</summary>
-        public ClueDefinition(ClueId id, string displayName, ClueCategory category)
-        { Id = id; DisplayName = displayName; Category = category; }
+        public ClueDefinition(ClueId id, string displayName, ClueCategory category, bool quietDiscovery = false)
+        { Id = id; DisplayName = displayName; Category = category; QuietDiscovery = quietDiscovery; }
     }
     /// <summary>有限配方：无序精确输入与前置事实，输出线索和／或事实。</summary>
     public sealed class SemanticRecipe
     {
         /// <summary>内容的稳定身份，用于查找与去重。</summary>
         public string Id { get; }
+        /// <summary>解释的叙事倾向，只在成功后计数；联想保持中性。</summary>
+        public NarrativeDisposition Disposition { get; }
         /// <summary>配方所需的精确碎片集合，顺序无关。</summary>
         public IReadOnlyList<ClueId> Inputs { get; }
         /// <summary>必须全部成立的前置事实。</summary>
@@ -44,14 +48,14 @@ namespace Game.Domain
         /// <param name="requires">必须全部成立的前置事实，可以为空。</param>
         /// <param name="produces">命中后添加的事实，可被后续反应继续消费。</param>
         /// <exception cref="ArgumentException">配方 ID 为空、输入数量越界或输入重复。</exception>
-        public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires, IReadOnlyList<FactId> produces)
-            : this(id, inputs, requires, Array.Empty<ClueId>(), produces) { }
+        public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires, IReadOnlyList<FactId> produces, NarrativeDisposition disposition = NarrativeDisposition.Neutral)
+            : this(id, inputs, requires, Array.Empty<ClueId>(), produces, disposition) { }
 
         /// <summary>创建可以产生线索和事实的统一配方；不按“灵感／解释”分支执行。</summary>
         /// <param name="producesClues">形成的新线索，通常为概念；可以为空。</param>
         /// <param name="producesFacts">世界事实输出；可以为空。</param>
         public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires,
-            IReadOnlyList<ClueId> producesClues, IReadOnlyList<FactId> producesFacts)
+            IReadOnlyList<ClueId> producesClues, IReadOnlyList<FactId> producesFacts, NarrativeDisposition disposition = NarrativeDisposition.Neutral)
         {
             if (inputs == null || requires == null || producesClues == null || producesFacts == null)
                 throw new ArgumentNullException("配方集合不能为 null；没有输出时使用空数组。");
@@ -60,6 +64,7 @@ namespace Game.Domain
                 throw new ArgumentException("配方需要非空标识符，以及两个或三个不同的输入碎片。");
             // 复制集合后再包装为只读，调用者修改原数组不会影响配方。
             Id = id;
+            Disposition = disposition;
             Inputs = Array.AsReadOnly(inputs.ToArray());
             Requires = Array.AsReadOnly(requires.ToArray());
             ProducesClues = Array.AsReadOnly(producesClues.ToArray());
@@ -83,13 +88,16 @@ namespace Game.Domain
         public string Description { get; }
         /// <summary>未满足调查条件时显示的中文反馈。</summary>
         public string LockedDescription { get; }
+        /// <summary>空间发现需要的最低偏离次数；普通物品默认不受此条件限制。</summary>
+        public int MinimumDeviations { get; }
         /// <summary>必须全部成立的前置事实。</summary>
         public IReadOnlyList<FactId> Requires { get; }
         /// <summary>成功调查时授予的碎片；已经知道的碎片不会重复发现。</summary>
         public IReadOnlyList<ClueId> Grants { get; }
         /// <summary>创建带前置事实与授予列表的条件发现规则。</summary>
-        public DiscoveryRule(string id, ObjectId source, string displayName, string description, IReadOnlyList<FactId> requires, IReadOnlyList<ClueId> grants, string lockedDescription = "还需要发生一些变化，才能调查这里。")
+        public DiscoveryRule(string id, ObjectId source, string displayName, string description, IReadOnlyList<FactId> requires, IReadOnlyList<ClueId> grants, string lockedDescription = "还需要发生一些变化，才能调查这里。", int minimumDeviations = 0)
         {
+            MinimumDeviations = minimumDeviations;
             Id = id; Source = source; DisplayName = displayName; Description = description; LockedDescription = lockedDescription;
             Requires = Array.AsReadOnly(requires.ToArray()); Grants = Array.AsReadOnly(grants.ToArray());
         }
@@ -167,8 +175,10 @@ namespace Game.Domain
                 interpretations.Select(x => new SemanticRecipe("recipe." + x.Target.Value + "." + x.Concept.Value,
                     new[] { new ClueId(x.Target.Value), new ClueId(x.Concept.Value) }, x.Requires, x.Produces)).ToArray(), reactions) { }
         /// <summary>只依据发现规则的前置事实查询调查许可。</summary>
-        public bool IsInspectable(GameState state, ObjectId source) => Discoveries.Any(x => x.Source == source && x.Requires.All(state.HasFact));
+        public bool IsInspectable(GameState state, ObjectId source) => Discoveries.Any(x => x.Source == source && CanDiscover(state, x));
+        /// <summary>发现条件与叙事门槛统一查询，场景表现不能代替领域许可。</summary>
+        public bool CanDiscover(GameState state, DiscoveryRule rule) => rule.Requires.All(state.HasFact) && state.DeviationCount >= rule.MinimumDeviations;
         /// <summary>查询输入与条件已满足但未完成的配方，仅供调试显示。</summary>
-        public IEnumerable<SemanticRecipe> AvailableRecipes(GameState state) => Recipes.Where(x => !state.HasCompleted(x.Id) && x.Inputs.All(state.Knows) && x.Requires.All(state.HasFact));
+        public IEnumerable<SemanticRecipe> AvailableRecipes(GameState state) => Recipes.Where(x => !state.HasCompleted(x.Id) && x.Inputs.All(state.Knows) && x.Requires.All(state.HasFact) && state.Allows(x.Disposition));
     }
 }
