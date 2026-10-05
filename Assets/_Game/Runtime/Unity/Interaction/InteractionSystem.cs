@@ -43,9 +43,16 @@ namespace Game.Unity
         public bool InspectAt(Vector2 screenPoint)
         {
             var target = FindClickable(screenPoint);
-            if (target == null) return false;
+            if (target == null || IsHiddenBoundary(target)) return false;
             if (inspection != null && session.Rules.Observations.Count > 0 && target.TryGetComponent<InspectableObject>(out var item)) return inspection.Enter(item);
             target.Inspect(session); return true;
+        }
+        /// <summary>带叙事揭示门槛的背景在全部条件满足前，不提前出现悬停或点击回应。</summary>
+        private bool IsHiddenBoundary(Clickable target)
+        {
+            var discovery = session.Rules.Discoveries.FirstOrDefault(x => x.Source == target.Entity.Id);
+            // 偏离次数与屋顶等事实必须同时满足；不能只满足次数就提前暗示房间也是物体。
+            return discovery != null && discovery.MinimumDeviations > 0 && !session.Rules.CanDiscover(session.State, discovery);
         }
         /// <summary>处理鼠标与 UI 遮挡，显示领域查询得到的中文反馈。</summary>
         private void Update()
@@ -55,7 +62,7 @@ namespace Game.Unity
             bool blocked = notebook.IsOpen || notebook.ExternalInputBlocked || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject());
             var target = blocked ? null : FindClickable(Mouse.current.position.ReadValue());
             // 未到可发现的叙事门槛前，房间边界保持普通背景，不提前提示题眼。
-            if (target != null && session.Rules.Discoveries.Any(x => x.Source == target.Entity.Id && x.MinimumDeviations > session.State.DeviationCount)) target = null;
+            if (target != null && IsHiddenBoundary(target)) target = null;
             bool constricted = session.State.CanvasLocked;
             // 中文显示来源于内容定义；业务许可来源于状态查询。
             bool inspectable = target != null && session.IsInspectable(target.Entity.Id);

@@ -246,7 +246,7 @@ namespace Game.Unity
             colors.fadeDuration = 0f;
             openButton.colors = colors;
         }
-        /// <summary>根据 KnownClues 重建分类列表和解释历史。</summary>
+        /// <summary>从 KnownClues 重建思想材料与关系；历史灰盒保留分类布局。</summary>
         private void Render()
         {
             ClearRows(objectList); ClearRows(conceptList); if (observationList != null) ClearRows(observationList);
