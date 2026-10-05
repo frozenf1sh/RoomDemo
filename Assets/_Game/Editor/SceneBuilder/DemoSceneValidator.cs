@@ -41,6 +41,12 @@ namespace Game.Editor
                     throw new InvalidOperationException("演出导演、音频监听器或必要灯光缺失／重复。");
                 if (new SerializedObject(root.GetComponentInChildren<GameBootstrap>(true)).FindProperty("sequence").objectReferenceValue != sequences[0])
                     throw new InvalidOperationException("启动组件未绑定唯一的海画演出导演。");
+                // 双路线叙事对象只在启用的新场景要求存在，历史灰盒不假装已经完成叙事接入。
+                var bootstrap=root.GetComponentInChildren<GameBootstrap>(true);
+                if(bootstrap.NarrativeEnabled && (root.GetComponentsInChildren<NarrationSystem>(true).Length!=1 ||
+                    root.GetComponentsInChildren<CanvasRoutePresenter>(true).Length!=1 || root.GetComponentsInChildren<CanvasEndingSequence>(true).Length!=1 ||
+                    root.GetComponentsInChildren<PainterlyWorldPresenter>(true).Length!=1))
+                    throw new InvalidOperationException("旁白、画布作品、普通完成或绘画化消费者缺失／重复。");
                 // 第四阶段技术对象必须完整绑定；开墙不能靠缺失节点或随机场景查找实现。
                 var starry = root.GetComponentsInChildren<StarryWorldSequence>(true);
                 if (starry.Length != 1 || root.GetComponentsInChildren<RoomModules>(true).Length != 1 ||
@@ -57,7 +63,7 @@ namespace Game.Editor
                 float starryDuration = new SerializedObject(starry[0]).FindProperty("duration").floatValue;
                 if (!float.IsFinite(starryDuration) || starryDuration < 13.5f || starryDuration > 20)
                     throw new InvalidOperationException("星空演出应为 13.5～20 秒，且最后保留主题过渡时间。");
-                foreach (var shaderName in new[] { "Game/StarrySky", "RoomDemo/PaintingSea" })
+                foreach (var shaderName in new[] { "Game/StarrySky", "RoomDemo/PaintingSea", "Game/CanvasLandscape", "Game/PainterlyWind", "Game/WorldBoundary" })
                 {
                     var shader = Shader.Find(shaderName);
                     if (shader == null || ShaderUtil.GetShaderMessages(shader).Any(x => x.severity.ToString() == "Error"))
