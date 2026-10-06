@@ -1,0 +1,10 @@
+{
+  "name": "Game.RealtimePainterly",
+  "rootNamespace": "Game.Unity.TechnicalArt.RealtimePainterly",
+  "references": [
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.InputSystem",
+    "Unity.ugui"
+  ]
+}

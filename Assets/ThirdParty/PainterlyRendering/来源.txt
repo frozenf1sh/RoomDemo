@@ -1,0 +1,38 @@
+实时绘画渲染引用与许可
+核对日期：2026-10-07
+
+实际阅读的版本与文件：
+
+https://github.com/tantaneity/painterly-urp @ fa4961504203344b9f0d234f4ed45b72481cb218
+Assets/Shaders/Strokes.shader：13610 字节
+Assets/Shaders/Outline.shader：4760 字节
+Assets/Rendering/StrokesRendererFeature.cs：10615 字节
+Assets/Rendering/OutlineRendererFeature.cs：8664 字节
+
+https://github.com/GarrettGunnell/Post-Processing @ 871a7ffcc44174f237b4c0127db51026c438d7a4
+Assets/Kuwahara Filter/AnisotropicKuwahara.shader：8829 字节
+Assets/Kuwahara Filter/AnisotropicKuwahara.cs：2707 字节
+
+https://github.com/Josephy5/PostProcessing-URP @ 96da10bcc1b5b8bf8df60caa3d71ca31305642ad
+Assets/Kuwahara/Anisotropic Kuwahara/AnisotropicKuwahara.shader：16407 字节
+Assets/Kuwahara/Anisotropic Kuwahara/AnisotropicKuwaharaPass.cs：4194 字节
+Assets/Kuwahara/Anisotropic Kuwahara/AnisotropicKuwaharaRendererFeature.cs：1511 字节
+Assets/Kuwahara/Anisotropic Kuwahara/AnisotropicKuwaharaVolume.cs：1733 字节
+
+https://github.com/Impasto-Lab/Painterly-Curved-Strokes @ b9412d7365c71f55e0397df8102ec023f4bcf32d
+core/painter.py：5567 字节
+core/stroke.py：5756 字节
+geometry/gradient.py：3736 字节
+effects/bump_map.py：1898 字节
+
+直接复用 Garrett MIT 数学代码；许可全文随资源和独立构建分发。Josephy5 只作为适配与参数参考。
+tantaneity 无许可证，仅移植数学算法思想，没有复制其源码。Impasto-Lab 仅阅读，没有导入。
+Sagit 仅公开说明：https://www.sagitsoftware.com/projects/oil-paint-shader/；未找到可下载源码。
+
+本轮材质纹理仅复用已有普通木纹：
+Assets/ThirdParty/PolyHaven/OldWoodFloor/Diffuse.jpg：755937 字节
+Assets/ThirdParty/PolyHaven/OldWoodFloor/nor_gl.jpg：714487 字节
+来源：https://polyhaven.com/a/old_wooden_floor_03
+许可：CC0，https://polyhaven.com/license
+盆与弯叶网格：复用项目自身的 ArtistPlant 几何资源，使用新建普通 URP Lit 材质。
+未使用 AI 画作、笔触贴图、离线油画处理结果或旧的绘画图片。
