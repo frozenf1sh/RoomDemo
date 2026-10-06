@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Experimental.Rendering;
+using System.Collections.Generic;
 
 namespace Game.Unity.TechnicalArt.RealtimePainterly
 {
@@ -14,8 +15,10 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
     {
         [SerializeField] private Shader kuwaharaShader;
         [SerializeField] private Shader worldBrushShader;
+        [SerializeField] private Shader influenceCompositeShader;
         private Material kuwaharaMaterial;
         private Material worldMaterial;
+        private Material influenceMaterial;
         private PainterlyPass pass;
 
         /// <summary>为生成器保存 Shader 资产引用，保证独立构建不会剥离隐藏 Shader。</summary>
@@ -26,15 +29,24 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
             Create();
         }
 
+        /// <summary>可选局部合成层；核心张量、取色与笔触 Shader 保持不变。</summary>
+        public void ConfigureInfluence(Shader shader)
+        {
+            influenceCompositeShader = shader;
+            Create();
+        }
+
         /// <summary>创建实例拥有的临时材质；重新创建时先释放旧资源。</summary>
         public override void Create()
         {
             CoreUtils.Destroy(kuwaharaMaterial);
             CoreUtils.Destroy(worldMaterial);
+            CoreUtils.Destroy(influenceMaterial);
             if (kuwaharaShader == null || worldBrushShader == null) return;
             kuwaharaMaterial = CoreUtils.CreateEngineMaterial(kuwaharaShader);
             worldMaterial = CoreUtils.CreateEngineMaterial(worldBrushShader);
-            pass = new PainterlyPass(kuwaharaMaterial, worldMaterial);
+            influenceMaterial = influenceCompositeShader != null ? CoreUtils.CreateEngineMaterial(influenceCompositeShader) : null;
+            pass = new PainterlyPass(kuwaharaMaterial, worldMaterial, influenceMaterial);
         }
 
         /// <summary>在普通渲染之后、URP TAA 与色调映射之前排入绘画处理。</summary>
@@ -42,7 +54,11 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
         {
             if (pass == null || data.cameraData.cameraType != CameraType.Game) return;
             var parameters = data.cameraData.camera.GetComponent<PainterlyCamera>();
-            if (parameters == null || !parameters.isActiveAndEnabled || parameters.PainterlyIntensity <= 0) return;
+            if (parameters == null || !parameters.isActiveAndEnabled) return;
+            bool local = false;
+            foreach (var influence in PainterlyInfluence.Active)
+                if (influence.AppliesTo(data.cameraData.camera)) { local = true; break; }
+            if (parameters.PainterlyIntensity <= 0 && !local) return;
             pass.Parameters = parameters;
             renderer.EnqueuePass(pass);
         }
@@ -52,23 +68,29 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
         {
             CoreUtils.Destroy(kuwaharaMaterial);
             CoreUtils.Destroy(worldMaterial);
+            CoreUtils.Destroy(influenceMaterial);
             pass = null;
         }
 
-        /// <summary>记录张量、平滑、世界笔触、八扇区核与原图混合的六个绘制 Pass。</summary>
+        /// <summary>保留六个基础绘制 Pass，按配置增加一个指定物体遮罩 Pass。</summary>
         private sealed class PainterlyPass : ScriptableRenderPass
         {
             public PainterlyCamera Parameters;
             private readonly Material kuwahara;
             private readonly Material world;
+            private readonly Material influence;
+            private TextureHandle objectMask;
+            private readonly Vector4[] centres = new Vector4[16], radii = new Vector4[16];
+            private int regionCount;
             private static readonly int TensorId = Shader.PropertyToID("_TFM");
             private static readonly int OriginalId = Shader.PropertyToID("_OriginalScene");
 
             /// <summary>请求正常深度／法线，并强制中间颜色纹理，避免直接读写屏幕。</summary>
-            public PainterlyPass(Material kuwahara, Material world)
+            public PainterlyPass(Material kuwahara, Material world, Material influence)
             {
                 this.kuwahara = kuwahara;
                 this.world = world;
+                this.influence = influence;
                 renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
                 requiresIntermediateTexture = true;
                 ConfigureInput(ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Normal);
@@ -83,6 +105,72 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
                 public float Anisotropy, Hardness, Sharpness, Intensity, Size, Blend, Variation, Highlight;
                 public bool Debug;
                 public Vector3 Light;
+                public TextureHandle Mask;
+                public int RegionCount;
+                public Vector4[] Centres, Radii;
+            }
+
+            /// <summary>对象遮罩使用准确的 Renderer 几何，与当前摄像机的深度做只读测试。</summary>
+            private sealed class MaskData
+            {
+                public Material Material;
+                public Renderer[] Renderers;
+                public float[] Amounts;
+                public float[] Protected;
+            }
+
+            private void RecordInfluence(RenderGraph graph, UniversalResourceData resources, TextureDesc descriptor)
+            {
+                var targets = new List<Renderer>();
+                var amounts = new List<float>();
+                var protectedPixels = new List<float>();
+                regionCount = 0;
+                var camera = Parameters.GetComponent<Camera>();
+                foreach (var item in PainterlyInfluence.Active)
+                {
+                    if (!item.AppliesTo(camera)) continue;
+                    if (item.Targets != null && item.Targets.Length > 0)
+                    {
+                        foreach (var target in item.Targets)
+                        {
+                            if (target == null || !target.enabled || !target.gameObject.activeInHierarchy) continue;
+                            targets.Add(target);
+                            amounts.Add(item.PainterlyIntensity);
+                            protectedPixels.Add(item.PreserveOriginal ? 1 : 0);
+                        }
+                    }
+                    else if (regionCount < 16)
+                    {
+                        var p = item.transform.position;
+                        centres[regionCount] = new Vector4(p.x,p.y,p.z,item.PainterlyIntensity);
+                        var r = item.Radii;
+                        radii[regionCount++] = new Vector4(Mathf.Max(.001f,r.x),Mathf.Max(.001f,r.y),Mathf.Max(.001f,r.z),item.Feather);
+                    }
+                }
+                descriptor.name = "绘画_指定物体遮罩";
+                descriptor.colorFormat = GraphicsFormat.R8G8_UNorm;
+                descriptor.clearBuffer = true;
+                descriptor.clearColor = Color.clear;
+                objectMask = graph.CreateTexture(descriptor);
+                using var builder = graph.AddRasterRenderPass<MaskData>("绘画：局部物体遮罩",out var data);
+                data.Material = influence;
+                data.Renderers = targets.ToArray();
+                data.Amounts = amounts.ToArray();
+                data.Protected = protectedPixels.ToArray();
+                builder.SetRenderAttachment(objectMask,0,AccessFlags.Write);
+                builder.SetRenderAttachmentDepth(resources.activeDepthTexture,AccessFlags.Read);
+                builder.AllowGlobalStateModification(true);
+                builder.SetRenderFunc(static (MaskData d, RasterGraphContext ctx) =>
+                {
+                    for (int i = 0; i < d.Renderers.Length; i++)
+                    {
+                        // 按绘制命令设置权重，不修改任何物体的材质或 PropertyBlock。
+                        ctx.cmd.SetGlobalFloat("_InfluenceAmount",d.Amounts[i]);
+                        ctx.cmd.SetGlobalFloat("_KeepOriginal",d.Protected[i]);
+                        int count = d.Renderers[i].sharedMaterials.Length;
+                        for (int sub = 0; sub < count; sub++) ctx.cmd.DrawRenderer(d.Renderers[i],d.Material,sub,1);
+                    }
+                });
             }
 
             /// <summary>为当前摄像机创建浮点张量和颜色缓冲，声明完整资源依赖。</summary>
@@ -109,6 +197,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
                 var filtered = Make("绘画_Kuwahara色彩整理");
                 var destination = Make("绘画_世界空间笔触");
 
+                if (influence != null) RecordInfluence(graph, resources, descriptor);
+
                 Draw(graph, resources, "绘画：结构张量", source, tensor, 0, default, source);
                 Draw(graph, resources, "绘画：张量水平平滑", tensor, horizontal, 1, default, source);
                 Draw(graph, resources, "绘画：方向特征向量", horizontal, eigenvectors, 2, default, source);
@@ -126,7 +216,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
             {
                 using var builder = graph.AddRasterRenderPass<DrawData>(label, out var data);
                 var p = Parameters;
-                data.Material = index >= 4 ? world : kuwahara;
+                data.Material = index == 5 && influence != null ? influence : index >= 4 ? world : kuwahara;
                 data.Source = source;
                 data.Tensor = tensor;
                 data.Original = original;
@@ -142,6 +232,15 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
                 data.Highlight = p.HighlightStrength;
                 data.Debug = p.DebugWorldCells;
                 data.Light = p.DirectionalLight != null ? -p.DirectionalLight.transform.forward : Vector3.up;
+                if (index == 5 && influence != null)
+                {
+                    data.Mask = objectMask;
+                    data.Centres = (Vector4[])centres.Clone();
+                    data.Radii = (Vector4[])radii.Clone();
+                    data.RegionCount = regionCount;
+                    builder.UseTexture(objectMask);
+                    builder.UseTexture(resources.cameraDepthTexture);
+                }
                 builder.UseTexture(source);
                 if (index == 3) builder.UseTexture(tensor);
                 if (index >= 4)
@@ -176,8 +275,16 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
                         d.Material.SetFloat("_HighlightStrength", d.Highlight);
                         d.Material.SetFloat("_DebugWorldCells", d.Debug ? 1 : 0);
                         d.Material.SetVector("_BrushLightDirection", d.Light);
+                        if (d.Index == 5 && d.Centres != null)
+                        {
+                            ctx.cmd.SetGlobalTexture("_ObjectInfluence",d.Mask);
+                            d.Material.SetInt("_RegionCount",d.RegionCount);
+                            d.Material.SetVectorArray("_RegionCentres",d.Centres);
+                            d.Material.SetVectorArray("_RegionRadii",d.Radii);
+                        }
                     }
                     int shaderPass = d.Index >= 4 ? d.Index-4 : d.Index;
+                    if (d.Index == 5 && d.Centres != null) shaderPass = 0;
                     Blitter.BlitTexture(ctx.cmd, d.Source, new Vector4(1,1,0,0), d.Material, shaderPass);
                 });
             }
