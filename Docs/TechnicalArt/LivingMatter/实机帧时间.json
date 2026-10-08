@@ -1,0 +1,24 @@
+{
+  "sky": {
+    "frame_count": 281,
+    "median_ms": 17.805,
+    "p95_ms": 18.498,
+    "target_fps": 60,
+    "width": 1600,
+    "height": 900
+  },
+  "water": {
+    "frame_count": 287,
+    "median_ms": 16.833,
+    "p95_ms": 18.835,
+    "target_fps": 60,
+    "width": 1600,
+    "height": 900
+  },
+  "gpu": "Apple M5",
+  "ram_mb": 16384,
+  "os": "macOS 26.5.2",
+  "unity": "6000.6.3f1",
+  "duration_each_seconds": 5,
+  "capture_disabled_during_measurement": true
+}

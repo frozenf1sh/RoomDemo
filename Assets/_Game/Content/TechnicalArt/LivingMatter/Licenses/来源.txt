@@ -1,0 +1,27 @@
+本轮技术与素材来源
+核对日期：2026-10-08
+
+Pavel Dobryakov / WebGL-Fluid-Simulation
+https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
+版本：a2d292931f19d9b3b9f564e23e6c32729d2121c3
+实际阅读 script.js：splatShader、advectionShader、curlShader、vorticityShader、step()。
+移植半拉格朗日反追踪与反馈纹理组织思想；MIT 许可全文随资源与程序分发。
+
+GPU Gems 3 第 30 章：
+https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-30-real-time-simulation-and-rendering-3d-fluids
+实际阅读 PS_ADVECT_VEL、PS_ADVECT_MACCORMACK 与四／八邻域限制器。移植数学算法，未导入图像或示例模型。
+
+Bridson 等，Curl-Noise for Procedural Fluid Flow：
+https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph2007-curlnoise.pdf
+流函数旋度、旋涡叠加与边界切向速度的思想参考，未复制论文图片。
+
+本轮保留项目已冻结的 WorldBrushPatches 与 AnisotropicKuwahara。
+木纹复用项目已有 Poly Haven old_wooden_floor_03（CC0）：
+https://polyhaven.com/a/old_wooden_floor_03
+https://polyhaven.com/license
+杯体、自由液面、出杯流束与湿膜载体均为本项目程序网格；天空无任何导入画作。
+没有 AI 生成图片、离线油画、滚动 Skybox 或镜头运动。
+
+分发素材大小：
+Assets/ThirdParty/PolyHaven/OldWoodFloor/Diffuse.jpg: 755937 字节，SHA-256 e6952149cd1bb02e485a183f526e9dbe8d90d2a22bfac564cc3874cfb8eddd03
+Assets/_Game/Content/TechnicalArt/LivingMatter/Licenses/PavelDobryakov-MIT.txt: 1072 字节，SHA-256 1be448ae1212de2bee77b4cf851ab0acea0a7f7f32d21cd73095dd94dc173f66
