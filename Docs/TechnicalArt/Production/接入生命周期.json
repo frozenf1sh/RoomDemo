@@ -1,0 +1,13 @@
+{
+  "output": null,
+  "diagnostics": [],
+  "success": true,
+  "result": {
+    "paused_restore": true,
+    "additive_camera_scope": true,
+    "lip_error": 0.00250754436,
+    "landing_error": 0.0009796603,
+    "disable_releases_mesh": true,
+    "reenable_recreates_resources": true
+  }
+}
