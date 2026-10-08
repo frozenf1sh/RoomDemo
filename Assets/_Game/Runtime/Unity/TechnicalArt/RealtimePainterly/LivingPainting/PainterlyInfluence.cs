@@ -31,7 +31,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly
         public void SetPainterlyIntensity(float value) => PainterlyIntensity = Mathf.Clamp01(value);
 
         internal bool AppliesTo(Camera camera) => isActiveAndEnabled && (PainterlyIntensity > 0 || PreserveOriginal)
-            && gameObject.scene == camera.gameObject.scene && (OnlyCamera == null || OnlyCamera == camera);
+            // 显式绑定摄像机时支持独立加载的视觉场景；未绑定时仍限于自身场景，避免串扰。
+            && (OnlyCamera != null ? OnlyCamera == camera : gameObject.scene == camera.gameObject.scene);
 
         private void OnDrawGizmosSelected()
         {
