@@ -1,0 +1,30 @@
+newmtl Door
+Kd 1 1 1
+map_Kd Door_baseColor.jpeg
+newmtl Glass01
+Kd 1 1 1
+map_Kd Glass01_baseColor.jpeg
+newmtl WindowMetal
+Kd 1 1 1
+map_Kd WindowMetal_baseColor.jpeg
+newmtl Concrete02_basecolor
+Kd 1 1 1
+map_Kd Concrete02_basecolor_baseColor.jpeg
+newmtl Wood
+Kd 1 1 1
+map_Kd Wood_baseColor.jpeg
+newmtl Block02
+Kd 1 1 1
+map_Kd Block02_baseColor.jpeg
+newmtl roof
+Kd 1 1 1
+map_Kd roof_baseColor.jpeg
+newmtl Gutter
+Kd 1 1 1
+map_Kd Gutter_baseColor.jpeg
+newmtl material
+Kd 1 1 1
+newmtl material_0
+Kd 1 1 1
+newmtl edge_color000255
+Kd 1 1 1

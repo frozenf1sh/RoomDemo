@@ -1,0 +1,3 @@
+newmtl M_Bookcase
+Kd 1 1 1
+map_Kd M_Bookcase_BaseColor.jpeg

@@ -1,5 +1,5 @@
-// 文件：ApprovedSkyPaint.hlsl。职责：逐字复用已通过星夜的笔触、暖星与颜料起伏计算。
-// 边界：只抽取渲染函数，未更改数值或算法；原 Hero Shader 保持不变。
+// 文件：ApprovedSkyPaint.hlsl。职责：复用已通过星夜的笔触与颜料起伏，支持星光独立显现。
+// 边界：生产适配增加星光权重；原 Hero Shader 保持不变。
             float3 FlowBrushes(float2 uv,float3 pigment,float2 direction)
             {
                 float2 q=uv*float2(1.7777778,1),grid=floor(q/.036);
@@ -34,6 +34,14 @@
                 float relief=clamp((h1-paint.a)*1.3+(h2-paint.a)*.8,-.10,.10);
                 float2 direction=normalize(Velocity(uv)*float2(1.7777778,1)+1e-6);
                 float3 colour=FlowBrushes(uv,paint.rgb,direction)*(1+relief);
+                // 未点亮时只保留冷色云的笔触，点亮以后才出现暖星与光晕。
+                colour=lerp(dot(colour,float3(.22,.6,.18))*float3(.18,.33,.62),colour,_StarGain);
+                colour=SkyStarLayer(colour,uv);
+                float vignette=smoothstep(.82,.20,length((uv-.5)*float2(.85,1)));
+                return half4(colour*lerp(.79,1,vignette),1);
+            }
+            float3 SkyStarLayer(float3 colour,float2 uv)
+            {
                 [unroll] for(int n=0;n<8;n++)
                 {
                     float2 d=(uv-Star(n))*float2(1.7777778,1);
@@ -43,17 +51,16 @@
                     float core=1-smoothstep(contour*.70,contour*1.15,r);
                     float halo=exp(-r*r/(size*size*15));
                     float blueBoundary=exp(-pow((r-size*2.7)/(size*1.4),2));
-                    colour*=1-blueBoundary*.27;
-                    colour+=float3(.24,.16,.035)*halo;
-                    colour=lerp(colour,float3(1.35,.79,.23)*(1+.07*sin(angle*9+r*800)),core);
+                    colour*=1-blueBoundary*.27*_StarGain;
+                    colour+=float3(.24,.16,.035)*halo*_StarGain;
+                    colour=lerp(colour,float3(1.35,.79,.23)*(1+.07*sin(angle*9+r*800)),core*_StarGain);
                 }
                 // 小星固定且稀疏；没有随机闪烁或满屏发光点。
                 [unroll] for(int s=0;s<19;s++)
                 {
                     float2 site=float2(frac(.197+s*.6180339),.08+frac(.71+s*.381966)*.85);
                     float r=length((uv-site)*float2(1.7777778,1));
-                    colour+=float3(.49,.36,.16)*(1-smoothstep(.0006,.0018,r));
+                    colour+=float3(.49,.36,.16)*(1-smoothstep(.0006,.0018,r))*_StarGain;
                 }
-                float vignette=smoothstep(.82,.20,length((uv-.5)*float2(.85,1)));
-                return half4(colour*lerp(.79,1,vignette),1);
+                return colour;
             }

@@ -26,6 +26,12 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         [Range(.01f,.3f)] public float Feather = .07f;
         [Min(0)] public float TransitionSeconds = 5;
         public bool Paused;
+        [Range(0,1)] public float InitialLight = 1;
+        /// <summary>正式画室分开呈现星光与云层笔势；独立 TA 预设仍保留完整笔触。</summary>
+        public bool SeparateLightAndFlow;
+        private readonly VisualTransition light = new VisualTransition();
+        /// <summary>分别控制星光，保留云层流动的独立表现。</summary>
+        public void LightTo(float value, float seconds) { light.To(value, seconds); Apply(); }
         private readonly VisualTransition coverage = new VisualTransition();
         private readonly VisualTransition flow = new VisualTransition();
         private MaterialPropertyBlock properties;
@@ -44,6 +50,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             properties = new MaterialPropertyBlock();
             coverage.Reset(InitialCoverage);
             flow.Reset(InitialFlow);
+            light.Reset(InitialLight);
             if (Pigment != null) Pigment.AutomaticTime = false;
             BindCamera(FollowCamera != null ? FollowCamera : Camera.main);
             Apply();
@@ -95,6 +102,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         {
             coverage.Reset(InitialCoverage);
             flow.Reset(InitialFlow);
+            light.Reset(InitialLight);
             if (Pigment != null)
             {
                 // 清空时使用已通过的单位取向，避免上一轮的慢流值改变初始刷毛方向。
@@ -109,6 +117,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         {
             coverage.Tick(seconds);
             flow.Tick(seconds);
+            light.Tick(seconds);
             if (Pigment != null && flow.Value > .0001f && coverage.Value > .0001f)
             {
                 Pigment.Flow = flow.Value;
@@ -123,6 +132,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             Surface.GetPropertyBlock(properties);
             // 模拟流速可为零；笔触取向仍读取单位流场，避免静止时退成任意对角线。
             properties.SetFloat("_Flow", 1);
+            properties.SetFloat("_StarGain", light.Value);
+            properties.SetFloat("_CloudPaint", SeparateLightAndFlow?Mathf.Clamp01(flow.Value/.6f):1);
             properties.SetFloat("_Coverage", coverage.Value);
             properties.SetFloat("_Opacity", Mathf.Clamp01(Opacity));
             properties.SetFloat("_Feather", Feather);
