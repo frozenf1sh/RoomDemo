@@ -1,0 +1,11 @@
+Model Information:
+* title:	Free Small Old House
+* source:	https://sketchfab.com/3d-models/free-small-old-house-c86ac5cb889e4b62af6ddea43d773882
+* author:	jimbogies (https://sketchfab.com/jimbogies)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Free Small Old House" (https://sketchfab.com/3d-models/free-small-old-house-c86ac5cb889e4b62af6ddea43d773882) by jimbogies (https://sketchfab.com/jimbogies) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

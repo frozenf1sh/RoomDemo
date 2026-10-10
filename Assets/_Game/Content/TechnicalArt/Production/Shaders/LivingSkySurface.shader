@@ -1,5 +1,5 @@
 // 文件：LivingSkySurface.shader。职责：把已通过的星夜画面接到世界方向与局部揭示遮罩。
-// 边界：笔触与星光函数逐字复用；仅增加空间映射、覆盖率和普通天空混合。
+// 边界：沿用 TA 笔触和星光；生产接入把点亮与云层绘画化拆为独立权重。
 Shader "RoomDemo/Production/LivingSkySurface"
 {
     Properties
@@ -7,6 +7,8 @@ Shader "RoomDemo/Production/LivingSkySurface"
         _Pigment("运行时颜料",2D)="black"{}
         _Aspect("颜料场比例",Float)=1.7777778
         _Mode("颜料模式",Float)=0
+        _StarGain("星光强度",Range(0,1))=1
+        _CloudPaint("云层绘画强度",Range(0,1))=1
         _Coverage("天空覆盖",Range(0,1))=0
         _Opacity("天空显现",Range(0,1))=1
         _Feather("边缘柔和度",Range(.01,.3))=.07
@@ -30,8 +32,11 @@ Shader "RoomDemo/Production/LivingSkySurface"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "../../LivingMatter/Shaders/PigmentField.hlsl"
             TEXTURE2D(_Pigment);SAMPLER(sampler_Pigment);float4 _Pigment_TexelSize;
+            float _StarGain;
+            float3 SkyStarLayer(float3 colour,float2 uv);
             #include "ApprovedSkyPaint.hlsl"
-            float _Coverage,_Opacity,_Feather,_SkyYaw,_SkyElevation,_SkySpan;
+            #include "OrdinarySky.hlsl"
+            float _Coverage,_Opacity,_Feather,_SkyYaw,_SkyElevation,_SkySpan,_CloudPaint;
             float4 _RevealDirection;
             struct Input { float3 positionOS:POSITION; };
             struct Output { float4 positionCS:SV_POSITION;float3 direction:TEXCOORD0; };
@@ -76,6 +81,8 @@ Shader "RoomDemo/Production/LivingSkySurface"
                 float mask=1-smoothstep(max(0,radius-_Feather),radius+_Feather,angle+rough);
                 if(_Coverage>.999) mask=1;
                 half4 painted=SeamlessPaint(uv);
+                // 单独点亮保留同一片暮云；流动才把云带改写成 TA 的颜料笔势。
+                if(_CloudPaint<.999) painted.rgb=lerp(SkyStarLayer(OrdinarySkyColour(direction),uv),painted.rgb,_CloudPaint);
                 // 球极以同一暗蓝安静区域收束，消除经度在极点汇合造成的星点拉丝。
                 painted.rgb=lerp(float3(.014,.022,.065),painted.rgb,1-smoothstep(.985,1,abs(direction.y)));
                 return half4(painted.rgb,mask*_Opacity);

@@ -4,6 +4,7 @@
   "references": [
     "Game.Domain",
     "Game.Application",
+    "Game.RealtimePainterly",
     "Unity.InputSystem",
     "Unity.ugui"
   ],

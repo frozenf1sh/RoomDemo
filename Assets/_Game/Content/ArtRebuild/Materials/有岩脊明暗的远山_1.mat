@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: "\u6709\u5CA9\u810A\u660E\u6697\u7684\u8FDC\u5C71_1"
+  m_Shader: {fileID: 4800000, guid: 9bdf5645063b34866879717af82b885e, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 48f4dac427ee14ba69cc2f321f844bef, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats: []
+    m_Colors:
+    - _BaseColor: {r: 0.021, g: 0.035, b: 0.059, a: 1}
+    - _MoonDirection: {r: 0.25, g: 0.65, b: -0.5, a: 0}
+    - _RidgeColor: {r: 0.053999998, g: 0.085, b: 0.134, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

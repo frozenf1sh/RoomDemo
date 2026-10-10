@@ -5,6 +5,8 @@
     "Game.Domain",
     "Game.Application",
     "Game.Unity",
+    "Game.RealtimePainterly",
+    "Game.RealtimePainterly.Editor",
     "Unity.InputSystem",
     "Unity.ugui",
     "Unity.RenderPipelines.Core.Runtime",

@@ -1,0 +1,149 @@
+{
+  "materials": [
+    {
+      "name": "Door",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.16914337262742132,
+      "roughnessFactor": 0.46171569284782576,
+      "baseColor": "Door_baseColor.jpeg"
+    },
+    {
+      "name": "Glass01",
+      "baseColorFactor": [
+        1.0,
+        1.0,
+        1.0,
+        0.9554314832197583
+      ],
+      "metallicFactor": 0.7299069863831965,
+      "roughnessFactor": 0.28495324938133143,
+      "baseColor": "Glass01_baseColor.jpeg",
+      "metalRough": "Glass01_metallicRoughness.png",
+      "packed": "Glass01_URPMask.png"
+    },
+    {
+      "name": "WindowMetal",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.8091453231095561,
+      "roughnessFactor": 0.2118101693262303,
+      "baseColor": "WindowMetal_baseColor.jpeg",
+      "metalRough": "WindowMetal_metallicRoughness.png",
+      "packed": "WindowMetal_URPMask.png"
+    },
+    {
+      "name": "Concrete02_basecolor",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 1,
+      "baseColor": "Concrete02_basecolor_baseColor.jpeg",
+      "metalRough": "Concrete02_basecolor_metallicRoughness.png",
+      "packed": "Concrete02_basecolor_URPMask.png",
+      "normal": "Concrete02_basecolor_normal.png"
+    },
+    {
+      "name": "Wood",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 1,
+      "baseColor": "Wood_baseColor.jpeg",
+      "metalRough": "Wood_metallicRoughness.png",
+      "packed": "Wood_URPMask.png",
+      "normal": "Wood_normal.png"
+    },
+    {
+      "name": "Block02",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 1,
+      "baseColor": "Block02_baseColor.jpeg",
+      "metalRough": "Block02_metallicRoughness.png",
+      "packed": "Block02_URPMask.png",
+      "normal": "Block02_normal.png"
+    },
+    {
+      "name": "roof",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 1,
+      "baseColor": "roof_baseColor.jpeg",
+      "metalRough": "roof_metallicRoughness.png",
+      "packed": "roof_URPMask.png",
+      "normal": "roof_normal.png"
+    },
+    {
+      "name": "Gutter",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.08990503590106179,
+      "roughnessFactor": 0.1569528592849045,
+      "baseColor": "Gutter_baseColor.jpeg"
+    },
+    {
+      "name": "material",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 0.6
+    },
+    {
+      "name": "material_0",
+      "baseColorFactor": [
+        0.643137,
+        0.698039,
+        0.733333,
+        1.0
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 0.6
+    },
+    {
+      "name": "edge_color000255",
+      "baseColorFactor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "metallicFactor": 0.0,
+      "roughnessFactor": 0.6
+    }
+  ]
+}

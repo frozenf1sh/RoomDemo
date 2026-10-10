@@ -1,0 +1,20 @@
+[
+  {
+    "source": "AssetIntake/ArtRefresh20261010/3D/sm_bookcase_gltf.zip",
+    "bytes": 40466715,
+    "sha256": "cf37c38cb5ec6156ffbfe6a65b1657ee609f9a9f2b5e9534fb655c704fdfa696",
+    "destination": "Assets/_Game/Content/ArtRebuild/Imports/KragBookcase"
+  },
+  {
+    "source": "AssetIntake/FabVisualPass20261010/old_wooden_window_vmfwcabdw_mid.zip",
+    "bytes": 14753079,
+    "sha256": "b41c863128075a816404fd9de313f574816e76c7837629ac2abd6b7d264ef4d1",
+    "destination": "Assets/_Game/Content/ArtRebuild/Imports/QuixelWindow"
+  },
+  {
+    "source": "AssetIntake/FabVisualPass20261010/palette_02.zip",
+    "bytes": 2796646,
+    "sha256": "4e376607b5923123857908577f68af23a74983457f75ae27bbf67669140f5bb1",
+    "destination": "Assets/_Game/Content/ArtRebuild/Imports/LumiPalette"
+  }
+]
