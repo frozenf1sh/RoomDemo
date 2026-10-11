@@ -20,7 +20,7 @@ namespace Game.Tests
         private NotebookView notebook;
         [UnitySetUp] public IEnumerator Load()
         {
-            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Content/Scenes/DemoRoom.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Content/Scenes/Archive/DemoRoom.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             bootstrap = Object.FindAnyObjectByType<GameBootstrap>(); inspection = Object.FindAnyObjectByType<InspectionController>(); notebook = Object.FindAnyObjectByType<NotebookView>();
         }

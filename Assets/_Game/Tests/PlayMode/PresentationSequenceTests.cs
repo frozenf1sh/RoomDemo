@@ -30,7 +30,7 @@ namespace Game.Tests
         [UnitySetUp] public IEnumerator Load()
         {
 #if UNITY_EDITOR
-            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Content/Scenes/DemoRoom.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Content/Scenes/Archive/DemoRoom.unity", new LoadSceneParameters(LoadSceneMode.Single));
 #else
             yield return SceneManager.LoadSceneAsync("DemoRoom");
 #endif

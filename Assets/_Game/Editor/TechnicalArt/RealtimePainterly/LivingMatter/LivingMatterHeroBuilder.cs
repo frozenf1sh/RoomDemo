@@ -18,8 +18,8 @@ namespace Game.Editor.TechnicalArt.RealtimePainterly
     public static class LivingMatterHeroBuilder
     {
         public const string Root="Assets/_Game/Content/TechnicalArt/LivingMatter/";
-        public const string SkyPath="Assets/_Game/Content/Scenes/LivingStarryNightHero.unity";
-        public const string WaterPath="Assets/_Game/Content/Scenes/LivingWaterPigmentHero.unity";
+        public const string SkyPath="Assets/_Game/Content/Scenes/Experiments/TechnicalArt/LivingStarryNightHero.unity";
+        public const string WaterPath="Assets/_Game/Content/Scenes/Experiments/TechnicalArt/LivingWaterPigmentHero.unity";
         private const string Base="Assets/_Game/Content/TechnicalArt/RealtimePainterly/";
 
         /// <summary>通过 Editor API 保存专用资源；任何未保存场景都阻止生成。</summary>

@@ -22,8 +22,8 @@ namespace Game.Editor.TechnicalArt.RealtimePainterly
     public static class LivingPaintingBenchmarkBuilder
     {
         public const string Root="Assets/_Game/Content/TechnicalArt/LivingPainting/";
-        public const string TablePath="Assets/_Game/Content/Scenes/LivingPaintingBenchmark.unity";
-        public const string HeroPath="Assets/_Game/Content/Scenes/PainterlyFinalHero.unity";
+        public const string TablePath="Assets/_Game/Content/Scenes/Experiments/TechnicalArt/LivingPaintingBenchmark.unity";
+        public const string HeroPath="Assets/_Game/Content/Scenes/Experiments/TechnicalArt/PainterlyFinalHero.unity";
         private const string BaseRoot="Assets/_Game/Content/TechnicalArt/RealtimePainterly/";
         private static Font font;
         private static Material celestial;

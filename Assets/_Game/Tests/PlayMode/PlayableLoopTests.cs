@@ -21,7 +21,7 @@ namespace Game.Tests
     /// <summary>加载真实场景，验证射线、笔记本、动画、音频状态、恢复与字体。</summary>
     public sealed class PlayableLoopTests
     {
-        private const string ScenePath = "Assets/_Game/Content/Scenes/DemoRoom.unity";
+        private const string ScenePath = "Assets/_Game/Content/Scenes/Archive/DemoRoom.unity";
         private GameBootstrap bootstrap;
         private NotebookView notebook;
         private InteractionSystem input;
