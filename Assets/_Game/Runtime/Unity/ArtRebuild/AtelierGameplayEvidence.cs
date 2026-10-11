@@ -53,7 +53,11 @@ namespace Game.Unity.ArtRebuild
             var game = FindAnyObjectByType<AtelierGameplay>();
             if (game == null || game.Session == null || !game.Notebook.IsOpen) yield break;
             ClueId[] inputs;
-            if (!game.Session.State.Knows(StudioRules.Flow))
+            if (!game.Session.State.Knows(StudioRules.Light) && game.Session.State.Knows(AtelierRules.Observation("bright")))
+                inputs = new[] { AtelierRules.Observation("dark"), AtelierRules.Observation("bright") };
+            else if (game.IsPaintingFocused && game.Session.State.Knows(StudioRules.Light) && game.Session.State.Knows(StudioRules.PictureLamp) && !game.Session.State.HasFact(StudioRules.PictureLit))
+                inputs = new[] { new ClueId(StudioRules.PictureLamp.Value), new ClueId(StudioRules.Light.Value) };
+            else if (!game.Session.State.Knows(StudioRules.Flow))
                 inputs = new[] { AtelierRules.Observation("still"), AtelierRules.Observation("spread") };
             else if (game.IsPaintingFocused && !game.Session.State.HasFact(StudioRules.PictureFlow))
                 inputs = new[] { new ClueId(StudioRules.PictureWater.Value), new ClueId(StudioRules.Flow.Value) };

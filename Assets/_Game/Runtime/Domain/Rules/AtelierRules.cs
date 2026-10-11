@@ -15,7 +15,10 @@ namespace Game.Domain
         public static readonly ObjectId Painting = new ObjectId("atelier.painting"),
             WetPaper = new ObjectId("atelier.wet_paper"), Trial = new ObjectId("atelier.trial"),
             SharedMark = new ObjectId("atelier.shared_mark"), Brush = new ObjectId("atelier.brush"),
-            Manuscript = new ObjectId("atelier.manuscript"), StillLamp = new ObjectId("atelier.still_lamp");
+            Manuscript = new ObjectId("atelier.manuscript"), StillLamp = new ObjectId("atelier.still_lamp"),
+            Matches = new ObjectId("atelier.matches");
+        /// <summary>记录玩家实际划过火柴的历史，不代表火柴永远燃烧。</summary>
+        public static readonly FactId MatchStruck = F("match_struck");
         /// <summary>擦除也必须通过亲手擦拭前后的观察形成。</summary>
         public static readonly ClueId Erase = new ClueId("atelier.erase");
         /// <summary>准备、现实变化与主动交稿各有独立事实。</summary>
@@ -74,7 +77,8 @@ namespace Game.Domain
             Object(StudioRules.PictureLamp, "画里的灯", "画里画了灯芯，却还没有点上那一点亮色。", new[] { LampSketched });
             Object(StudioRules.PictureWindow, "画里的窗", "窗前那道帘子还挡着山坡上的小屋。", new[] { WindowSketched });
             Object(StudioRules.Cup, "杯里的水", "一只洗笔杯。杯口有旧颜料，水还很清。");
-            Object(StudioRules.LampBody, "左边的油灯", "灯芯是黑的，旁边放着火柴。");
+            Object(StudioRules.LampBody, "左边的油灯", "灯芯是黑的，玻璃罩搁在一旁。灯碗里还有油。");
+            Object(Matches, "火柴", "纸盒侧面有一条磨旧的砂纸，抽屉里还剩几根火柴。");
             Object(StudioRules.Curtain, "窗帘", "帘环挂在铜杆上，拉绳压在扣子下面。");
             Object(WetPaper, "纸上的湿色", "蓝色的水迹沿着纸纤维洇开。", new[] { PaperWet });
             Object(Trial, "画边的湿色", "木板上蹭了一道湿颜料，旁边搭着擦笔布。");
@@ -131,7 +135,8 @@ namespace Game.Domain
             reactions.Add(new ReactionRule("atelier.reaction.ready", new[] { StudioRules.PictureFlow, StudioRules.PictureLit, StudioRules.PictureOpen },
                 new[] { ReadyToDeliver }, requiresNoDeviation: true));
             actions.Add(new SceneActionRule("wash", StudioRules.Cup, none, new[] { StudioRules.Washed }, "笔尖的蓝色在水里散开了。", "先看看杯里的水。"));
-            actions.Add(new SceneActionRule("light_wick", StudioRules.LampBody, none, new[] { StudioRules.LampTurned }, "火苗留在灯芯上。", "灯芯在玻璃罩里面。"));
+            actions.Add(new SceneActionRule("strike_match", Matches, none, new[] { MatchStruck }, "火柴头擦过砂纸，亮了起来。", "先拿一根火柴。"));
+            actions.Add(new SceneActionRule("light_wick", StudioRules.LampBody, new[] { MatchStruck }, new[] { StudioRules.LampTurned }, "火苗留在灯芯上。", "先把火柴划亮，再送到灯芯边。"));
             actions.Add(new SceneActionRule("release_curtain", StudioRules.Curtain, none, new[] { StudioRules.CurtainReleased }, "帘子收向一边。", "拉绳还压在扣子下面。"));
             actions.Add(new SceneActionRule("wipe_trial", Trial, none, new[] { TrialWiped }, "木纹露出来了。", "布要碰到湿颜料。"));
             actions.Add(new SceneActionRule("observe_whole", SharedMark, new[] { RoofErased, StudioRules.FullSky }, new[] { SharedMarkSeen, WholeObserved }, "这几道笔迹连在一起。", "先看清它经过了哪里。"));

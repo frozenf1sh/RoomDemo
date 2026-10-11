@@ -9,6 +9,8 @@ Shader "RoomDemo/Atelier/TaskPainting"
         _Sketch("四层落笔进度",Vector)=(0,0,0,0)
         _WaterRegion("水色位置和范围",Vector)=(.5,.2,.08,.03)
         _WaterPaint("水色落笔进度",Range(0,1))=0
+        _LampRegion("画中灯芯位置和局部色域",Vector)=(.78,.4,.055,.09)
+        _LampPaint("灯芯亮色进度",Range(0,1))=0
         _PaintTime("水色时间",Float)=0
     }
     SubShader
@@ -33,7 +35,7 @@ Shader "RoomDemo/Atelier/TaskPainting"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceData.hlsl"
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             TEXTURE2D(_MotifMask); SAMPLER(sampler_MotifMask);
-            float4 _WaterRegion,_Sketch,_Dabs[32]; float _WaterPaint,_PaintTime,_SelectedMotif,_DabCount;
+            float4 _WaterRegion,_LampRegion,_Sketch,_Dabs[32]; float _WaterPaint,_LampPaint,_PaintTime,_SelectedMotif,_DabCount;
             struct Attributes { float3 positionOS:POSITION; float3 normalOS:NORMAL; float4 tangentOS:TANGENT; float2 uv:TEXCOORD0; };
             struct Varyings { float4 positionCS:SV_POSITION; float3 world:TEXCOORD0; float2 uv:TEXCOORD1; float3 normal:TEXCOORD2; float3 tangent:TEXCOORD3; };
             Varyings Vert(Attributes i)
@@ -59,6 +61,13 @@ Shader "RoomDemo/Atelier/TaskPainting"
                 float stroke=smoothstep(.45,.95,ripple)*(.55+.45*bristle);
                 float3 wet=lerp(colour*.86+float3(.025,.045,.055),float3(.20,.29,.27),stroke*.48);
                 colour=lerp(colour,wet,laid*mask);
+                float2 lamp=(uv-_LampRegion.xy)/_LampRegion.zw;
+                float lampMask=exp(-dot(lamp,lamp)*2.4);
+                float lampBrush=.6+.4*sin(uv.x*2100+sin(uv.y*94)*1.4);
+                float lampLaid=smoothstep(saturate(.45+lamp.y*.28+lampBrush*.08),saturate(.57+lamp.y*.28+lampBrush*.08),_LampPaint);
+                // 先画静物时灯芯只留暗底；后续用短笔触添暖色，既有瓷座纹理仍保留。
+                colour=lerp(colour,colour*.33+float3(.035,.023,.012),lampMask*(1-lampLaid));
+                colour+=float3(.20,.085,.015)*lampMask*lampLaid;
                 float4 motif=SAMPLE_TEXTURE2D(_MotifMask,sampler_MotifMask,uv);
                 float2 cell=floor(uv*float2(38,54));
                 float random=frac(sin(dot(cell,float2(12.9898,78.233)))*43758.5453);
@@ -92,6 +101,8 @@ Shader "RoomDemo/Atelier/TaskPainting"
                 SurfaceData surface=(SurfaceData)0;
                 surface.albedo=colour*(.98+weave*.014); surface.alpha=1;
                 surface.smoothness=.11+laid*mask*.16; surface.normalTS=float3(0,0,1); surface.occlusion=1;
+                float paintedWick=exp(-pow(lamp.x*7,2)-pow(lamp.y*3.5,2));
+                surface.emission=float3(.52,.22,.042)*paintedWick*lampLaid*coverage*(.97+.03*sin(_PaintTime*3.7));
                 InputData input=(InputData)0;
                 input.positionWS=i.world; input.normalWS=n; input.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.world);
                 input.shadowCoord=TransformWorldToShadowCoord(i.world); input.bakedGI=SampleSH(n);
