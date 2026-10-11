@@ -1,5 +1,5 @@
 // 文件：AtelierNarration.cs
-// 职责：集中维护新画室第一阶段短旁白、停顿与拉回当前任务的分支。
+// 职责：集中维护新画室双线短旁白、停顿与拉回当前任务的分支。
 // 边界：文本只反映已经发生的输入和状态，不透露现实配方，不决定世界事实。
 using Game.Domain;
 
@@ -30,6 +30,14 @@ namespace Game.Unity.ArtRebuild
                 case "curtain_next": text = "窗边的帘子还挤着。[pause=.8]拉一下左边的绳子，看看外头。"; break;
                 case "open_learned": text = "对，让出来一点就够了。[pause=.8]画里的窗，也照这个样子改。"; break;
                 case "window_painted": text = state.HasFact(AtelierRules.ReadyToDeliver) ? "这就齐了。[pause=.8]先让颜料干一干。明早拿去交。" : "窗边透气了。[pause=.8]再看看水和灯，还有没有漏掉的。"; break;
+                case "delivered": text = "好，就这张。[pause=1.1]别再补了，留着晾干。[pause=1.0]明早我们拿去交。"; break;
+                case "erase_learned": text = "木纹露出来了。[pause=.8]布上的颜色可别再蹭回去。[pause=1.0]画边也收拾一下，今天就到这儿。"; break;
+                case "roof_erased": text = "……停一下。[pause=1.2]我让你擦的是木板。[pause=1.0]屋顶怎么也……[pause=1.2]别再往上擦了。"; break;
+                case "frame_erased": text = "窗框也要擦？[pause=1.1]你今晚是不打算画完了，是吧。"; break;
+                case "sky_lit": text = "星星已经够亮了。[pause=1.0]画上还缺什么，你倒是看看画。"; break;
+                case "sky_flow": text = "……连天也要动。[pause=1.3]你先把笔放下，行不行？"; break;
+                case "whole_seen": text = "我看见了。[pause=1.3]不用把每一处都指给我看。[pause=1.4]桌子，窗，帘子……这些也都要擦掉？"; break;
+                case "room_erased": text = "等等。[pause=2.0]……画还在那儿。[pause=2.0]算了。[pause=1.6]这次，让我看完。"; break;
                 case "outside_light": text = "……杯子不用发光。[pause=.9]回到画里的灯上。我们还得交稿。"; break;
                 case "outside_first":
                     text = "……你在干什么？[pause=1.2]那不是画布。[pause=1.0]";

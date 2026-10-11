@@ -1,0 +1,105 @@
+{
+  "success": true,
+  "command": "command test_status",
+  "data": {
+    "command": "test_status",
+    "parameters": {},
+    "result": {
+      "status": "completed",
+      "duration": 0.74,
+      "summary": {
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "results": [
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.BlankCanvasAndNoteNeverGrantStillLifeObjects",
+          "Status": "Passed",
+          "Duration": 0.0739292,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.DeliveryClosesOnlyTheOrdinaryPaintingRoute",
+          "Status": "Passed",
+          "Duration": 0.0129283,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.LightingNeedsStruckMatchAndSeparateBrightObservation",
+          "Status": "Passed",
+          "Duration": 0.0034743,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.ObservationAndPhysicalActionNeverGrantFinishedConceptOrAnotherObject",
+          "Status": "Passed",
+          "Duration": 0.010894,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.PaintingObjectsIsNeutralAndWaterMustBeClickedSeparately",
+          "Status": "Passed",
+          "Duration": 0.0029324,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.RoomEndingNeverPretendsDeliveryOrLocksBackToCanvas",
+          "Status": "Passed",
+          "Duration": 0.0038091,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.SkyAndRoofNeedNeitherWaterLightNorLocalFrameErasure(True)",
+          "Status": "Passed",
+          "Duration": 0.0045733,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.SkyAndRoofNeedNeitherWaterLightNorLocalFrameErasure(False)",
+          "Status": "Passed",
+          "Duration": 0.0030338,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.StrikingRequiresOwnMatchClickAndNeverGrantsLampOrLight",
+          "Status": "Passed",
+          "Duration": 0.0124112,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.ThirdPaintCompletionWaitsForExplicitDeliveryAndStillAllowsExperiment",
+          "Status": "Passed",
+          "Duration": 0.0083733,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierRouteTests.UnconfirmedErasePreparationHasNoDomainSideEffects",
+          "Status": "Passed",
+          "Duration": 0.0113181,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

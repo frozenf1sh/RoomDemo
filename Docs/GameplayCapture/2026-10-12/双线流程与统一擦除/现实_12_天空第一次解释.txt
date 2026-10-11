@@ -1,0 +1,3 @@
+证据=调试命令及输入适配事件回放
+事实=atelier.cup_sketched、atelier.brush_sketched、atelier.lamp_sketched、atelier.window_sketched、atelier.still_life_painted、studio.washed、studio.picture_flow、atelier.match_struck、studio.lamp_turned、studio.picture_lit、studio.curtain_released、studio.picture_open、atelier.ready_to_deliver、studio.water_flow、atelier.reality_touched、studio.water_lit、atelier.trial_wiped、atelier.frame_erased、atelier.roof_erased、studio.sky_flow
+错误=0
