@@ -22,8 +22,8 @@ namespace Game.Editor
     /// <summary>通过 Unity Editor API 生成中文灰盒场景、Prefab、材料和占位音频。</summary>
     public static class DemoSceneBuilder
     {
-        public const string ScenePath = "Assets/_Game/Content/Scenes/DemoRoom.unity";
-        public const string GreyboxScenePath = "Assets/_Game/Content/Scenes/DemoGreybox.unity";
+        public const string ScenePath = "Assets/_Game/Content/Scenes/Archive/DemoRoom.unity";
+        public const string GreyboxScenePath = "Assets/_Game/Content/Scenes/Experiments/Greybox/DemoGreybox.unity";
         private static string assetVariant = "";
         public const string ChineseFontPath = "Assets/ThirdParty/NotoSans/NotoSansCJKsc-Regular.otf";
         private const string Content = "Assets/_Game/Content/";

@@ -21,7 +21,7 @@ namespace Game.Editor.TechnicalArt.RealtimePainterly.Production
     public static class ProductionResourceBuilder
     {
         public const string Root = "Assets/_Game/Content/TechnicalArt/Production/";
-        public const string ScenePath = Root + "Scenes/TechnicalArtProductionBenchmark.unity";
+        public const string ScenePath = "Assets/_Game/Content/Scenes/Experiments/TechnicalArt/TechnicalArtProductionBenchmark.unity";
         private const string Matter = "Assets/_Game/Content/TechnicalArt/LivingMatter/";
         private const string Painting = "Assets/_Game/Content/TechnicalArt/LivingPainting/";
         private const string Core = "Assets/_Game/Content/TechnicalArt/RealtimePainterly/";

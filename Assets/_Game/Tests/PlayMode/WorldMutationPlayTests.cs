@@ -20,7 +20,7 @@ namespace Game.Tests
         private WorldMutation mutation;
         [UnitySetUp] public IEnumerator Load()
         {
-            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Content/Scenes/DemoRoom.unity", new LoadSceneParameters(LoadSceneMode.Single)); yield return null;
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Content/Scenes/Archive/DemoRoom.unity", new LoadSceneParameters(LoadSceneMode.Single)); yield return null;
             bootstrap = Object.FindAnyObjectByType<GameBootstrap>(); room = Object.FindAnyObjectByType<RoomModules>(); exterior = Object.FindAnyObjectByType<WorldExterior>(); mutation = Object.FindAnyObjectByType<WorldMutation>();
         }
         [UnityTest] public IEnumerator DirectVisualOperationsRestoreAndSpawnOnlyOneInstance()

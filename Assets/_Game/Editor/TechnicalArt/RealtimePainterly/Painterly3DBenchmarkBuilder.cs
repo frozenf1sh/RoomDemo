@@ -17,7 +17,7 @@ namespace Game.Editor.TechnicalArt.RealtimePainterly
     /// <summary>生成实验场景；拒绝覆盖任意尚未保存的人工场景。</summary>
     public static class Painterly3DBenchmarkBuilder
     {
-        public const string ScenePath = "Assets/_Game/Content/Scenes/Painterly3DBenchmark.unity";
+        public const string ScenePath = "Assets/_Game/Content/Scenes/Experiments/TechnicalArt/Painterly3DBenchmark.unity";
         private const string Root = "Assets/_Game/Content/TechnicalArt/RealtimePainterly/";
         private const string PlantModels = "Assets/_Game/Content/Art/Models/ArtistPlant/";
         private static Font font;
