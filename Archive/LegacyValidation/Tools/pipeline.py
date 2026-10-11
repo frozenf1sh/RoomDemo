@@ -10,7 +10,7 @@ import subprocess
 import time
 import xml.etree.ElementTree as ET
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[3]
 LOGS = ROOT / 'Logs' / 'Pipeline'
 LOGS.mkdir(parents=True, exist_ok=True)
 VERSION = (ROOT / 'ProjectSettings/ProjectVersion.txt').read_text().splitlines()[0].split(': ')[1]
