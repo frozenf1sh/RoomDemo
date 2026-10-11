@@ -196,7 +196,8 @@ namespace Game.Editor.ArtRebuild
             }
         }
 
-        private static Texture2D Repaint(Texture2D source)
+        /// <summary>把项目现场渲染转成确定的短笔触；调用者负责释放返回的临时纹理。</summary>
+        public static Texture2D Repaint(Texture2D source)
         {
             int w = source.width, h = source.height;
             var input = source.GetPixels(); var output = input.Select(c=>Color.Lerp(c,new Color(.28f,.23f,.17f),.14f)).ToArray();
@@ -286,7 +287,7 @@ namespace Game.Editor.ArtRebuild
             notes.Configure(body.gameObject,Group("旧物体占位",hidden),Group("旧概念占位",hidden),template,submit,selection,feedback);
             notes.ConfigureSlots(Array.Empty<Button>(),history);notes.ConfigureControls(reminder,close);notes.ConfigureDiscoveryFeedback(notice.gameObject,noticeText);
             notes.ConfigurePresentation(body,opacity,lines[0],paper,ink,scratch);notes.ConfigureUnifiedWords(content,marks);notes.ConfigureExploration(null,insight);notes.ConfigureQuietStudio(true);notes.ConfigureDescription(description);
-            var semantic=body.gameObject.AddComponent<NotebookCanvasView>();semantic.Configure(workspace,card,submit,lines,invitation);semantic.ConfigureBlindComposition(true);semantic.ConfigureQuietStudio(true);notes.ConfigureCanvas(semantic);
+            var semantic=body.gameObject.AddComponent<NotebookCanvasView>();semantic.Configure(workspace,card,submit,lines,invitation);semantic.ConfigureBlindComposition(true);semantic.ConfigureQuietStudio(true);semantic.ConfigureClickPlacement(true);notes.ConfigureCanvas(semantic);
             var caption=Label("世界字幕",canvas.transform,"",new Vector2(0,-325),new Vector2(850,40),19,new Color(.84f,.89f,.94f));
             var captions=caption.gameObject.AddComponent<OneLineSubtitle>();captions.Configure(caption,caption.gameObject.AddComponent<CanvasGroup>());
             var narrationArea=Panel("旁白区域",canvas.transform,new Vector2(960,70),new Vector2(0,-313),Color.clear);

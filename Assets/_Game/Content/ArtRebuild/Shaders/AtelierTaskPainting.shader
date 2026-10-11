@@ -6,6 +6,9 @@ Shader "RoomDemo/Atelier/TaskPainting"
     {
         _BaseMap("场景取材笔触画",2D)="white"{}
         _MotifMask("真实几何分色遮罩",2D)="black"{}
+        _OpenMap("实际拉帘后短笔触",2D)="black"{}
+        _OpenRegion("窗边色域",Vector)=(.55,.7,.3,.4)
+        _OpenPaint("窗边补笔",Range(0,1))=0
         _Sketch("四层落笔进度",Vector)=(0,0,0,0)
         _WaterRegion("水色位置和范围",Vector)=(.5,.2,.08,.03)
         _WaterPaint("水色落笔进度",Range(0,1))=0
@@ -35,6 +38,8 @@ Shader "RoomDemo/Atelier/TaskPainting"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceData.hlsl"
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             TEXTURE2D(_MotifMask); SAMPLER(sampler_MotifMask);
+            TEXTURE2D(_OpenMap); SAMPLER(sampler_OpenMap);
+            float4 _OpenRegion; float _OpenPaint;
             float4 _WaterRegion,_LampRegion,_Sketch,_Dabs[32]; float _WaterPaint,_LampPaint,_PaintTime,_SelectedMotif,_DabCount;
             struct Attributes { float3 positionOS:POSITION; float3 normalOS:NORMAL; float4 tangentOS:TANGENT; float2 uv:TEXCOORD0; };
             struct Varyings { float4 positionCS:SV_POSITION; float3 world:TEXCOORD0; float2 uv:TEXCOORD1; float3 normal:TEXCOORD2; float3 tangent:TEXCOORD3; };
@@ -47,6 +52,11 @@ Shader "RoomDemo/Atelier/TaskPainting"
             {
                 float2 uv=i.uv;
                 float3 colour=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,uv).rgb;
+                float2 window=(uv-_OpenRegion.xy)/_OpenRegion.zw;
+                float localWindow=(1-smoothstep(.93,1,abs(window.x)))*(1-smoothstep(.93,1,abs(window.y)));
+                float brushStep=saturate(.50-window.y*.42+.05*sin(uv.x*175)+.02*sin(uv.y*2800));
+                float openLaid=smoothstep(brushStep-.08,brushStep+.12,_OpenPaint*1.15)*localWindow;
+                colour=lerp(colour,SAMPLE_TEXTURE2D(_OpenMap,sampler_OpenMap,uv).rgb,openLaid);
                 float2 water=(uv-_WaterRegion.xy)/_WaterRegion.zw;
                 float radius=length(water);
                 float mask=1-smoothstep(.79,1.0,radius);
@@ -57,8 +67,11 @@ Shader "RoomDemo/Atelier/TaskPainting"
                 // 空出的水色保留暖底、铅笔椭圆和断开的干刷，不是纯白洞。
                 float graphite=exp(-pow((radius-.91)*45,2))*.22;
                 float3 underpaint=float3(.39,.32,.22)*(1-graphite)+colour*.15;
-                float ripple=sin(radius*19+angle*1.3-_PaintTime*.5);
-                float stroke=smoothstep(.45,.95,ripple)*(.55+.45*bristle);
+                // 弧段沿杯面旋转，同时向外迁移；保留可追踪的断笔，避免只在原处闪烁。
+                float movingAngle=angle-_PaintTime*.65;
+                float ripple=sin(radius*20+movingAngle*2-_PaintTime*1.1);
+                float arcs=smoothstep(-.15,.55,sin(movingAngle*3+radius*3));
+                float stroke=smoothstep(.35,.92,ripple)*arcs*(.68+.32*bristle);
                 float3 wet=lerp(colour*.86+float3(.025,.045,.055),float3(.20,.29,.27),stroke*.48);
                 colour=lerp(colour,wet,laid*mask);
                 float2 lamp=(uv-_LampRegion.xy)/_LampRegion.zw;
@@ -69,11 +82,14 @@ Shader "RoomDemo/Atelier/TaskPainting"
                 colour=lerp(colour,colour*.33+float3(.035,.023,.012),lampMask*(1-lampLaid));
                 colour+=float3(.20,.085,.015)*lampMask*lampLaid;
                 float4 motif=SAMPLE_TEXTURE2D(_MotifMask,sampler_MotifMask,uv);
-                float2 cell=floor(uv*float2(38,54));
-                float random=frac(sin(dot(cell,float2(12.9898,78.233)))*43758.5453);
-                // 短笔触按交错行逐条落下，细笔毛留出颜料沟；不是整张图片透明度淡入。
-                float arrival=saturate((1-uv.y)*.79+frac(cell.y*.381)*.16+random*.05);
-                float4 revealed=smoothstep(arrival,arrival+.035,_Sketch*1.04);
+                float broken=.04*sin(uv.x*93+sin(uv.y*61)*2)+.025*sin(uv.y*251+uv.x*37);
+                // 每件静物从自身周围洇开，细毛打散边沿；不再横向扫描整张画。
+                float4 distanceToMotif=float4(length((uv-_WaterRegion.xy)/float2(.105,.16)),
+                    length((uv-(_WaterRegion.xy+float2(.10,.015)))/float2(.17,.10)),
+                    length((uv-_LampRegion.xy)/float2(.10,.22)),
+                    length((uv-float2(.54,.56))/float2(.70,.68)));
+                float4 arrival=clamp(distanceToMotif*.55+broken,.12,.90);
+                float4 revealed=smoothstep(arrival-.11,arrival+.23,_Sketch*1.18);
                 float coverage=saturate(dot(motif,revealed));
                 float chosen=0;
                 if(_SelectedMotif>=0) chosen=motif[(int)_SelectedMotif];
@@ -102,7 +118,10 @@ Shader "RoomDemo/Atelier/TaskPainting"
                 surface.albedo=colour*(.98+weave*.014); surface.alpha=1;
                 surface.smoothness=.11+laid*mask*.16; surface.normalTS=float3(0,0,1); surface.occlusion=1;
                 float paintedWick=exp(-pow(lamp.x*7,2)-pow(lamp.y*3.5,2));
-                surface.emission=float3(.52,.22,.042)*paintedWick*lampLaid*coverage*(.97+.03*sin(_PaintTime*3.7));
+                // 底图已有现场明暗，补偿二次受光造成的压暗；仍保留实体亚麻的阴影与纤维。
+                surface.emission=colour*.28*coverage;
+                surface.emission+=float3(.07,.14,.15)*stroke*laid*mask*coverage;
+                surface.emission+=float3(.52,.22,.042)*paintedWick*lampLaid*coverage*(.97+.03*sin(_PaintTime*3.7));
                 InputData input=(InputData)0;
                 input.positionWS=i.world; input.normalWS=n; input.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.world);
                 input.shadowCoord=TransformWorldToShadowCoord(i.world); input.bakedGI=SampleSH(n);

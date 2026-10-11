@@ -27,6 +27,9 @@ namespace Game.Unity.ArtRebuild
                 case "lamp_next": text = "再给灯芯添一点亮色。[pause=.8]左边那盏油灯还没点，火柴就在旁边。"; break;
                 case "light_learned": text = "就添灯芯上这一点。[pause=.8]别把整张画都涂白了。"; break;
                 case "lamp_painted": text = "这盏灯可以了。[pause=.8]先停一下，看看整张画。"; break;
+                case "curtain_next": text = "窗边的帘子还挤着。[pause=.8]拉一下左边的绳子，看看外头。"; break;
+                case "open_learned": text = "对，让出来一点就够了。[pause=.8]画里的窗，也照这个样子改。"; break;
+                case "window_painted": text = state.HasFact(AtelierRules.ReadyToDeliver) ? "这就齐了。[pause=.8]先让颜料干一干。明早拿去交。" : "窗边透气了。[pause=.8]再看看水和灯，还有没有漏掉的。"; break;
                 case "outside_light": text = "……杯子不用发光。[pause=.9]回到画里的灯上。我们还得交稿。"; break;
                 case "outside_first":
                     text = "……你在干什么？[pause=1.2]那不是画布。[pause=1.0]";

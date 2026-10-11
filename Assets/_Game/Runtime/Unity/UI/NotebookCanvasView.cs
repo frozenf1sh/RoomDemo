@@ -22,6 +22,12 @@ namespace Game.Unity
         /// <summary>叙事纸面不预告正确答案；历史灰盒仍可保留旧配方提示。</summary>
         public void ConfigureBlindComposition(bool enabled) { blindComposition = enabled; }
         [SerializeField] private bool quietStudio;
+        [SerializeField] private bool clickPlacement;
+        private ClueId? picked;
+        /// <summary>独立玩法允许选词后点击纸面放置；旧场景默认保留原输入。</summary>
+        public bool ClickPlacement => clickPlacement;
+        /// <summary>启用替代拖动输入，只影响临时纸面，不修改收藏或配方。</summary>
+        public void ConfigureClickPlacement(bool enabled) { clickPlacement = enabled; }
         /// <summary>保留拖动与提交，清空装饰性提示并固定字号、提交位置。</summary>
         public void ConfigureQuietStudio(bool enabled) { quietStudio = enabled; }
         private readonly Dictionary<ClueId, RectTransform> cards = new Dictionary<ClueId, RectTransform>();
@@ -46,6 +52,13 @@ namespace Game.Unity
         public void Bind(GameSession game, NotebookView view)
         {
             session = game; notebook = view;
+            if (clickPlacement)
+            {
+                workspace.GetComponent<Image>().raycastTarget = true;
+                var placement = workspace.GetComponent<NotebookPaperPlacement>();
+                if (placement == null) placement = workspace.gameObject.AddComponent<NotebookPaperPlacement>();
+                placement.Owner = this;
+            }
             if (inkMotes == null)
             {
                 inkMotes = new Image[4];
@@ -82,7 +95,11 @@ namespace Game.Unity
             label.fontSize = quietStudio ? 22 : definition.Category == ClueCategory.Concept ? 28 : definition.Category == ClueCategory.Observation ? 20 : 23;
             if (quietStudio) label.color = definition.Category == ClueCategory.Concept ? new Color(.25f,.39f,.63f) : definition.Category == ClueCategory.Observation ? new Color(.48f,.39f,.29f) : new Color(.20f,.30f,.26f);
             var image = button.GetComponent<Image>(); image.color = new Color(.87f,.82f,.66f,.12f);
-            button.onClick.RemoveAllListeners(); button.onClick.AddListener(() => { if (quietStudio) notebook.SelectClue(clue); else Remove(clue); });
+            button.onClick.RemoveAllListeners(); button.onClick.AddListener(() =>
+            {
+                if (quietStudio && !clickPlacement) notebook.SelectClue(clue);
+                else { Remove(clue); notebook.NotifyCanvasChanged(); }
+            });
             button.gameObject.AddComponent<NotebookClueDrag>().Configure(this, clue, true);
             cards.Add(clue, rect); Refresh(); return rect;
         }
@@ -91,6 +108,20 @@ namespace Game.Unity
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(workspace, screen, camera, out var point);
             return point;
+        }
+        /// <summary>只选择已经亲自获得的词；再次选择覆盖未放下的临时词。</summary>
+        public void Pick(ClueId clue)
+        {
+            if (!clickPlacement || !session.State.Knows(clue)) return;
+            picked = clue;
+        }
+        /// <summary>点击纸面空处放下所选词；不提交、不预判配方。</summary>
+        public void PlacePicked(Vector2 screen, Camera camera)
+        {
+            if (!clickPlacement || !picked.HasValue) return;
+            var clue = picked.Value;
+            var card = Add(clue, LocalPoint(screen, camera));
+            if (card != null) { EndDrag(clue, screen, camera); picked = null; }
         }
         /// <summary>移动活动词条并更新淡线；正式画室不查询配方提示。</summary>
         public void Move(ClueId clue, Vector2 position)
@@ -118,10 +149,11 @@ namespace Game.Unity
         {
             foreach (var card in cards.Values) { card.gameObject.SetActive(false); Destroy(card.gameObject); }
             if (inkMotes != null) foreach(var mote in inkMotes) mote.gameObject.SetActive(false);
-            cards.Clear(); candidateInputs = new ClueId[0]; successUntil = 0; failureUntil = 0;
+            cards.Clear(); picked = null; candidateInputs = new ClueId[0]; successUntil = 0; failureUntil = 0;
             foreach (var line in lines) line.enabled = false;
             action.gameObject.SetActive(false); invitation.text = quietStudio ? "" : "把记下的细节拖到这里";
         }
+        private void OnDisable() { picked = null; }
         /// <summary>成功时淡线短暂变亮；不把闪光当作配方完成的第二份状态。</summary>
         public void ShowSuccess()
         {

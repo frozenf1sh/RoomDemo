@@ -31,11 +31,19 @@ Material:
         m_Texture: {fileID: 2800000, guid: 99d958eb7a3ac4f1c88d3d8fe2e1d4fa, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _OpenMap:
+        m_Texture: {fileID: 2800000, guid: caba8378f9c734f87a439ec2632126be, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _LampPaint: 0
+    - _OpenPaint: 0
     - _PaintTime: 0
     - _WaterPaint: 0
     m_Colors:
+    - _LampRegion: {r: 0.78, g: 0.4, b: 0.055, a: 0.09}
+    - _OpenRegion: {r: 0.5643171, g: 0.6069172, b: 0.359444, a: 0.27769575}
     - _Sketch: {r: 0, g: 0, b: 0, a: 0}
     - _WaterRegion: {r: 0.37336904, g: 0.14765432, b: 0.054439146, a: 0.029383488}
   m_BuildTextureStacks: []

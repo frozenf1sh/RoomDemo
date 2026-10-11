@@ -1,0 +1,3 @@
+模式=调试命令及 UI 事件回放，非原生输入证明
+事实=atelier.cup_sketched、atelier.brush_sketched、atelier.lamp_sketched、atelier.window_sketched、atelier.still_life_painted
+错误=0

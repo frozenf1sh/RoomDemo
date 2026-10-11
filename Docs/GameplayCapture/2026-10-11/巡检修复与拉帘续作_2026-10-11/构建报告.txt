@@ -1,0 +1,7 @@
+结果=Succeeded
+错误=0
+警告=1
+大小=654912475
+时长=00:00:15.4228150
+场景=Assets/_Game/Content/Scenes/AtelierPlayable.unity
+Pipeline: No RuntimePipelineConfig asset found (Project Settings > Pipeline > Runtime). Pipeline will be disabled in Player builds.

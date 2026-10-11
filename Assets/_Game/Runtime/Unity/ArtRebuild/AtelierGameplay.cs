@@ -26,6 +26,8 @@ namespace Game.Unity.ArtRebuild
         public AtelierWashPresenter Wash;
         public AtelierPaintingPresenter Painting;
         public AtelierLampPresenter Lamp;
+        public AtelierCurtainPresenter Curtain;
+        public Transform CurtainFocusPose;
         public Transform FocusPose, DeskFocusPose, LampFocusPose;
         public GameObject ManuscriptPanel;
         public Text HoverText, ObservationText;
@@ -55,6 +57,7 @@ namespace Game.Unity.ArtRebuild
             Notebook.EscapeClosesNotebook = false;
             Notebook.Bind(Session); Wash.Bind(Session); Painting.Bind(Session); Narrator.Bind(Session);
             if (Lamp != null) Lamp.Bind(Session);
+            if (Curtain != null) Curtain.Bind(Session);
             Session.EventRaised += OnEvent;
             Notebook.OpenChanged += OnNotebook;
             ContextAction.gameObject.SetActive(false);
@@ -141,6 +144,30 @@ namespace Game.Unity.ArtRebuild
         {
             selected = target;
             ContextPanel.SetActive(true); ContextAction.gameObject.SetActive(false);
+            if (target.Kind == AtelierTargetKind.Curtain || target.Kind == AtelierTargetKind.CurtainCord)
+            {
+                Session.Inspect(StudioRules.Curtain);
+                if (!focused || focusKind != AtelierTargetKind.Curtain)
+                {
+                    if (!Session.State.HasFact(StudioRules.CurtainReleased)) Session.ObserveDetail(StudioRules.Curtain, "hidden");
+                    focused = true; focusKind = AtelierTargetKind.Curtain;
+                    StartCamera(CurtainFocusPose.position, CurtainFocusPose.rotation, 57);
+                    return;
+                }
+                if (Curtain.Gathering) { ObservationText.text = "帘环还在走，等布褶落稳。"; return; }
+                bool open = Session.State.HasFact(StudioRules.CurtainReleased);
+                if (!open && target.Kind == AtelierTargetKind.CurtainCord)
+                {
+                    // 拉绳本身是实际点击来源；提交动作不顺带奖励拉开后的观察。
+                    Session.ObserveDetail(StudioRules.Curtain, "hidden");
+                    Session.PerformAction(StudioRules.Curtain, "release_curtain");
+                    ObservationText.text = "拉绳带着帘环收向两边，下摆慢慢落稳。";
+                    return;
+                }
+                Session.ObserveDetail(StudioRules.Curtain, open ? "revealed" : "hidden");
+                ObservationText.text = open ? "帘褶收拢了，窗边又露出一小片山坡。\n按 N，把拉帘前后记在一起。" : "帘褶挤着窗边，挡住了一点山坡。\n点左边垂下来的拉绳，带开帘子。";
+                return;
+            }
             if (target.Kind == AtelierTargetKind.OilLamp || target.Kind == AtelierTargetKind.Wick)
             {
                 Session.Inspect(StudioRules.LampBody);
@@ -257,6 +284,11 @@ namespace Game.Unity.ArtRebuild
                 Session.Inspect(StudioRules.PictureLamp);
                 ObservationText.text = Session.State.HasFact(StudioRules.PictureLit) ? "画里的灯芯亮了，暖色沿着瓷座铺开。" : "灯已经画上了，还差灯芯的一点亮色。";
             }
+            else if (Vector2.Distance(uv, Painting.WindowUV) < .18f && Session.State.HasFact(AtelierRules.WindowSketched))
+            {
+                Session.Inspect(StudioRules.PictureWindow);
+                ObservationText.text = Session.State.HasFact(StudioRules.PictureOpen) ? "画里的帘子也收开了一点。" : "画里还留着刚才遮住窗边的帘子。\n刚才拉帘时看到的变化，可以画在这里。";
+            }
             else ObservationText.text = "杯子、笔、灯，还有窗外的夜色，都画上去了。";
         }
 
@@ -342,7 +374,9 @@ namespace Game.Unity.ArtRebuild
             if (result.RecipeId == "atelier.idea.flow") Say("flow_learned");
             if (result.RecipeId == "atelier.meaning.picture_water") { Say("water_painted"); StartCoroutine(AfterWaterPainting()); }
             if (result.RecipeId == "atelier.idea.light") Say("light_learned");
-            if (result.RecipeId == "atelier.meaning.picture_lamp") Say("lamp_painted");
+            if (result.RecipeId == "atelier.meaning.picture_lamp") { Say("lamp_painted"); StartCoroutine(AfterLampPainting()); }
+            if (result.RecipeId == "atelier.idea.open") Say("open_learned");
+            if (result.RecipeId == "atelier.meaning.picture_window") Say("window_painted");
             if (result.RecipeId == "atelier.meaning.water_light") StartCoroutine(AfterWrongLight());
             if (result.RecipeId == "atelier.meaning.water_flow")
             {
@@ -361,6 +395,11 @@ namespace Game.Unity.ArtRebuild
             // 等局部水色和前句说完，只发旁白请求，不生成新观察或物体。
             yield return new WaitForSeconds(6);
             if (!Session.State.HasFact(StudioRules.LampTurned)) Say("lamp_next");
+        }
+        private IEnumerator AfterLampPainting()
+        {
+            yield return new WaitForSeconds(6);
+            if (!Session.State.HasFact(StudioRules.CurtainReleased)) Say("curtain_next");
         }
         private IEnumerator AfterWrongLight()
         {

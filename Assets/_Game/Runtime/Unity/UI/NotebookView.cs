@@ -189,8 +189,13 @@ namespace Game.Unity
             if (!session.State.Knows(clue)) return;
             if (semanticCanvas != null && quietStudio)
             {
-                // 点击只阅读，唯一进入右页的入口是真实拖动。
+                // 默认点击只阅读；独立玩法可选择后点击右页放下，保留拖动与最多三个输入。
                 if (clueDescription != null) clueDescription.text = StudioNarration.Description(clue, session.Rules);
+                if (semanticCanvas.ClickPlacement)
+                {
+                    semanticCanvas.Pick(clue);
+                    if (clueDescription != null) clueDescription.text = Label(clue) + "\n点击右页空处放下，或直接拖过去。";
+                }
                 ClueRead?.Invoke(clue);
                 return;
             }
