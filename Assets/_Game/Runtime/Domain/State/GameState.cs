@@ -16,6 +16,7 @@ namespace Game.Domain
         private readonly HashSet<string> reactions = new HashSet<string>();
         private readonly HashSet<string> recipes = new HashSet<string>();
         private readonly Dictionary<ClueId, ClueCategory> categories;
+        private readonly FactId? canvasLockFact;
         private readonly Dictionary<string, PendingDeferredEffect> pending = new Dictionary<string, PendingDeferredEffect>();
         /// <summary>显式游戏日序，初始为第一天，不与真实时间关联。</summary>
         public int DayIndex { get; private set; } = 1;
@@ -27,8 +28,8 @@ namespace Game.Domain
         public int ConsecutiveCompliance { get; private set; }
         /// <summary>一旦发现了画布之外的解释，后续服从不再强制收束路线。</summary>
         public bool HasDeviated => DeviationCount > 0;
-        /// <summary>连续三个核心解释交给画且从未偏离，进入明确的画布收束。</summary>
-        public bool CanvasLocked => !HasDeviated && ConsecutiveCompliance >= 3;
+        /// <summary>内容配置主动交稿时等待其事实；历史内容保持连续三次服从的默认收束。</summary>
+        public bool CanvasLocked => canvasLockFact.HasValue ? HasFact(canvasLockFact.Value) : !HasDeviated && ConsecutiveCompliance >= 3;
         /// <summary>内部旁白阶段从唯一状态派生，不保存另一份路线状态。</summary>
         public NarrativeStage NarrativeStage => CanvasLocked ? NarrativeStage.CanvasLockIn : DeviationCount >= 3 ? NarrativeStage.LosingAuthority : DeviationCount >= 2 ? NarrativeStage.Concerned : HasDeviated ? NarrativeStage.SlightlyConfused : NarrativeStage.Normal;
         /// <summary>锁入画布后拒绝新的偏离解释；联想与画布解释仍可执行。</summary>
@@ -38,7 +39,12 @@ namespace Game.Domain
         /// <summary>已登记但尚未到日的效果快照，外部不能修改队列。</summary>
         public IReadOnlyCollection<PendingDeferredEffect> PendingDeferredEffects => pending.Values.OrderBy(x => x.DueDay).ThenBy(x => x.ReactionId).ToList().AsReadOnly();
         /// <summary>建立碎片类别索引，供旧物体与概念查询派生视图。</summary>
-        public GameState(IEnumerable<ClueDefinition> definitions) { categories = definitions.ToDictionary(x => x.Id, x => x.Category); }
+        public GameState(IEnumerable<ClueDefinition> definitions, FactId? canvasLockFact = null)
+        {
+            // 收束策略由内容装载一次，不允许 Unity 表现层在运行中改写。
+            this.canvasLockFact = canvasLockFact;
+            categories = definitions.ToDictionary(x => x.Id, x => x.Category);
+        }
         // 每次查询返回只读快照，避免外部强制转换后修改内部 HashSet。
         /// <summary>当前已知碎片的只读快照，无法改写内部集合。</summary>
         public IReadOnlyCollection<ClueId> KnownClues => clues.ToList().AsReadOnly();

@@ -118,6 +118,10 @@ namespace Game.Domain
         /// <summary>由外部明确触发的已声明事实，当前用于独立世界样板的开发入口。</summary>
         /// <remarks>只是内容身份清单，没有视觉、时间或反应逻辑。</remarks>
         public IReadOnlyList<FactId> DeclaredFacts { get; }
+        /// <summary>有限的可见场景操作；不构成另一套配方或动画框架。</summary>
+        public IReadOnlyList<SceneActionRule> SceneActions { get; }
+        /// <summary>可选的主动收束事实；为空时保留历史内容的连续服从规则。</summary>
+        public FactId? CanvasLockFact { get; }
         // 第一版的兼容查询视图；实际匹配始终只使用 ClueId 配方。
         /// <summary>由统一内容定义派生的第一版物体视图。</summary>
         public IReadOnlyList<ObjectDefinition> Objects { get; }
@@ -126,10 +130,16 @@ namespace Game.Domain
         /// <summary>从兼容二元配方派生的旧解释视图。</summary>
         public IReadOnlyList<InterpretationRule> Interpretations { get; }
         /// <summary>装载规则并校验唯一性、引用与歧义；旧构造入口会转换成新数据。</summary>
-        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null)
+        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null, SceneActionRule[] sceneActions = null, FactId? canvasLockFact = null)
         {
+            // 新内容可以等待玩家亲自交稿，旧内容仍采用既有的三次服从收束。
+            CanvasLockFact = canvasLockFact;
             observations = observations ?? Array.Empty<ObservationDiscovery>();
             declaredFacts = declaredFacts ?? Array.Empty<FactId>();
+            sceneActions = sceneActions ?? Array.Empty<SceneActionRule>();
+            if (sceneActions.Select(x => x.Id).Distinct().Count() != sceneActions.Length || sceneActions.Any(x => !discoveries.Any(d => d.Source == x.Source) || string.IsNullOrWhiteSpace(x.Id) || x.Produces.Count == 0))
+                throw new ArgumentException("场景操作必须有唯一身份、有效来源和非空事实产出。");
+            SceneActions = Array.AsReadOnly(sceneActions.ToArray());
             // 一次性验证所有内容身份，尽早暴露策划数据错误。
             if (clues.Select(x => x.Id).Distinct().Count() != clues.Length || discoveries.Select(x => x.Source).Distinct().Count() != discoveries.Length ||
                 discoveries.Select(x => x.Id).Distinct().Count() != discoveries.Length || recipes.Select(x => x.Id).Distinct().Count() != recipes.Length || reactions.Select(x => x.Id).Distinct().Count() != reactions.Length)
