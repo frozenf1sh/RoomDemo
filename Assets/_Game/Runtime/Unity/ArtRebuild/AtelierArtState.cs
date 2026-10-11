@@ -12,6 +12,8 @@ namespace Game.Unity.ArtRebuild
     public sealed class AtelierArtState : MonoBehaviour
     {
         public RenderPipelineAsset ScenePipeline;
+        /// <summary>玩法副本只在运行时接管专用管线，编辑预览不持久修改共享质量设置。</summary>
+        public bool OnlyOwnPipelineAtRuntime;
         public Material NormalHdri;
         public GameObject ClosedRoof;
         public GameObject RevealRim;
@@ -23,21 +25,24 @@ namespace Game.Unity.ArtRebuild
         /// <summary>后期略微抬头，让屋顶流动星夜成为主视觉。</summary>
         public Vector3 LateViewTarget = new Vector3(.08f, 2.83f, 1.65f);
         private RenderPipelineAsset previousPipeline;
+        private bool ownsPipeline;
 
         /// <summary>当前仅供美术预览的后期状态，不代表任何领域事实。</summary>
         public bool LateSkyActive { get; private set; }
 
         private void OnEnable()
         {
+            ownsPipeline = ScenePipeline != null && (!OnlyOwnPipelineAtRuntime || UnityEngine.Application.isPlaying);
             previousPipeline = QualitySettings.renderPipeline;
-            if (ScenePipeline != null) QualitySettings.renderPipeline = ScenePipeline;
+            if (ownsPipeline) QualitySettings.renderPipeline = ScenePipeline;
             SetLateSky(false);
         }
 
         private void OnDisable()
         {
             // 离开画室时只恢复本组件实际接管的管线，不覆盖其他系统随后选择的管线。
-            if (QualitySettings.renderPipeline == ScenePipeline) QualitySettings.renderPipeline = previousPipeline;
+            if (ownsPipeline && QualitySettings.renderPipeline == ScenePipeline) QualitySettings.renderPipeline = previousPipeline;
+            ownsPipeline = false;
         }
 
         /// <summary>明确切换视觉状态；不会授予碎片、推进日序或产生交互事实。</summary>

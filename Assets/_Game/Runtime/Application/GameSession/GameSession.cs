@@ -27,7 +27,7 @@ namespace Game.Application
         public GameSession(RuleSet rules)
         {
             Rules = rules;
-            State = new GameState(rules.Clues);
+            State = new GameState(rules.Clues, rules.CanvasLockFact);
             engine = new RuleEngine(rules);
         }
 
@@ -38,6 +38,9 @@ namespace Game.Application
 
         /// <summary>来自检视模型许可后的细节点击；不能直接传入任意产出线索。</summary>
         public IReadOnlyList<DomainEvent> ObserveDetail(ObjectId source, string detail) => Dispatch(new ObserveDetail(source, detail));
+
+        /// <summary>玩家对已认识的物体进行明确操作；许可由领域数据判断。</summary>
+        public IReadOnlyList<DomainEvent> PerformAction(ObjectId source, string actionId) => Dispatch(new PerformSceneAction(source, actionId));
 
         /// <summary>第一版二元解释入口，内部适配为统一的碎片组合。</summary>
         /// <param name="concept">旧概念 ID。</param>
@@ -61,6 +64,14 @@ namespace Game.Application
 
         /// <summary>查询物体当前是否可调查，不读取或改变场景 Collider。</summary>
         public bool IsInspectable(ObjectId id) => Rules.IsInspectable(State, id);
+        /// <summary>查询有限操作的事实条件，表现层不能复制动作配方。</summary>
+        public bool IsActionAvailable(ObjectId source, string actionId)
+        {
+            var action = Rules.SceneActions.SingleOrDefault(x => x.Id == actionId && x.Source == source);
+            return action != null && !State.CanvasLocked && IsInspectable(source)
+                && action.Requires.All(State.HasFact) && !action.Blocks.Any(State.HasFact)
+                && !action.Produces.All(State.HasFact);
+        }
 
         /// <summary>有待执行的解释时，玩家可以选择结束今天。</summary>
         public bool CanAdvanceDay => State.HasPendingDeferredEffects;

@@ -21,15 +21,22 @@ namespace Game.Unity
         [SerializeField] private bool blindComposition;
         /// <summary>叙事纸面不预告正确答案；历史灰盒仍可保留旧配方提示。</summary>
         public void ConfigureBlindComposition(bool enabled) { blindComposition = enabled; }
+        [SerializeField] private bool quietStudio;
+        /// <summary>保留拖动与提交，清空装饰性提示并固定字号、提交位置。</summary>
+        public void ConfigureQuietStudio(bool enabled) { quietStudio = enabled; }
         private readonly Dictionary<ClueId, RectTransform> cards = new Dictionary<ClueId, RectTransform>();
         private GameSession session;
         private NotebookView notebook;
         private ClueId[] candidateInputs = new ClueId[0];
         private float successUntil;
+        private float failureUntil;
+        /// <summary>失败只在纸面上短暂回应，不预告正确配方，也不混入旁白。</summary>
+        public void ShowFailure()
+        { invitation.text = "这两点还没形成联系。"; failureUntil = Time.unscaledTime + 2.2f; }
         private Image[] inkMotes;
         private Vector2 moteOrigin;
-        /// <summary>当前近邻词条的输入；没有近邻时提交全部词条，由领域判定。</summary>
-        public IReadOnlyList<ClueId> CombinationInput => candidateInputs.Length > 0 ? candidateInputs : cards.Keys.ToArray();
+        /// <summary>正式画室提交全部活动词条；历史灰盒保留近邻兼容。</summary>
+        public IReadOnlyList<ClueId> CombinationInput => quietStudio ? cards.Keys.ToArray() : candidateInputs.Length > 0 ? candidateInputs : cards.Keys.ToArray();
         /// <summary>活动卡片的数量，不是已知线索数量。</summary>
         public int ActiveCardCount => cards.Count;
         /// <summary>配置纸面技术对象，保留所有已有线索和世界状态。</summary>
@@ -52,7 +59,7 @@ namespace Game.Unity
             Clear();
             action.onClick.RemoveAllListeners(); action.onClick.AddListener(notebook.InterpretSelected);
         }
-        /// <summary>点击词条也能放到画布；已经放入的词再次点击可移回。</summary>
+        /// <summary>历史灰盒的点击选择入口；正式画室从拖动入口添加词条。</summary>
         public void Toggle(ClueId clue)
         {
             if (cards.ContainsKey(clue)) Remove(clue);
@@ -72,9 +79,10 @@ namespace Game.Unity
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
             rect.sizeDelta = new Vector2(142, 62); rect.anchoredPosition = localPosition;
             var label = button.GetComponentInChildren<Text>(); label.text = definition.DisplayName;
-            label.fontSize = definition.Category == ClueCategory.Concept ? 28 : definition.Category == ClueCategory.Observation ? 20 : 23;
+            label.fontSize = quietStudio ? 22 : definition.Category == ClueCategory.Concept ? 28 : definition.Category == ClueCategory.Observation ? 20 : 23;
+            if (quietStudio) label.color = definition.Category == ClueCategory.Concept ? new Color(.25f,.39f,.63f) : definition.Category == ClueCategory.Observation ? new Color(.48f,.39f,.29f) : new Color(.20f,.30f,.26f);
             var image = button.GetComponent<Image>(); image.color = new Color(.87f,.82f,.66f,.12f);
-            button.onClick.RemoveAllListeners(); button.onClick.AddListener(() => Remove(clue));
+            button.onClick.RemoveAllListeners(); button.onClick.AddListener(() => { if (quietStudio) notebook.SelectClue(clue); else Remove(clue); });
             button.gameObject.AddComponent<NotebookClueDrag>().Configure(this, clue, true);
             cards.Add(clue, rect); Refresh(); return rect;
         }
@@ -84,7 +92,7 @@ namespace Game.Unity
             RectTransformUtility.ScreenPointToLocalPointInRectangle(workspace, screen, camera, out var point);
             return point;
         }
-        /// <summary>移动活动词条，重新请求近邻的只读提示。</summary>
+        /// <summary>移动活动词条并更新淡线；正式画室不查询配方提示。</summary>
         public void Move(ClueId clue, Vector2 position)
         { if (cards.TryGetValue(clue, out var card)) { notebook.PrepareCanvasInput(); card.anchoredPosition = position; Refresh(); } }
         /// <summary>拖到纸面外即归还边栏；已知线索不会被消费。</summary>
@@ -97,6 +105,7 @@ namespace Game.Unity
                 card.anchoredPosition = new Vector2(Mathf.Clamp(card.anchoredPosition.x,-bound.x,bound.x),Mathf.Clamp(card.anchoredPosition.y,-bound.y,bound.y));
                 Refresh();
             }
+            notebook.NotifyCanvasChanged();
         }
         /// <summary>归还一个输入卡片；领域收藏保持原样。</summary>
         public void Remove(ClueId clue)
@@ -109,13 +118,14 @@ namespace Game.Unity
         {
             foreach (var card in cards.Values) { card.gameObject.SetActive(false); Destroy(card.gameObject); }
             if (inkMotes != null) foreach(var mote in inkMotes) mote.gameObject.SetActive(false);
-            cards.Clear(); candidateInputs = new ClueId[0]; successUntil = 0;
+            cards.Clear(); candidateInputs = new ClueId[0]; successUntil = 0; failureUntil = 0;
             foreach (var line in lines) line.enabled = false;
-            action.gameObject.SetActive(false); invitation.text = "把记下的细节拖到这里";
+            action.gameObject.SetActive(false); invitation.text = quietStudio ? "" : "把记下的细节拖到这里";
         }
         /// <summary>成功时淡线短暂变亮；不把闪光当作配方完成的第二份状态。</summary>
         public void ShowSuccess()
         {
+            failureUntil = 0; invitation.text = "";
             successUntil = Time.unscaledTime + .85f;
             moteOrigin=Vector2.zero;
             foreach(var card in cards.Values) moteOrigin+=card.anchoredPosition/Mathf.Max(1,cards.Count);
@@ -128,8 +138,9 @@ namespace Game.Unity
             if (session == null) return;
             candidateInputs = new ClueId[0]; SemanticRecipe recipe = null;
             var all = cards.Keys.ToArray();
-            // 先考虑三词精确组合；第三词远离时允许独立的两词近邻提示。
-            if (all.Length >= 2)
+            // 正式画室全部提交；只有历史灰盒使用旧的近邻选择逻辑。
+            if (quietStudio) candidateInputs = all;
+            else if (all.Length >= 2)
             {
                 var groups = new List<ClueId[]>();
                 bool threeTogether=all.Length==3 && all.All(a=>all.All(b=>Vector2.Distance(cards[a].anchoredPosition,cards[b].anchoredPosition)<=205));
@@ -144,16 +155,20 @@ namespace Game.Unity
                 }
             }
             foreach(var line in lines) line.enabled = false;
-            bool canTry = blindComposition ? candidateInputs.Length >= 2 : recipe != null;
+            bool canTry = quietStudio || blindComposition ? candidateInputs.Length >= 2 : recipe != null;
+            // 语义纸面拥有提交许可；不能继承旧槽位在无输入时留下的禁用状态。
+            action.interactable = canTry;
             action.gameObject.SetActive(canTry);
-            invitation.text = cards.Count == 0 ? "把记下的细节拖到这里" : "";
+            invitation.text = !quietStudio && cards.Count == 0 ? "把记下的细节拖到这里" : "";
             if (!canTry) return;
             Vector2 center = Vector2.zero;
             foreach(var clue in candidateInputs) center += cards[clue].anchoredPosition / candidateInputs.Length;
-            ((RectTransform)action.transform).anchoredPosition = center + new Vector2(0,-62);
+            ((RectTransform)action.transform).anchoredPosition = quietStudio ? new Vector2(0, -workspace.rect.height * .5f - 28) : center + new Vector2(0,-62);
             // 按输入的语义重量提供动词，不查询这组词是否存在答案。
             bool containsObject = candidateInputs.Any(c => session.Rules.Clues.Single(x => x.Id == c).Category == ClueCategory.Object);
-            action.GetComponentInChildren<Text>().text = blindComposition ? (containsObject ? "解释" : "联想")
+            var actionLabel = action.GetComponentInChildren<Text>();
+            actionLabel.color = new Color(.40f, .29f, .12f, 1);
+            actionLabel.text = quietStudio ? "解释" : blindComposition ? (containsObject ? "解释" : "联想")
                 : recipe.ProducesClues.Count > 0 ? "联想" : "解释";
             for(int i=0;i<candidateInputs.Length-1;i++)
             {
@@ -168,6 +183,7 @@ namespace Game.Unity
         }
         private void Update()
         {
+            if (failureUntil > 0 && Time.unscaledTime >= failureUntil) { failureUntil = 0; Refresh(); }
             if (successUntil <= 0) return;
             float remaining=Mathf.Clamp01((successUntil-Time.unscaledTime)/.85f);
             for(int i=0;i<inkMotes.Length;i++)

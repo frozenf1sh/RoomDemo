@@ -39,6 +39,7 @@ namespace Game.Domain
             // 命令分发只区分输入方式，不能在这里写盆栽、海或窗户的规则。
             if (command is InspectObject inspect) accepted = Inspect(state, inspect, events);
             else if (command is AdvanceDay) accepted = Advance(state, events);
+            else if (command is PerformSceneAction action) accepted = Act(state, action, events);
             else if (command is ObserveDetail detail) accepted = Observe(state, detail, events);
             else if (command is Combine combine) accepted = Combine(state, combine.Clues, events);
             else if (command is Interpret interpret) accepted = Interpret(state, interpret, events);
@@ -74,7 +75,7 @@ namespace Game.Domain
             var known = rules.Recipes.SelectMany(x => x.Produces.Concat(x.Requires))
                 .Concat(rules.Reactions.SelectMany(x => x.Produces.Concat(x.Requires)))
                 .Concat(rules.Discoveries.SelectMany(x => x.Requires)).Concat(rules.Observations.SelectMany(x => x.Requires))
-                .Concat(rules.DeclaredFacts).ToHashSet();
+                .Concat(rules.DeclaredFacts).Concat(rules.SceneActions.SelectMany(x => x.Requires.Concat(x.Produces).Concat(x.Blocks))).ToHashSet();
             if (facts.Any(f => !known.Contains(f))) throw new ArgumentException("未知的调试事实。");
             var events = new List<DomainEvent>();
             AddFacts(state, facts, events);
@@ -138,6 +139,24 @@ namespace Game.Domain
             // 重复点细节仍可阅读描述，但 HashSet 保证线索与发现提示只新增一次。
             GrantClues(state, definition.Grants, events);
             events.Add(new ObjectInspected(command.Source, definition.Description));
+            return true;
+        }
+
+        /// <summary>验证亲手操作的真实来源；动作只添加事实，不完成重要解释。</summary>
+        private bool Act(GameState state, PerformSceneAction command, List<DomainEvent> events)
+        {
+            var rule = rules.SceneActions.FirstOrDefault(x => x.Id == command.ActionId && x.Source == command.Source);
+            bool allowed = rule != null && state.Knows(command.Source) && rule.Requires.All(state.HasFact)
+                && !rule.Blocks.Any(state.HasFact) && !state.CanvasLocked;
+            if (!allowed)
+            {
+                events.Add(new InspectionFailed(command.Source, rule == null ? "这里没有这个操作。" : rule.LockedDescription));
+                return false;
+            }
+            // 重复命令不会追加重复事实，也不会刷新路线计数。
+            if (rule.Produces.All(state.HasFact)) return true;
+            events.Add(new ObjectInspected(command.Source, rule.Description));
+            AddFacts(state, rule.Produces, events);
             return true;
         }
 
