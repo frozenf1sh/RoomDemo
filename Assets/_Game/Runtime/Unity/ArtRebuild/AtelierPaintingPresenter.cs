@@ -21,7 +21,7 @@ namespace Game.Unity.ArtRebuild
         private readonly Vector4[] dabs = new Vector4[32];
         private static readonly FactId[] SketchFacts = { AtelierRules.CupSketched, AtelierRules.BrushSketched, AtelierRules.LampSketched, AtelierRules.WindowSketched };
         private int motif = -1, dabCount, taps;
-        private float waterProgress, lampProgress, clock, travel;
+        private float waterProgress, lampProgress, openProgress, clock, travel;
         private Vector2 last;
         private bool drawing;
         /// <summary>当前临时选中的静物，不是领域事实。</summary>
@@ -36,6 +36,7 @@ namespace Game.Unity.ArtRebuild
             for (int i = 0; i < 4; i++) layers[i] = IsSketched(i) ? 1 : 0;
             waterProgress = game.State.HasFact(StudioRules.PictureFlow) ? 1 : 0;
             lampProgress = game.State.HasFact(StudioRules.PictureLit) ? 1 : 0;
+            openProgress = game.State.HasFact(StudioRules.PictureOpen) ? 1 : 0;
             clock = 0; SelectMotif(-1); Apply();
         }
         /// <summary>选择眼前的真实物件；更换物件会丢弃未确认的试笔。</summary>
@@ -75,6 +76,7 @@ namespace Game.Unity.ArtRebuild
                 layers[i] = Mathf.MoveTowards(layers[i], IsSketched(i) ? 1 : 0, Time.deltaTime / (i == 3 ? 4.2f : 2.8f));
             waterProgress = Mathf.MoveTowards(waterProgress, session.State.HasFact(StudioRules.PictureFlow) ? 1 : 0, Time.deltaTime / 2.4f);
             lampProgress = Mathf.MoveTowards(lampProgress, session.State.HasFact(StudioRules.PictureLit) ? 1 : 0, Time.deltaTime / 3.2f);
+            openProgress = Mathf.MoveTowards(openProgress, session.State.HasFact(StudioRules.PictureOpen) ? 1 : 0, Time.deltaTime / 3.8f);
             Apply();
         }
         private void Apply()
@@ -88,6 +90,7 @@ namespace Game.Unity.ArtRebuild
             properties.SetFloat("_WaterPaint", waterProgress);
             properties.SetVector("_LampRegion", new Vector4(LampUV.x, LampUV.y, .055f, .09f));
             properties.SetFloat("_LampPaint", lampProgress);
+            properties.SetFloat("_OpenPaint", openProgress);
             properties.SetFloat("_PaintTime", clock);
             Surface.SetPropertyBlock(properties);
         }

@@ -75,11 +75,11 @@ namespace Game.Domain
             Object(StillLamp, "桌上的灯", "灯光照着桌面，瓷座上的花纹已经磨淡。");
             Object(StudioRules.PictureWater, "画里的水", "杯子已经画上了，水面还是静的。", new[] { CupSketched });
             Object(StudioRules.PictureLamp, "画里的灯", "画里画了灯芯，却还没有点上那一点亮色。", new[] { LampSketched });
-            Object(StudioRules.PictureWindow, "画里的窗", "窗前那道帘子还挡着山坡上的小屋。", new[] { WindowSketched });
+            Object(StudioRules.PictureWindow, "画里的窗", "画里还留着刚才遮住窗边的帘子。", new[] { WindowSketched });
             Object(StudioRules.Cup, "杯里的水", "一只洗笔杯。杯口有旧颜料，水还很清。");
             Object(StudioRules.LampBody, "左边的油灯", "灯芯是黑的，玻璃罩搁在一旁。灯碗里还有油。");
             Object(Matches, "火柴", "纸盒侧面有一条磨旧的砂纸，抽屉里还剩几根火柴。");
-            Object(StudioRules.Curtain, "窗帘", "帘环挂在铜杆上，拉绳压在扣子下面。");
+            Object(StudioRules.Curtain, "窗帘", "帘环挂在铜杆上，拉绳从左边的铜环垂下来。");
             Object(WetPaper, "纸上的湿色", "蓝色的水迹沿着纸纤维洇开。", new[] { PaperWet });
             Object(Trial, "画边的湿色", "木板上蹭了一道湿颜料，旁边搭着擦笔布。");
             Object(StudioRules.Window, "窗框", "灰蓝色的漆压在木纹上，转角处还能看见刷痕。");
@@ -94,8 +94,8 @@ namespace Game.Domain
             Detail(StudioRules.Cup, "spread", "散开的水纹", "笔尖碰过的地方，蓝色沿着一圈圈水纹散开。", StudioRules.Washed);
             Detail(StudioRules.LampBody, "dark", "熄灭的灯芯", "灯芯没有发光。");
             Detail(StudioRules.LampBody, "bright", "亮起的灯芯", "火苗停在灯芯顶端，瓷座也亮了一点。", StudioRules.LampTurned);
-            Detail(StudioRules.Curtain, "hidden", "遮住的窗帘", "帘褶遮着近处的那间小屋。");
-            Detail(StudioRules.Curtain, "revealed", "拉开的窗帘", "帘环收向一边，窗外露了出来。", StudioRules.CurtainReleased);
+            Detail(StudioRules.Curtain, "hidden", "遮住的窗帘", "帘褶挤着窗边，挡住了一小片山坡。");
+            Detail(StudioRules.Curtain, "revealed", "拉开的窗帘", "帘环收向两边，窗边的山坡多露出了一点。", StudioRules.CurtainReleased);
             Detail(Trial, "wet", "擦前的湿色", "木纹被一层没干的蓝灰颜料盖住。");
             Detail(Trial, "base", "擦后的底色", "布带走了湿颜料，原来的木纹露出来了。", TrialWiped);
             Idea("flow", StudioRules.Flow, "流动", "still", "spread");
@@ -137,7 +137,7 @@ namespace Game.Domain
             actions.Add(new SceneActionRule("wash", StudioRules.Cup, none, new[] { StudioRules.Washed }, "笔尖的蓝色在水里散开了。", "先看看杯里的水。"));
             actions.Add(new SceneActionRule("strike_match", Matches, none, new[] { MatchStruck }, "火柴头擦过砂纸，亮了起来。", "先拿一根火柴。"));
             actions.Add(new SceneActionRule("light_wick", StudioRules.LampBody, new[] { MatchStruck }, new[] { StudioRules.LampTurned }, "火苗留在灯芯上。", "先把火柴划亮，再送到灯芯边。"));
-            actions.Add(new SceneActionRule("release_curtain", StudioRules.Curtain, none, new[] { StudioRules.CurtainReleased }, "帘子收向一边。", "拉绳还压在扣子下面。"));
+            actions.Add(new SceneActionRule("release_curtain", StudioRules.Curtain, none, new[] { StudioRules.CurtainReleased }, "帘子沿着铜杆收向两边。", "先看看窗边的拉绳。"));
             actions.Add(new SceneActionRule("wipe_trial", Trial, none, new[] { TrialWiped }, "木纹露出来了。", "布要碰到湿颜料。"));
             actions.Add(new SceneActionRule("observe_whole", SharedMark, new[] { RoofErased, StudioRules.FullSky }, new[] { SharedMarkSeen, WholeObserved }, "这几道笔迹连在一起。", "先看清它经过了哪里。"));
             actions.Add(new SceneActionRule("deliver", Painting, new[] { ReadyToDeliver }, new[] { CanvasDelivered }, "画交出去了。", "画还有几处没完成。", new[] { RealityTouched, RoomErased }));

@@ -137,8 +137,9 @@ namespace Game.Editor.ArtRebuild
                 for(int i=0;i<renderers.Length;i++)
                 {
                     var r=renderers[i];int stage=3;string objectPath=PathOf(r.transform);
-                    if(objectPath.Contains("独立洗笔工作簇")||objectPath.Contains("Quixel 厚木工作台"))stage=0;
-                    if(objectPath.Contains("杯口支承点")||objectPath.Contains("带颜料的真实调色板"))stage=1;
+                    // 杯层只包含杯身和液面；桌面属于后续环境，不能跟着杯子显出一大片裁切。
+                    if(objectPath.Contains("独立洗笔工作簇")&&!objectPath.Contains("杯口支承点"))stage=0;
+                    if(objectPath.Contains("杯口支承点"))stage=1;
                     if(objectPath.Contains("扫描维多利亚旧油灯"))stage=2;
                     r.sharedMaterials=Enumerable.Repeat(materials[stage],originals[i].Length).ToArray();
                 }
@@ -167,6 +168,17 @@ namespace Game.Editor.ArtRebuild
                 easel.gameObject.SetActive(active);RenderTexture.active=oldActive;RenderTexture.ReleaseTemporary(target);
                 if(capture!=null)Object.DestroyImmediate(capture);Object.DestroyImmediate(cameraObject);foreach(var m in materials)Object.DestroyImmediate(m);
             }
+        }
+        /// <summary>仅修复玩法副本的分色；不重建场景、便条或点灯工作簇。</summary>
+        public static string RepairPaintingMasks()
+        {
+            var scene=SceneManager.GetActiveScene();
+            if(EditorApplication.isPlaying||scene.path!=AtelierGameplayBuilder.ScenePath||scene.isDirty)
+                throw new InvalidOperationException("请先保存独立玩法场景并退出运行模式。");
+            var game=Object.FindAnyObjectByType<AtelierGameplay>();
+            BakeMasks(GameObject.Find("独立夜间画室").transform,game);
+            EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
+            return "已修复杯层分色，保留当前人工场景。";
         }
         private static string PathOf(Transform t) => t.parent==null?t.name:PathOf(t.parent)+"/"+t.name;
         private static Transform Child(Transform parent,string name)

@@ -1,0 +1,83 @@
+{
+  "status": "completed",
+  "duration": 0.13,
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "results": [
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.BlankCanvasAndNoteNeverGrantStillLifeObjects",
+      "Status": "Passed",
+      "Duration": 0.0715941,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.DeliveryClosesOnlyTheOrdinaryPaintingRoute",
+      "Status": "Passed",
+      "Duration": 0.0048409,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.LightingNeedsStruckMatchAndSeparateBrightObservation",
+      "Status": "Passed",
+      "Duration": 0.0013083,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.ObservationAndPhysicalActionNeverGrantFinishedConceptOrAnotherObject",
+      "Status": "Passed",
+      "Duration": 0.0089513,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.PaintingObjectsIsNeutralAndWaterMustBeClickedSeparately",
+      "Status": "Passed",
+      "Duration": 0.0011732,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.SkyAndRoofNeedNeitherWaterLightNorLocalFrameErasure(True)",
+      "Status": "Passed",
+      "Duration": 0.0015841,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.SkyAndRoofNeedNeitherWaterLightNorLocalFrameErasure(False)",
+      "Status": "Passed",
+      "Duration": 0.0011958,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.StrikingRequiresOwnMatchClickAndNeverGrantsLampOrLight",
+      "Status": "Passed",
+      "Duration": 0.0010631,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.ThirdPaintCompletionWaitsForExplicitDeliveryAndStillAllowsExperiment",
+      "Status": "Passed",
+      "Duration": 0.0013511,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Game.Tests.AtelierRouteTests.UnconfirmedErasePreparationHasNoDomainSideEffects",
+      "Status": "Passed",
+      "Duration": 0.0025307,
+      "Message": null,
+      "StackTrace": null
+    }
+  ]
+}

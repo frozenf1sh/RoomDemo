@@ -1,0 +1,3 @@
+模式=调试命令及 UI 事件回放，非原生输入证明
+事实=atelier.cup_sketched、atelier.brush_sketched
+错误=0
