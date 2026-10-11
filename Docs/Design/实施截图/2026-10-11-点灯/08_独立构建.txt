@@ -1,0 +1,8 @@
+时间=277.689
+分辨率=1600×900
+错误累计=0
+画作近看=False
+笔记打开=False
+使用过UI事件回放=True
+事实=atelier.cup_sketched、atelier.brush_sketched、atelier.lamp_sketched、atelier.window_sketched、atelier.still_life_painted、studio.washed、studio.picture_flow
+已知=atelier.manuscript、atelier.brush、studio.cup、atelier.obs.still、atelier.painting、atelier.still_lamp、studio.window、atelier.obs.spread、studio.flow、studio.picture_water、studio.lamp_body、atelier.obs.dark

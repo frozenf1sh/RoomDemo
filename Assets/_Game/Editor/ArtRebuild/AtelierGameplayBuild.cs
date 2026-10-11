@@ -32,6 +32,19 @@ namespace Game.Editor.ArtRebuild
             try { Debug.Log(BuildMac("AtelierOpening_20261011")); }
             catch(Exception exception) { Debug.LogException(exception); }
         }
+        /// <summary>点灯阶段另存独立包，不覆盖上轮已验收的开场包。</summary>
+        public static string QueueLampBuild()
+        {
+            EditorApplication.update -= BuildLamp;
+            EditorApplication.update += BuildLamp;
+            return "已排入实体点灯构建";
+        }
+        private static void BuildLamp()
+        {
+            EditorApplication.update -= BuildLamp;
+            try { Debug.Log(BuildMac("AtelierLight_20261011")); }
+            catch(Exception exception) { Debug.LogException(exception); }
+        }
         /// <summary>保存已审核的新场景并构建 macOS 试玩包；失败报告保留供诊断。</summary>
         public static string BuildMac(string outputName = "AtelierPlayable_20261011")
         {

@@ -25,7 +25,8 @@ namespace Game.Unity.ArtRebuild
         public OneLineSubtitle Captions;
         public AtelierWashPresenter Wash;
         public AtelierPaintingPresenter Painting;
-        public Transform FocusPose, DeskFocusPose;
+        public AtelierLampPresenter Lamp;
+        public Transform FocusPose, DeskFocusPose, LampFocusPose;
         public GameObject ManuscriptPanel;
         public Text HoverText, ObservationText;
         public GameObject ContextPanel, PausePanel;
@@ -53,6 +54,7 @@ namespace Game.Unity.ArtRebuild
             Session = new GameSession(AtelierRules.Create());
             Notebook.EscapeClosesNotebook = false;
             Notebook.Bind(Session); Wash.Bind(Session); Painting.Bind(Session); Narrator.Bind(Session);
+            if (Lamp != null) Lamp.Bind(Session);
             Session.EventRaised += OnEvent;
             Notebook.OpenChanged += OnNotebook;
             ContextAction.gameObject.SetActive(false);
@@ -96,6 +98,7 @@ namespace Game.Unity.ArtRebuild
             if (focused && focusKind == AtelierTargetKind.Manuscript) return;
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { HoverText.text = ""; return; }
             var ray = ViewCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+            if (Lamp != null) Lamp.SetPointer(ray, focused && focusKind == AtelierTargetKind.OilLamp);
             if (!Physics.Raycast(ray, out var hit, 20, PickingMask, QueryTriggerInteraction.Collide)) { HoverText.text = ""; return; }
             var target = hit.collider.GetComponent<AtelierInteractionTarget>();
             HoverText.text = target != null ? target.DisplayName : "";
@@ -138,6 +141,56 @@ namespace Game.Unity.ArtRebuild
         {
             selected = target;
             ContextPanel.SetActive(true); ContextAction.gameObject.SetActive(false);
+            if (target.Kind == AtelierTargetKind.OilLamp || target.Kind == AtelierTargetKind.Wick)
+            {
+                Session.Inspect(StudioRules.LampBody);
+                if (!focused || focusKind != AtelierTargetKind.OilLamp)
+                {
+                    Session.ObserveDetail(StudioRules.LampBody, Session.State.HasFact(StudioRules.LampTurned) ? "bright" : "dark");
+                    focused = true; focusKind = AtelierTargetKind.OilLamp;
+                    StartCamera(LampFocusPose.position, LampFocusPose.rotation, 43);
+                    return;
+                }
+                if (target.Kind == AtelierTargetKind.Wick && Lamp.HasBurningMatch && !Session.State.HasFact(StudioRules.LampTurned))
+                {
+                    if (!Lamp.CanTouchWick)
+                    { ObservationText.text = "把火柴凑近灯芯，再点一下。"; return; }
+                    // 指针真正命中裸露灯芯并将火柴头送到接触点，才提交正常点灯命令。
+                    Session.ObserveDetail(StudioRules.LampBody, "dark");
+                    Lamp.HoldAtWick();
+                    Session.PerformAction(StudioRules.LampBody, "light_wick");
+                    ObservationText.text = "火从火柴头接到了灯芯上。";
+                    return;
+                }
+                if (Lamp.IgnitionPlaying) { ObservationText.text = "火苗还没稳住，稍等一下。"; return; }
+                bool lit = Session.State.HasFact(StudioRules.LampTurned);
+                Session.ObserveDetail(StudioRules.LampBody, lit ? "bright" : "dark");
+                ObservationText.text = lit ? "火苗稳在灯芯上，瓷座和桌面也暖了一点。\n按 N，比较点火前后的灯芯。" : "灯芯露在外面，玻璃罩搁在旁边。\n先取一根火柴，沿盒侧砂纸划一下。";
+                return;
+            }
+            if (target.Kind == AtelierTargetKind.Matches || target.Kind == AtelierTargetKind.MatchStriker)
+            {
+                Session.Inspect(AtelierRules.Matches);
+                if (!focused || focusKind != AtelierTargetKind.OilLamp)
+                {
+                    focused = true; focusKind = AtelierTargetKind.OilLamp;
+                    StartCamera(LampFocusPose.position, LampFocusPose.rotation, 43);
+                    return;
+                }
+                if (target.Kind == AtelierTargetKind.Matches)
+                {
+                    Lamp.TakeMatch();
+                    ObservationText.text = "取了一根火柴。\n点盒子朝前的砂纸边，让火柴头划过去。";
+                }
+                else if (Lamp.HasMatch)
+                {
+                    if (Session.State.HasFact(AtelierRules.MatchStruck)) Lamp.StrikeAgain();
+                    else Session.PerformAction(AtelierRules.Matches, "strike_match");
+                    ObservationText.text = "沿砂纸擦亮，再把火送到灯芯边。";
+                }
+                else ObservationText.text = "先点纸盒里露出的火柴，取一根。";
+                return;
+            }
             if (target.Kind == AtelierTargetKind.Manuscript)
             {
                 Session.Inspect(AtelierRules.Manuscript);
@@ -199,6 +252,11 @@ namespace Game.Unity.ArtRebuild
             }
             else if (!Session.State.HasFact(AtelierRules.StillLifePainted))
                 ObservationText.text = "先选一样眼前的东西。\n杯子、笔、灯和窗，都可以画。";
+            else if (Vector2.Distance(uv, Painting.LampUV) < .11f && Session.State.HasFact(AtelierRules.LampSketched))
+            {
+                Session.Inspect(StudioRules.PictureLamp);
+                ObservationText.text = Session.State.HasFact(StudioRules.PictureLit) ? "画里的灯芯亮了，暖色沿着瓷座铺开。" : "灯已经画上了，还差灯芯的一点亮色。";
+            }
             else ObservationText.text = "杯子、笔、灯，还有窗外的夜色，都画上去了。";
         }
 
@@ -243,6 +301,7 @@ namespace Game.Unity.ArtRebuild
                 focused = false; ContextPanel.SetActive(false); return;
             }
             focused = false; strokeActive = false;
+            if (Lamp != null) Lamp.PutMatchDown();
             StartCamera(homePosition, lookRotation, homeFov);
         }
         private void StartCamera(Vector3 destination, Quaternion rotation, float fov)
@@ -281,7 +340,10 @@ namespace Game.Unity.ArtRebuild
             if (!(value is CombinationSucceeded result)) return;
             if (result.RecipeId.StartsWith("atelier.sketch.") && !Session.State.HasFact(AtelierRules.StillLifePainted)) Say("sketch_first");
             if (result.RecipeId == "atelier.idea.flow") Say("flow_learned");
-            if (result.RecipeId == "atelier.meaning.picture_water") Say("water_painted");
+            if (result.RecipeId == "atelier.meaning.picture_water") { Say("water_painted"); StartCoroutine(AfterWaterPainting()); }
+            if (result.RecipeId == "atelier.idea.light") Say("light_learned");
+            if (result.RecipeId == "atelier.meaning.picture_lamp") Say("lamp_painted");
+            if (result.RecipeId == "atelier.meaning.water_light") StartCoroutine(AfterWrongLight());
             if (result.RecipeId == "atelier.meaning.water_flow")
             {
                 if (delayedVoice != null) StopCoroutine(delayedVoice);
@@ -293,6 +355,17 @@ namespace Game.Unity.ArtRebuild
             // 世界事实已经成立；这里只等最后一层短笔触收齐，才评论“东西都在了”。
             yield return new WaitForSeconds(4.6f);
             if (!Session.State.HasFact(AtelierRules.RealityTouched)) Say("still_life");
+        }
+        private IEnumerator AfterWaterPainting()
+        {
+            // 等局部水色和前句说完，只发旁白请求，不生成新观察或物体。
+            yield return new WaitForSeconds(6);
+            if (!Session.State.HasFact(StudioRules.LampTurned)) Say("lamp_next");
+        }
+        private IEnumerator AfterWrongLight()
+        {
+            yield return new WaitForSeconds(1.4f);
+            Say("outside_light");
         }
         private IEnumerator AfterVisibleResult()
         {

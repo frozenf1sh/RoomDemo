@@ -20,6 +20,11 @@ namespace Game.Tests
         {
             game.Inspect(source);
             game.ObserveDetail(source, before);
+            if (source == StudioRules.LampBody)
+            {
+                game.Inspect(AtelierRules.Matches);
+                game.PerformAction(AtelierRules.Matches, "strike_match");
+            }
             game.PerformAction(source, action);
             game.ObserveDetail(source, after);
             Pair(AtelierRules.Observation(before), AtelierRules.Observation(after));
@@ -138,6 +143,34 @@ namespace Game.Tests
             Assert.IsFalse(game.State.HasFact(AtelierRules.RoofErased));
             Assert.AreEqual(0, game.State.DeviationCount);
             Assert.IsFalse(game.State.HasCompleted(recipe.Id));
+        }
+        [Test] public void StrikingRequiresOwnMatchClickAndNeverGrantsLampOrLight()
+        {
+            game.PerformAction(AtelierRules.Matches, "strike_match");
+            Assert.IsFalse(game.State.HasFact(AtelierRules.MatchStruck));
+            game.Inspect(AtelierRules.Matches);
+            game.PerformAction(AtelierRules.Matches, "strike_match");
+            Assert.IsTrue(game.State.HasFact(AtelierRules.MatchStruck));
+            Assert.IsFalse(game.State.Knows(StudioRules.LampBody));
+            Assert.IsFalse(game.State.Knows(StudioRules.Light));
+            Assert.IsFalse(game.State.HasFact(StudioRules.LampTurned));
+        }
+        [Test] public void LightingNeedsStruckMatchAndSeparateBrightObservation()
+        {
+            game.Inspect(StudioRules.LampBody);
+            game.ObserveDetail(StudioRules.LampBody, "dark");
+            game.PerformAction(StudioRules.LampBody, "light_wick");
+            Assert.IsFalse(game.State.HasFact(StudioRules.LampTurned));
+            game.Inspect(AtelierRules.Matches);
+            game.PerformAction(AtelierRules.Matches, "strike_match");
+            game.PerformAction(StudioRules.LampBody, "light_wick");
+            Assert.IsTrue(game.State.HasFact(StudioRules.LampTurned));
+            Assert.IsFalse(game.State.Knows(AtelierRules.Observation("bright")));
+            Assert.IsFalse(game.State.Knows(StudioRules.Light));
+            game.ObserveDetail(StudioRules.LampBody, "bright");
+            Pair(AtelierRules.Observation("dark"), AtelierRules.Observation("bright"));
+            Assert.IsTrue(game.State.Knows(StudioRules.Light));
+            Assert.IsFalse(game.State.Knows(StudioRules.PictureLamp));
         }
     }
 }
