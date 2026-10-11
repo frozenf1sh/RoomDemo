@@ -37,6 +37,9 @@
 # 如需忽略资源商店工具插件，可取消下一行注释。
 # /[Aa]ssets/AssetStoreTools*
 
+# 外部资产原包保留在本机；纳入项目的资源必须在对应来源与许可文档中登记。
+/AssetIntake/
+
 # 自动生成的 JetBrains Rider 插件
 /[Aa]ssets/Plugins/Editor/JetBrains*
 # JetBrains Rider 个人设置
