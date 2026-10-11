@@ -140,7 +140,7 @@ namespace Game.Domain
             actions.Add(new SceneActionRule("release_curtain", StudioRules.Curtain, none, new[] { StudioRules.CurtainReleased }, "帘子沿着铜杆收向两边。", "先看看窗边的拉绳。"));
             actions.Add(new SceneActionRule("wipe_trial", Trial, none, new[] { TrialWiped }, "木纹露出来了。", "布要碰到湿颜料。"));
             actions.Add(new SceneActionRule("observe_whole", SharedMark, new[] { RoofErased, StudioRules.FullSky }, new[] { SharedMarkSeen, WholeObserved }, "这几道笔迹连在一起。", "先看清它经过了哪里。"));
-            actions.Add(new SceneActionRule("deliver", Painting, new[] { ReadyToDeliver }, new[] { CanvasDelivered }, "画交出去了。", "画还有几处没完成。", new[] { RealityTouched, RoomErased }));
+            actions.Add(new SceneActionRule("deliver", Painting, new[] { ReadyToDeliver }, new[] { CanvasDelivered }, "这张画稿定下了，留在画架上晾干，明早交稿。", "画还有几处没完成。", new[] { RealityTouched, RoomErased }));
             return new RuleSet(clues.ToArray(), objects.ToArray(), recipes.ToArray(), reactions.ToArray(), observations.ToArray(),
                 sceneActions: actions.ToArray(), canvasLockFact: CanvasDelivered);
         }

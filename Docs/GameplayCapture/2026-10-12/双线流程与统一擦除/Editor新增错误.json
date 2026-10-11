@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "command": "command console",
+  "data": {
+    "command": "console",
+    "parameters": {
+      "level": "error",
+      "since": "273"
+    },
+    "result": {
+      "entries": [],
+      "cursor": 292,
+      "session": "7d5b4bf23c5e4414aeea0d6fb4fa089b",
+      "returned": 0,
+      "dropped": false,
+      "reset": false,
+      "counts": {
+        "error": 150,
+        "warn": 45,
+        "log": 97
+      },
+      "groundTruth": {
+        "sampledUtc": "2026-10-11T16:48:29.217839Z",
+        "ageMs": 155,
+        "compilationFailed": false,
+        "compiling": false,
+        "consoleErrors": 0,
+        "consoleWarnings": 1,
+        "consoleLogs": 6,
+        "seeded": true
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

@@ -134,6 +134,25 @@ namespace Game.Tests
             Apply(AtelierRules.Erase, StudioRules.Room);
             Assert.IsTrue(game.State.HasFact(AtelierRules.RoomErased));
         }
+        [Test] public void RoomEndingNeverPretendsDeliveryOrLocksBackToCanvas()
+        {
+            LearnThree();
+            Learn(AtelierRules.Trial, "wet", "wipe_trial", "base", AtelierRules.Erase);
+            Apply(AtelierRules.Erase, StudioRules.Ceiling);
+            Apply(StudioRules.Light, StudioRules.Sky);
+            Apply(StudioRules.Flow, StudioRules.Sky);
+            game.Inspect(AtelierRules.SharedMark);
+            game.PerformAction(AtelierRules.SharedMark, "observe_whole");
+            game.Inspect(StudioRules.Room);
+            Apply(AtelierRules.Erase, StudioRules.Room);
+            Assert.IsTrue(game.State.HasFact(AtelierRules.RoomErased));
+            Assert.IsFalse(game.State.CanvasLocked);
+            Assert.IsFalse(game.State.HasFact(AtelierRules.CanvasDelivered));
+            // 现实路线完成也不能借原交稿动作把玩家突然收束回画布。
+            game.Inspect(AtelierRules.Painting);
+            game.PerformAction(AtelierRules.Painting, "deliver");
+            Assert.IsFalse(game.State.HasFact(AtelierRules.CanvasDelivered));
+        }
         [Test] public void UnconfirmedErasePreparationHasNoDomainSideEffects()
         {
             Learn(AtelierRules.Trial, "wet", "wipe_trial", "base", AtelierRules.Erase);

@@ -1,0 +1,37 @@
+{
+  "Assets/_Game/Content/Scenes/AtelierNight.unity": {
+    "expected": "be276c3cb51614f61f30d5c48d52fe760f958e7847813f85e0b64e7144ff9192",
+    "actual": "be276c3cb51614f61f30d5c48d52fe760f958e7847813f85e0b64e7144ff9192",
+    "unchanged": true
+  },
+  "ProjectSettings/EditorBuildSettings.asset": {
+    "expected": "aed2984944503bf5dff418d2a4e6a6a48bc3f994307d99d6a03fd2f40302f23b",
+    "actual": "aed2984944503bf5dff418d2a4e6a6a48bc3f994307d99d6a03fd2f40302f23b",
+    "unchanged": true
+  },
+  "ProjectSettings/GraphicsSettings.asset": {
+    "expected": "15ff4127a0f261f15321f24c6a6b5c82e1f5a306ad32fd399eac3e3c46c723c9",
+    "actual": "15ff4127a0f261f15321f24c6a6b5c82e1f5a306ad32fd399eac3e3c46c723c9",
+    "unchanged": true
+  },
+  "ProjectSettings/QualitySettings.asset": {
+    "expected": "7be34b7f34b19f2ac1f26a66b93058ee854181a05a397f5fdda4261ac2fe5bea",
+    "actual": "7be34b7f34b19f2ac1f26a66b93058ee854181a05a397f5fdda4261ac2fe5bea",
+    "unchanged": true
+  },
+  "ProjectSettings/ProjectSettings.asset": {
+    "expected": "15f52107ce8113c55e0964616ba507ec4a4edec2d1a068ec54be0a4f0806a388",
+    "actual": "15f52107ce8113c55e0964616ba507ec4a4edec2d1a068ec54be0a4f0806a388",
+    "unchanged": true
+  },
+  "Assets/Settings/UniversalRenderPipelineGlobalSettings.asset": {
+    "expected": "f074f70005181226c7614cbfb06b064e692c1032763bef94ccf334d91d0056d0",
+    "actual": "f074f70005181226c7614cbfb06b064e692c1032763bef94ccf334d91d0056d0",
+    "unchanged": true
+  },
+  "Assets/Settings/DefaultVolumeProfile.asset": {
+    "expected": "6698bfacfad479acfd9766d00aba81ab52527d3b15c8b133d03ed7a2401499d6",
+    "actual": "6698bfacfad479acfd9766d00aba81ab52527d3b15c8b133d03ed7a2401499d6",
+    "unchanged": true
+  }
+}

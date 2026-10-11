@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 namespace Game.Unity.ArtRebuild
 {
-    /// <summary>第一阶段可游玩的画室入口，不连接归档场景的启动器或调试流程。</summary>
+    /// <summary>独立可玩画室的双线入口，不连接归档场景的启动器或调试流程。</summary>
     [DefaultExecutionOrder(100)]
     public sealed class AtelierGameplay : MonoBehaviour
     {
@@ -27,6 +27,9 @@ namespace Game.Unity.ArtRebuild
         public AtelierPaintingPresenter Painting;
         public AtelierLampPresenter Lamp;
         public AtelierCurtainPresenter Curtain;
+        public AtelierFinalePresenter Finale;
+        public AtelierTrialPresenter Trial;
+        public AtelierContinuationInput Continuation;
         public Transform CurtainFocusPose;
         public Transform FocusPose, DeskFocusPose, LampFocusPose;
         public GameObject ManuscriptPanel;
@@ -58,6 +61,12 @@ namespace Game.Unity.ArtRebuild
             Notebook.Bind(Session); Wash.Bind(Session); Painting.Bind(Session); Narrator.Bind(Session);
             if (Lamp != null) Lamp.Bind(Session);
             if (Curtain != null) Curtain.Bind(Session);
+            if (Finale != null)
+                Finale.Bind(Session);
+            if (Trial != null)
+                Trial.Bind(Session);
+            if (Continuation != null)
+                Continuation.Bind(this);
             Session.EventRaised += OnEvent;
             Notebook.OpenChanged += OnNotebook;
             ContextAction.gameObject.SetActive(false);
@@ -80,8 +89,10 @@ namespace Game.Unity.ArtRebuild
                 else if (focused && !transitioning) ReturnToRoom();
                 else SetPaused(!paused);
             }
-            Notebook.ExternalInputBlocked = paused || transitioning || (focused && focusKind == AtelierTargetKind.Manuscript);
-            Reminder.gameObject.SetActive(Notebook.HasUnreadDiscoveries && !Notebook.IsOpen && !paused);
+            bool ending = Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased);
+            Notebook.ExternalInputBlocked = paused || transitioning || ending ||
+                                            (focused && focusKind == AtelierTargetKind.Manuscript);
+            Reminder.gameObject.SetActive(Notebook.HasUnreadDiscoveries && !Notebook.IsOpen && !paused && !ending);
             ReturnButton.gameObject.SetActive(focused && !Notebook.IsOpen && !paused && !transitioning);
             if (paused || Notebook.IsOpen || transitioning || Mouse.current == null) { HoverText.text = ""; return; }
             if (focused && Mouse.current.rightButton.wasPressedThisFrame) { ReturnToRoom(); return; }
@@ -102,8 +113,21 @@ namespace Game.Unity.ArtRebuild
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { HoverText.text = ""; return; }
             var ray = ViewCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
             if (Lamp != null) Lamp.SetPointer(ray, focused && focusKind == AtelierTargetKind.OilLamp);
-            if (!Physics.Raycast(ray, out var hit, 20, PickingMask, QueryTriggerInteraction.Collide)) { HoverText.text = ""; return; }
+            RaycastHit hit;
+            bool picked = Continuation != null
+                ? Continuation.Pick(ray, out hit)
+                : Physics.Raycast(ray, out hit, 20, PickingMask, QueryTriggerInteraction.Collide);
+            if (!picked) { HoverText.text = ""; return; }
             var target = hit.collider.GetComponent<AtelierInteractionTarget>();
+            if (Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased))
+            {
+                HoverText.text = "";
+                return;
+            }
+            if (Continuation != null && Continuation.Pointer(target, hit,
+                Mouse.current.leftButton.wasPressedThisFrame, Mouse.current.leftButton.isPressed,
+                Mouse.current.leftButton.wasReleasedThisFrame))
+                return;
             HoverText.text = target != null ? target.DisplayName : "";
             if (target != null) PositionHover(Mouse.current.position.ReadValue());
             if (target != null && target.Kind == AtelierTargetKind.Painting && IsPaintingFocused && Painting.SelectedMotif >= 0 && !Painting.IsSketched(Painting.SelectedMotif))
@@ -142,6 +166,10 @@ namespace Game.Unity.ArtRebuild
         /// <summary>从一次真实射线命中观察对象；不会自动奖励概念。</summary>
         public void Observe(AtelierInteractionTarget target, Vector2 uv)
         {
+            if (Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased))
+                return;
+            if (Continuation != null && Continuation.Observe(target))
+                return;
             selected = target;
             ContextPanel.SetActive(true); ContextAction.gameObject.SetActive(false);
             if (target.Kind == AtelierTargetKind.Curtain || target.Kind == AtelierTargetKind.CurtainCord)
@@ -290,6 +318,8 @@ namespace Game.Unity.ArtRebuild
                 ObservationText.text = Session.State.HasFact(StudioRules.PictureOpen) ? "画里的帘子也收开了一点。" : "画里还留着刚才遮住窗边的帘子。\n刚才拉帘时看到的变化，可以画在这里。";
             }
             else ObservationText.text = "杯子、笔、灯，还有窗外的夜色，都画上去了。";
+            if (Continuation != null)
+                Continuation.OfferDelivery();
         }
 
         private void SelectMotif(int index)
@@ -326,6 +356,8 @@ namespace Game.Unity.ArtRebuild
         public void ReturnToRoom()
         {
             if (!focused || transitioning) return;
+            if (Continuation != null)
+                Continuation.CancelFocus();
             if (ManuscriptPanel != null) ManuscriptPanel.SetActive(false);
             if (focusKind == AtelierTargetKind.Manuscript)
             {
@@ -335,6 +367,25 @@ namespace Game.Unity.ArtRebuild
             focused = false; strokeActive = false;
             if (Lamp != null) Lamp.PutMatchDown();
             StartCamera(homePosition, lookRotation, homeFov);
+        }
+        /// <summary>新工作簇共用已检查的镜头缓动；只移动视线，不移动被检视物体。</summary>
+        /// <param name="pose">近看机位；缓动期间暂停物体输入。</param>
+        /// <param name="fov">目标垂直视野角。</param>
+        public void FocusAt(Transform pose, float fov)
+        {
+            if (transitioning) return;
+            focused = true;
+            focusKind = AtelierTargetKind.Trial;
+            StartCamera(pose.position, pose.rotation, fov);
+        }
+        /// <summary>输入反馈使用独立世界说明节点，不冒充角色旁白。</summary>
+        /// <param name="text">当前操作或调查说明，不改变事实。</param>
+        /// <param name="visible">是否显示说明；每次更新均收起上一步动作按钮。</param>
+        public void ShowObservation(string text, bool visible)
+        {
+            ObservationText.text = text;
+            ContextPanel.SetActive(visible);
+            ContextAction.gameObject.SetActive(false);
         }
         private void StartCamera(Vector3 destination, Quaternion rotation, float fov)
         {
@@ -368,7 +419,33 @@ namespace Game.Unity.ArtRebuild
         }
         private void OnEvent(DomainEvent value)
         {
-            if (value is FactAdded fact && fact.Fact == AtelierRules.StillLifePainted) StartCoroutine(AfterStillLife());
+            if (value is FactAdded fact)
+            {
+                if (fact.Fact == AtelierRules.StillLifePainted)
+                    StartCoroutine(AfterStillLife());
+                if (fact.Fact == AtelierRules.CanvasDelivered)
+                    Say("delivered");
+                if (fact.Fact == AtelierRules.RoomErased)
+                {
+                    Notebook.SetOpen(false);
+                    ContextPanel.SetActive(false);
+                    ManuscriptPanel.SetActive(false);
+                    focused = false;
+                    strokeActive = false;
+                    if (Continuation != null)
+                        Continuation.CancelFocus();
+                    if (Lamp != null)
+                        Lamp.PutMatchDown();
+                    // 从最后调查的侧墙缓缓回望画架与窗上方；只移动视线，房间几何保持原位。
+                    var ending = Quaternion.LookRotation(new Vector3(.08f, 2.83f, 1.65f) - homePosition);
+                    homeRotation = lookRotation = ending;
+                    yaw = pitch = 0;
+                    StartCamera(homePosition, ending, homeFov);
+                    Say("room_erased");
+                }
+                if (fact.Fact == AtelierRules.WholeObserved)
+                    Say("whole_seen");
+            }
             if (!(value is CombinationSucceeded result)) return;
             if (result.RecipeId.StartsWith("atelier.sketch.") && !Session.State.HasFact(AtelierRules.StillLifePainted)) Say("sketch_first");
             if (result.RecipeId == "atelier.idea.flow") Say("flow_learned");
@@ -377,6 +454,17 @@ namespace Game.Unity.ArtRebuild
             if (result.RecipeId == "atelier.meaning.picture_lamp") { Say("lamp_painted"); StartCoroutine(AfterLampPainting()); }
             if (result.RecipeId == "atelier.idea.open") Say("open_learned");
             if (result.RecipeId == "atelier.meaning.picture_window") Say("window_painted");
+            if (result.RecipeId == "atelier.idea.erase") Say("erase_learned");
+            if (result.RecipeId == "atelier.meaning.roof_erase")
+            {
+                Notebook.SetOpen(false);
+                if (focused)
+                    ReturnToRoom();
+                Say("roof_erased");
+            }
+            if (result.RecipeId == "atelier.meaning.frame_erase") Say("frame_erased");
+            if (result.RecipeId == "atelier.meaning.sky_light") Say("sky_lit");
+            if (result.RecipeId == "atelier.meaning.sky_flow") Say("sky_flow");
             if (result.RecipeId == "atelier.meaning.water_light") StartCoroutine(AfterWrongLight());
             if (result.RecipeId == "atelier.meaning.water_flow")
             {
@@ -394,12 +482,12 @@ namespace Game.Unity.ArtRebuild
         {
             // 等局部水色和前句说完，只发旁白请求，不生成新观察或物体。
             yield return new WaitForSeconds(6);
-            if (!Session.State.HasFact(StudioRules.LampTurned)) Say("lamp_next");
+            if (!Session.State.HasFact(StudioRules.LampTurned) && !Session.State.HasFact(AtelierRules.RealityTouched)) Say("lamp_next");
         }
         private IEnumerator AfterLampPainting()
         {
             yield return new WaitForSeconds(6);
-            if (!Session.State.HasFact(StudioRules.CurtainReleased)) Say("curtain_next");
+            if (!Session.State.HasFact(StudioRules.CurtainReleased) && !Session.State.HasFact(AtelierRules.RealityTouched)) Say("curtain_next");
         }
         private IEnumerator AfterWrongLight()
         {
