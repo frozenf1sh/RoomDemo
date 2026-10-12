@@ -101,6 +101,15 @@ jobs:
         with:
           lfs: true
 
+      - name: 恢复 Windows Unity Library 缓存
+        id: unity-library-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: Library
+          key: roomdemo-unity-${{ runner.os }}-StandaloneWindows64-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            roomdemo-unity-${{ runner.os }}-StandaloneWindows64-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}-
+
       - name: Unity 构建 Windows x86_64 玩家
         uses: game-ci/unity-builder@eb1b9fba120c6e62c9fb7a7a81d6c107ce004c45 # v6.0.0
         env:
@@ -134,6 +143,14 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: 保存 Windows Unity Library 缓存
+        if: success() && steps.unity-library-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        with:
+          path: Library
+          key: roomdemo-unity-${{ runner.os }}-StandaloneWindows64-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}-${{ github.sha }}
+
   build-macos:
     name: 构建 macOS ARM64
     needs: prepare
@@ -146,6 +163,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: true
+
+      - name: 恢复 macOS Unity Library 缓存
+        id: unity-library-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: Library
+          key: roomdemo-unity-${{ runner.os }}-StandaloneOSX-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            roomdemo-unity-${{ runner.os }}-StandaloneOSX-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}-
 
       - name: Unity 构建 macOS ARM64 玩家
         uses: game-ci/unity-builder@eb1b9fba120c6e62c9fb7a7a81d6c107ce004c45 # v6.0.0
@@ -160,6 +186,7 @@ jobs:
           targetPlatform: StandaloneOSX
           buildName: RoomDemo
           buildsPath: build
+          cacheUnityInstallationOnMac: true
           buildMethod: Game.Editor.CliBuild.BuildReleaseFromCi
           customParameters: -roomDemoTarget StandaloneOSX -roomDemoArchitecture arm64 -roomDemoVersion ${{ needs.prepare.outputs.version }} -roomDemoOutput build/StandaloneOSX/RoomDemo.app
           allowDirtyBuild: true
@@ -179,6 +206,14 @@ jobs:
           path: dist/RoomDemo-${{ needs.prepare.outputs.version }}-macOS-arm64.zip
           if-no-files-found: error
           retention-days: 7
+
+      - name: 保存 macOS Unity Library 缓存
+        if: success() && steps.unity-library-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        with:
+          path: Library
+          key: roomdemo-unity-${{ runner.os }}-StandaloneOSX-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}-${{ github.sha }}
 
   publish:
     name: 发布 GitHub Release
