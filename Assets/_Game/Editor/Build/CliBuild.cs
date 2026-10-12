@@ -168,7 +168,8 @@ namespace Game.Editor
             File.Copy("Assets/ThirdParty/LICENSES.md", Path.Combine(outputDirectory, "第三方素材来源.md"), true);
             File.Copy("Assets/ThirdParty/Kenney/FurnitureKit/License.txt", Path.Combine(outputDirectory, "家具模型许可原文.txt"), true);
             File.Copy("Assets/ThirdParty/Kenney/NatureKit/License.txt", Path.Combine(outputDirectory, "自然素材许可原文.txt"), true);
-            Debug.Log("GitHub Actions 发布构建成功：" + target + " / " + architectureName + "，输出位于 " + output);
+            // GameCI CLI 通过固定英文标记识别自定义构建器的成功结果。
+            Debug.Log("Build succeeded! GitHub Actions 发布构建成功：" + target + " / " + architectureName + "，输出位于 " + output);
         }
         /// <summary>读取 Unity 进程的命令行参数，支持显式构建目标。</summary>
         private static string Argument(string name)
