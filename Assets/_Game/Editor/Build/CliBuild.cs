@@ -8,7 +8,9 @@ using System.IO;
 using System.Linq;
 using Game.Domain;
 using Game.Unity;
+using Game.Editor.ArtRebuild;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -90,6 +92,83 @@ namespace Game.Editor
             File.Copy("Assets/ThirdParty/Kenney/FurnitureKit/License.txt", Path.Combine(Path.GetDirectoryName(output), "模型许可原文.txt"), true);
             File.Copy("Assets/ThirdParty/Kenney/NatureKit/License.txt", Path.Combine(Path.GetDirectoryName(output), "自然素材许可原文.txt"), true);
             Debug.Log("命令行构建：成功，输出位于 " + output);
+        }
+        /// <summary>为 GitHub Actions 构建固定场景，并按参数显式选择桌面 CPU 架构。</summary>
+        public static void BuildReleaseFromCi()
+        {
+            string targetName = Argument("-roomDemoTarget");
+            if (!Enum.TryParse(targetName, true, out BuildTarget target) ||
+                (target != BuildTarget.StandaloneWindows64 && target != BuildTarget.StandaloneOSX))
+                throw new ArgumentException("发布流水线只接受 StandaloneWindows64 或 StandaloneOSX。");
+
+            string architectureName = Argument("-roomDemoArchitecture");
+            OSArchitecture architecture;
+            if (string.Equals(architectureName, "x64", StringComparison.OrdinalIgnoreCase))
+                architecture = OSArchitecture.x64;
+            else if (string.Equals(architectureName, "arm64", StringComparison.OrdinalIgnoreCase))
+                architecture = OSArchitecture.ARM64;
+            else
+                throw new ArgumentException("发布流水线架构必须明确为 x64 或 arm64。");
+
+            if ((target == BuildTarget.StandaloneWindows64 && architecture != OSArchitecture.x64) ||
+                (target == BuildTarget.StandaloneOSX && architecture != OSArchitecture.ARM64))
+                throw new ArgumentException("发布平台与要求的 CPU 架构不匹配。");
+
+            string version = Argument("-roomDemoVersion");
+            if (string.IsNullOrWhiteSpace(version) ||
+                !System.Text.RegularExpressions.Regex.IsMatch(version, @"^\d+\.\d+\.\d+-\d{6}$"))
+                throw new ArgumentException("发布版本必须使用 数字.数字.数字-年月日 格式。");
+
+            string output = Argument("-roomDemoOutput");
+            if (string.IsNullOrWhiteSpace(output))
+                output = target == BuildTarget.StandaloneWindows64
+                    ? "build/StandaloneWindows64/RoomDemo.exe"
+                    : "build/StandaloneOSX/RoomDemo.app";
+
+            string extension = target == BuildTarget.StandaloneWindows64 ? ".exe" : ".app";
+            if (!output.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("构建输出扩展名与桌面平台不匹配：" + output);
+
+            // 架构写入本次独立流水线进程的 Standalone 设置，随后立即核对设置值。
+            PlayerSettings.SetArchitecture(NamedBuildTarget.Standalone, (int)architecture);
+            if (PlayerSettings.GetArchitecture(NamedBuildTarget.Standalone) != (int)architecture)
+                throw new InvalidOperationException("Unity 未接受要求的桌面 CPU 架构：" + architectureName);
+
+            PlayerSettings.bundleVersion = version;
+            if (!File.Exists(AtelierGameplayBuilder.ScenePath))
+                throw new FileNotFoundException("固定画室玩法场景不存在。", AtelierGameplayBuilder.ScenePath);
+
+            output = Path.GetFullPath(output);
+            string outputDirectory = Path.GetDirectoryName(output);
+            Directory.CreateDirectory(outputDirectory);
+            // 正式 Build Settings 保持不变；本次只把独立可玩副本交给 BuildPipeline。
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = new[] { AtelierGameplayBuilder.ScenePath },
+                locationPathName = output,
+                target = target,
+                options = BuildOptions.None
+            });
+
+            Directory.CreateDirectory("Logs");
+            File.WriteAllText("Logs/release-build-summary.json", JsonUtility.ToJson(new BuildSummaryData
+            {
+                result = report.summary.result.ToString(),
+                output = output,
+                target = target + " / " + architectureName,
+                errors = report.summary.totalErrors,
+                warnings = report.summary.totalWarnings,
+                bytes = report.summary.totalSize
+            }, true));
+            if (report.summary.result != BuildResult.Succeeded)
+                throw new InvalidOperationException("GitHub Actions 发布构建失败：" + report.summary.result);
+
+            // 字体保留原始 OFL，素材清单和其他原文许可随可玩包一起分发。
+            File.Copy("Assets/ThirdParty/NotoSans/OFL.txt", Path.Combine(outputDirectory, "中文字体许可原文.txt"), true);
+            File.Copy("Assets/ThirdParty/LICENSES.md", Path.Combine(outputDirectory, "第三方素材来源.md"), true);
+            File.Copy("Assets/ThirdParty/Kenney/FurnitureKit/License.txt", Path.Combine(outputDirectory, "家具模型许可原文.txt"), true);
+            File.Copy("Assets/ThirdParty/Kenney/NatureKit/License.txt", Path.Combine(outputDirectory, "自然素材许可原文.txt"), true);
+            Debug.Log("GitHub Actions 发布构建成功：" + target + " / " + architectureName + "，输出位于 " + output);
         }
         /// <summary>读取 Unity 进程的命令行参数，支持显式构建目标。</summary>
         private static string Argument(string name)

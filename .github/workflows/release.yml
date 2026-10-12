@@ -1,0 +1,228 @@
+name: 构建并发布试玩包
+
+on:
+  push:
+    tags:
+      - "0.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 发布版本，例如 0.0.2-261012
+        required: true
+        default: 0.0.2-261012
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: 检查版本与 Unity CI 授权
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - name: 检出 Git 历史
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 限定从 main 分支发布
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::请从 main 分支手动运行此发布工作流。"
+            exit 1
+          fi
+
+      - name: 确认版本标签来自 main 历史
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "::error::版本标签必须指向 main 历史中的提交。"
+            exit 1
+          fi
+
+      - name: 校验发布版本
+        id: version
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{6}$ ]]; then
+            echo "::error::版本格式必须为 数字.数字.数字-年月日，例如 0.0.2-261012。"
+            exit 1
+          fi
+          echo "value=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: 检查 Unity 授权 secrets
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          missing=()
+          [[ -n "$UNITY_LICENSE" || -n "$UNITY_SERIAL" ]] || missing+=(UNITY_LICENSE_or_UNITY_SERIAL)
+          [[ -n "$UNITY_EMAIL" ]] || missing+=(UNITY_EMAIL)
+          [[ -n "$UNITY_PASSWORD" ]] || missing+=(UNITY_PASSWORD)
+          if (( ${#missing[@]} )); then
+            echo "::error::请先在仓库 Actions secrets 中配置 Unity 授权：${missing[*]}。"
+            exit 1
+          fi
+
+      - name: 拒绝覆盖已有版本标签
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if tag_info=$(gh api "repos/$REPOSITORY/git/ref/tags/$RELEASE_VERSION" 2>&1); then
+            echo "::error::标签 $RELEASE_VERSION 已存在；为避免覆盖旧发布，请选择新版本号。"
+            exit 1
+          elif [[ "$tag_info" != *"HTTP 404"* ]]; then
+            echo "$tag_info"
+            echo "::error::无法确认版本标签是否已存在，已停止发布。"
+            exit 1
+          fi
+
+  build-windows:
+    name: 构建 Windows x86_64
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出项目与 Git LFS 资源
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Unity 构建 Windows x86_64 玩家
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: auto
+          targetPlatform: StandaloneWindows64
+          buildName: RoomDemo
+          buildsPath: build
+          buildMethod: Game.Editor.CliBuild.BuildReleaseFromCi
+          customParameters: -roomDemoTarget StandaloneWindows64 -roomDemoArchitecture x64 -roomDemoVersion ${{ needs.prepare.outputs.version }} -roomDemoOutput build/StandaloneWindows64/RoomDemo.exe
+          allowDirtyBuild: true
+
+      - name: 校验架构并打包
+        run: >-
+          python3 Tools/package_release.py
+          --platform windows-x64
+          --source build/StandaloneWindows64
+          --output dist/RoomDemo-${{ needs.prepare.outputs.version }}-Windows-x86_64.zip
+          --root-name RoomDemo-${{ needs.prepare.outputs.version }}-Windows-x86_64
+
+      - name: 上传 Windows 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: dist/RoomDemo-${{ needs.prepare.outputs.version }}-Windows-x86_64.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  build-macos:
+    name: 构建 macOS ARM64
+    needs: prepare
+    runs-on: macos-14
+    steps:
+      - name: 确认 Apple Silicon runner
+        run: test "$(uname -m)" = "arm64"
+
+      - name: 检出项目与 Git LFS 资源
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Unity 构建 macOS ARM64 玩家
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: auto
+          targetPlatform: StandaloneOSX
+          buildName: RoomDemo
+          buildsPath: build
+          buildMethod: Game.Editor.CliBuild.BuildReleaseFromCi
+          customParameters: -roomDemoTarget StandaloneOSX -roomDemoArchitecture arm64 -roomDemoVersion ${{ needs.prepare.outputs.version }} -roomDemoOutput build/StandaloneOSX/RoomDemo.app
+          allowDirtyBuild: true
+
+      - name: 校验架构并打包
+        run: >-
+          python3 Tools/package_release.py
+          --platform macos-arm64
+          --source build/StandaloneOSX
+          --output dist/RoomDemo-${{ needs.prepare.outputs.version }}-macOS-arm64.zip
+          --root-name RoomDemo-${{ needs.prepare.outputs.version }}-macOS-arm64
+
+      - name: 上传 macOS 构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-arm64
+          path: dist/RoomDemo-${{ needs.prepare.outputs.version }}-macOS-arm64.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: 发布 GitHub Release
+    needs: [prepare, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载两平台包
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*"
+          path: dist
+          merge-multiple: true
+
+      - name: 生成 SHA-256 清单
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          files = sorted(Path("dist").glob("RoomDemo-*.zip"))
+          if len(files) != 2:
+              raise SystemExit(f"预期收到两个平台 ZIP，实际收到 {len(files)} 个。")
+          lines = []
+          for path in files:
+              digest = hashlib.sha256()
+              with path.open("rb") as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              lines.append(f"{digest.hexdigest()}  {path.name}")
+          Path("dist/SHA256SUMS.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: 发布双平台 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: RoomDemo ${{ needs.prepare.outputs.version }}
+          body: |
+            此版本采用固定主视角，玩家不能手动转动或缩放镜头。
+
+            - Windows：x86_64（AMD64 PE）
+            - macOS：Apple Silicon ARM64
+            - ZIP 在上传前检查了可执行文件架构、CRC 与 UTF-8 文件名标志。
+          files: dist/*
+          fail_on_unmatched_files: true
+          make_latest: true
