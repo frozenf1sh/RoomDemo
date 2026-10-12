@@ -40,8 +40,8 @@ namespace Game.Unity.ArtRebuild
         private readonly HashSet<string> spoken = new HashSet<string>();
         private AtelierInteractionTarget selected;
         private Vector3 homePosition;
-        private Quaternion homeRotation, lookRotation;
-        private float homeFov, yaw, pitch;
+        private Quaternion homeRotation;
+        private float homeFov;
         private bool focused, transitioning, paused;
         private AtelierTargetKind focusKind;
         private bool strokeActive;
@@ -54,7 +54,7 @@ namespace Game.Unity.ArtRebuild
         private void Start()
         {
             homePosition = ViewCamera.transform.position;
-            homeRotation = lookRotation = ViewCamera.transform.rotation;
+            homeRotation = ViewCamera.transform.rotation;
             homeFov = ViewCamera.fieldOfView;
             Session = new GameSession(AtelierRules.Create());
             Notebook.EscapeClosesNotebook = false;
@@ -95,20 +95,8 @@ namespace Game.Unity.ArtRebuild
             Reminder.gameObject.SetActive(Notebook.HasUnreadDiscoveries && !Notebook.IsOpen && !paused && !ending);
             ReturnButton.gameObject.SetActive(focused && !Notebook.IsOpen && !paused && !transitioning);
             if (paused || Notebook.IsOpen || transitioning || Mouse.current == null) { HoverText.text = ""; return; }
+            // 主视角不读取拖拽或滚轮镜头输入；近景右键仍保留为明确的返回操作。
             if (focused && Mouse.current.rightButton.wasPressedThisFrame) { ReturnToRoom(); return; }
-            if (!focused)
-            {
-                if (Mouse.current.rightButton.isPressed || (keyboard != null && keyboard.spaceKey.isPressed))
-                {
-                    Vector2 delta = Mouse.current.delta.ReadValue();
-                    yaw = Mathf.Clamp(yaw + delta.x * .12f, -76, 76);
-                    pitch = Mathf.Clamp(pitch - delta.y * .12f, -55, 68);
-                    ViewCamera.transform.rotation = homeRotation * Quaternion.Euler(pitch, yaw, 0);
-                    lookRotation = ViewCamera.transform.rotation;
-                }
-                float wheel = Mouse.current.scroll.ReadValue().y;
-                if (Mathf.Abs(wheel) > .01f) ViewCamera.fieldOfView = Mathf.Clamp(ViewCamera.fieldOfView - Mathf.Clamp(wheel * .12f, -4, 4), 32, 64);
-            }
             if (focused && focusKind == AtelierTargetKind.Manuscript) return;
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { HoverText.text = ""; return; }
             var ray = ViewCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
@@ -352,7 +340,7 @@ namespace Game.Unity.ArtRebuild
             focused = true; focusKind = AtelierTargetKind.Painting;
             StartCamera(FocusPose.position, FocusPose.rotation, 47);
         }
-        /// <summary>返回之前的观察方向与机位，画作解释不自动关书或返回。</summary>
+        /// <summary>返回固定主视角机位，画作解释不自动关书或返回。</summary>
         public void ReturnToRoom()
         {
             if (!focused || transitioning) return;
@@ -366,7 +354,7 @@ namespace Game.Unity.ArtRebuild
             }
             focused = false; strokeActive = false;
             if (Lamp != null) Lamp.PutMatchDown();
-            StartCamera(homePosition, lookRotation, homeFov);
+            StartCamera(homePosition, homeRotation, homeFov);
         }
         /// <summary>新工作簇共用已检查的镜头缓动；只移动视线，不移动被检视物体。</summary>
         /// <param name="pose">近看机位；缓动期间暂停物体输入。</param>
@@ -438,8 +426,7 @@ namespace Game.Unity.ArtRebuild
                         Lamp.PutMatchDown();
                     // 从最后调查的侧墙缓缓回望画架与窗上方；只移动视线，房间几何保持原位。
                     var ending = Quaternion.LookRotation(new Vector3(.08f, 2.83f, 1.65f) - homePosition);
-                    homeRotation = lookRotation = ending;
-                    yaw = pitch = 0;
+                    homeRotation = ending;
                     StartCamera(homePosition, ending, homeFov);
                     Say("room_erased");
                 }
