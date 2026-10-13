@@ -53,6 +53,7 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: -7925718525651456287}
   - {fileID: 4249211034169120201}
+  - {fileID: 6489855328828518076}
   m_RendererFeatureMap: ad6b866f10d7b46cl
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -98,3 +99,17 @@ MonoBehaviour:
   kuwaharaShader: {fileID: 4800000, guid: 45e4dc1ae6eb0461db90a69b14f9def1, type: 3}
   worldBrushShader: {fileID: 4800000, guid: a0db0495d3dd44b379e45edfde689b4a, type: 3}
   influenceCompositeShader: {fileID: 4800000, guid: 86dee0be4880241eaa8fb63f827b0c55, type: 3}
+--- !u!114 &6489855328828518076
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 313d991e075cb4180a6ff339a23ba79c, type: 3}
+  m_Name: "\u56FA\u5B9A\u753B\u5E45\u661F\u591C_\u539F\u7248\u7ED8\u753B\u6DF1\u5EA6\u5408\u6210"
+  m_EditorClassIdentifier: Game.RealtimePainterly::Game.Unity.TechnicalArt.RealtimePainterly.Production.FixedViewSkyFeature
+  m_Active: 1
+  compositeShader: {fileID: 4800000, guid: 3838b4206810a4658921f744b7336aa8, type: 3}
