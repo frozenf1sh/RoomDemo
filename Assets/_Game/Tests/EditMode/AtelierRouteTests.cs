@@ -94,6 +94,34 @@ namespace Game.Tests
             Pair(AtelierRules.Observation("still"), AtelierRules.Observation("spread"));
             Assert.IsTrue(game.State.Knows(StudioRules.Flow));
         }
+        [Test] public void SecondObservationUnlocksLogicBeforeItPermitsCombination()
+        {
+            game.Inspect(StudioRules.Cup);
+            game.ObserveDetail(StudioRules.Cup, "still");
+            Assert.IsFalse(game.State.HasFact(AtelierRules.F("logic.flow")));
+            game.PerformAction(StudioRules.Cup, "wash");
+
+            var events = game.ObserveDetail(StudioRules.Cup, "spread");
+
+            Assert.IsTrue(events.OfType<LogicDiscovered>().Any(x => x.LogicId == "logic.flow"));
+            Assert.IsTrue(game.State.HasFact(AtelierRules.F("logic.flow")));
+            Pair(AtelierRules.Observation("still"), AtelierRules.Observation("spread"));
+            Assert.IsTrue(game.State.Knows(StudioRules.Flow));
+            Assert.IsFalse(game.State.HasFact(AtelierRules.F("logic.flow")));
+            Assert.IsTrue(game.State.HasConsumedLogic("logic.flow"));
+
+            // 之后继续发现别的词条，也不能把已消耗的灵感重新授予。
+            game.Inspect(StudioRules.LampBody);
+            Assert.IsFalse(game.State.HasFact(AtelierRules.F("logic.flow")));
+        }
+        [Test] public void DebugLogicRestoreAlsoRestoresItsVisibleObservationCards()
+        {
+            game.DebugAddFact(AtelierRules.F("logic.light"));
+
+            Assert.IsTrue(game.State.Knows(AtelierRules.Observation("dark")));
+            Assert.IsTrue(game.State.Knows(AtelierRules.Observation("bright")));
+            Assert.IsTrue(game.State.HasFact(AtelierRules.F("logic.light")));
+        }
         [Test] public void ThirdPaintCompletionWaitsForExplicitDeliveryAndStillAllowsExperiment()
         {
             LearnThree(); FinishPainting();

@@ -45,6 +45,7 @@ namespace Game.Domain
             var recipes = new List<SemanticRecipe>();
             var reactions = new List<ReactionRule>();
             var actions = new List<SceneActionRule>();
+            var logics = new List<LogicDefinition>();
             var none = Array.Empty<FactId>();
             void Object(ObjectId id, string label, string description, FactId[] requires = null, bool quiet = false)
             {
@@ -57,11 +58,17 @@ namespace Game.Domain
                 clues.Add(new ClueDefinition(Observation(key), label, ClueCategory.Observation));
                 observations.Add(new ObservationDiscovery(id, key, text, requires, new[] { Observation(key) }));
             }
-            void Idea(string id, ClueId concept, string label, string before, string after)
+            FactId Logic(string id, string label, ClueId first, ClueId second)
+            {
+                var fact = F("logic." + id);
+                logics.Add(new LogicDefinition("logic." + id, label, fact, new[] { first, second }));
+                return fact;
+            }
+            void Idea(string id, ClueId concept, string label, string before, string after, FactId logic)
             {
                 clues.Add(new ClueDefinition(concept, label, ClueCategory.Concept));
                 recipes.Add(new SemanticRecipe("atelier.idea." + id, new[] { Observation(before), Observation(after) },
-                    none, new[] { concept }, none));
+                    new[] { logic }, new[] { concept }, none));
             }
             void Apply(string id, ClueId concept, ObjectId target, FactId fact,
                 NarrativeDisposition disposition = NarrativeDisposition.Deviant, FactId[] requires = null)
@@ -92,16 +99,21 @@ namespace Game.Domain
 
             Detail(StudioRules.Cup, "still", "平静的水面", "水面很平，灯的倒影落在杯边。");
             Detail(StudioRules.Cup, "spread", "散开的水纹", "笔尖碰过的地方，蓝色沿着一圈圈水纹散开。", StudioRules.Washed);
-            Detail(StudioRules.LampBody, "dark", "熄灭的灯芯", "灯芯没有发光。");
-            Detail(StudioRules.LampBody, "bright", "亮起的灯芯", "火苗停在灯芯顶端，瓷座也亮了一点。", StudioRules.LampTurned);
+            // 前后状态使用完整短语，笔记本中能直接读出“同一盏油灯的变化”。
+            Detail(StudioRules.LampBody, "dark", "熄灭的油灯", "油灯的灯芯没有发光。");
+            Detail(StudioRules.LampBody, "bright", "点亮的油灯", "火苗停在油灯灯芯顶端，瓷座也亮了一点。", StudioRules.LampTurned);
             Detail(StudioRules.Curtain, "hidden", "遮住的窗帘", "帘褶挤着窗边，挡住了一小片山坡。");
             Detail(StudioRules.Curtain, "revealed", "拉开的窗帘", "帘环收向两边，窗边的山坡多露出了一点。", StudioRules.CurtainReleased);
             Detail(Trial, "wet", "擦前的湿色", "木纹被一层没干的蓝灰颜料盖住。");
             Detail(Trial, "base", "擦后的底色", "布带走了湿颜料，原来的木纹露出来了。", TrialWiped);
-            Idea("flow", StudioRules.Flow, "流动", "still", "spread");
-            Idea("light", StudioRules.Light, "点亮", "dark", "bright");
-            Idea("open", StudioRules.Open, "打开", "hidden", "revealed");
-            Idea("erase", Erase, "擦除", "wet", "base");
+            var flowLogic = Logic("flow", "流动的灵感", Observation("still"), Observation("spread"));
+            var lightLogic = Logic("light", "点亮的灵感", Observation("dark"), Observation("bright"));
+            var openLogic = Logic("open", "打开的灵感", Observation("hidden"), Observation("revealed"));
+            var eraseLogic = Logic("erase", "擦除的灵感", Observation("wet"), Observation("base"));
+            Idea("flow", StudioRules.Flow, "流动", "still", "spread", flowLogic);
+            Idea("light", StudioRules.Light, "点亮", "dark", "bright", lightLogic);
+            Idea("open", StudioRules.Open, "打开", "hidden", "revealed", openLogic);
+            Idea("erase", Erase, "擦除", "wet", "base", eraseLogic);
             Apply("picture_water", StudioRules.Flow, StudioRules.PictureWater, StudioRules.PictureFlow, NarrativeDisposition.Compliant);
             Apply("picture_lamp", StudioRules.Light, StudioRules.PictureLamp, StudioRules.PictureLit, NarrativeDisposition.Compliant);
             Apply("picture_window", StudioRules.Open, StudioRules.PictureWindow, StudioRules.PictureOpen, NarrativeDisposition.Compliant);
@@ -142,7 +154,7 @@ namespace Game.Domain
             actions.Add(new SceneActionRule("observe_whole", SharedMark, new[] { RoofErased, StudioRules.FullSky }, new[] { SharedMarkSeen, WholeObserved }, "这几道笔迹连在一起。", "先看清它经过了哪里。"));
             actions.Add(new SceneActionRule("deliver", Painting, new[] { ReadyToDeliver }, new[] { CanvasDelivered }, "这张画稿定下了，留在画架上晾干，明早交稿。", "画还有几处没完成。", new[] { RealityTouched, RoomErased }));
             return new RuleSet(clues.ToArray(), objects.ToArray(), recipes.ToArray(), reactions.ToArray(), observations.ToArray(),
-                sceneActions: actions.ToArray(), canvasLockFact: CanvasDelivered);
+                sceneActions: actions.ToArray(), canvasLockFact: CanvasDelivered, logics: logics.ToArray());
         }
     }
 }

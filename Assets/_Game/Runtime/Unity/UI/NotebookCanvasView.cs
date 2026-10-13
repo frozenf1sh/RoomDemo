@@ -47,7 +47,13 @@ namespace Game.Unity
         public int ActiveCardCount => cards.Count;
         /// <summary>配置纸面技术对象，保留所有已有线索和世界状态。</summary>
         public void Configure(RectTransform area, Button template, Button submit, Image[] threads, Text prompt)
-        { workspace = area; cardTemplate = template; action = submit; lines = threads; invitation = prompt; }
+        {
+            workspace = area;
+            cardTemplate = template;
+            action = submit;
+            lines = threads;
+            invitation = prompt;
+        }
         /// <summary>换会话清除临时摆放，不复用上一局的解释提示。</summary>
         public void Bind(GameSession game, NotebookView view)
         {
@@ -90,7 +96,9 @@ namespace Game.Unity
             button.name = "CanvasClue_" + clue.Value; button.gameObject.SetActive(true);
             var rect = (RectTransform)button.transform;
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
-            rect.sizeDelta = new Vector2(142, 62); rect.anchoredPosition = localPosition;
+            // 词条卡片跟随 Prefab 模板尺寸，方便美术在 Inspector 中直接调节。
+            rect.sizeDelta = ((RectTransform)cardTemplate.transform).sizeDelta;
+            rect.anchoredPosition = localPosition;
             var label = button.GetComponentInChildren<Text>(); label.text = definition.DisplayName;
             label.fontSize = quietStudio ? 22 : definition.Category == ClueCategory.Concept ? 28 : definition.Category == ClueCategory.Observation ? 20 : 23;
             if (quietStudio) label.color = definition.Category == ClueCategory.Concept ? new Color(.25f,.39f,.63f) : definition.Category == ClueCategory.Observation ? new Color(.48f,.39f,.29f) : new Color(.20f,.30f,.26f);
@@ -132,7 +140,8 @@ namespace Game.Unity
             if (!RectTransformUtility.RectangleContainsScreenPoint(workspace, screen, camera)) Remove(clue);
             else if (cards.TryGetValue(clue, out var card))
             {
-                var bound = workspace.rect.size * .5f - new Vector2(73, 32);
+                var halfCard = card.rect.size * .5f;
+                var bound = workspace.rect.size * .5f - halfCard;
                 card.anchoredPosition = new Vector2(Mathf.Clamp(card.anchoredPosition.x,-bound.x,bound.x),Mathf.Clamp(card.anchoredPosition.y,-bound.y,bound.y));
                 Refresh();
             }
@@ -193,9 +202,7 @@ namespace Game.Unity
             action.gameObject.SetActive(canTry);
             invitation.text = !quietStudio && cards.Count == 0 ? "把记下的细节拖到这里" : "";
             if (!canTry) return;
-            Vector2 center = Vector2.zero;
-            foreach(var clue in candidateInputs) center += cards[clue].anchoredPosition / candidateInputs.Length;
-            ((RectTransform)action.transform).anchoredPosition = quietStudio ? new Vector2(0, -workspace.rect.height * .5f - 28) : center + new Vector2(0,-62);
+            // 解释按钮的位置完全由 Prefab 决定；运行时只更新可用性和文案，不能跟随词条或工作区改写位置。
             // 按输入的语义重量提供动词，不查询这组词是否存在答案。
             bool containsObject = candidateInputs.Any(c => session.Rules.Clues.Single(x => x.Id == c).Category == ClueCategory.Object);
             var actionLabel = action.GetComponentInChildren<Text>();

@@ -60,8 +60,7 @@ namespace Game.Domain
             if (clues.Any(c => !rules.Clues.Any(d => d.Id == c)))
                 throw new ArgumentException("未知的调试碎片。");
             var events = new List<DomainEvent>();
-            foreach (var clue in clues)
-                if (state.Discover(clue)) events.Add(new ClueDiscovered(clue));
+            GrantClues(state, clues, events);
             return events.AsReadOnly();
         }
 
@@ -74,10 +73,14 @@ namespace Game.Domain
             // 允许所有规则引用的事实，不把具体试玩内容写死在引擎中。
             var known = rules.Recipes.SelectMany(x => x.Produces.Concat(x.Requires))
                 .Concat(rules.Reactions.SelectMany(x => x.Produces.Concat(x.Requires)))
+                .Concat(rules.Logics.Select(x => x.UnlockFact))
                 .Concat(rules.Discoveries.SelectMany(x => x.Requires)).Concat(rules.Observations.SelectMany(x => x.Requires))
                 .Concat(rules.DeclaredFacts).Concat(rules.SceneActions.SelectMany(x => x.Requires.Concat(x.Produces).Concat(x.Blocks))).ToHashSet();
             if (facts.Any(f => !known.Contains(f))) throw new ArgumentException("未知的调试事实。");
             var events = new List<DomainEvent>();
+            // 调试或预设若直接写入灵感事实，也必须恢复其观察前提；否则会形成“有灵感却没有可解释词条”的无效状态。
+            foreach (var logic in rules.Logics.Where(x => facts.Contains(x.UnlockFact)))
+                GrantClues(state, logic.RequiresClues, events);
             AddFacts(state, facts, events);
             EvaluateReactions(state, events);
             return events.AsReadOnly();
@@ -193,9 +196,10 @@ namespace Game.Domain
                 return false;
             }
 
-            // 碎片不会被消耗；成功只记录配方并添加其输出事实。
+            // 碎片不会被消耗；灵感是一次性许可，成功落笔后必须从当前事实中移除并留下不可恢复记录。
             state.Complete(recipe.Id, recipe.Disposition);
             events.Add(new CombinationSucceeded(recipe.Id, recipe.ProducesClues));
+            ConsumeRequiredLogics(state, recipe, events);
             // 两类输出都由数据驱动；线索先发布，随后事实进入同一个反应闭包。
             GrantClues(state, recipe.ProducesClues, events);
             AddFacts(state, recipe.ProducesFacts, events);
@@ -266,6 +270,31 @@ namespace Game.Domain
                 var category = rules.Clues.Single(x => x.Id == clue).Category;
                 if (category == ClueCategory.Object) events.Add(new ObjectDiscovered(new ObjectId(clue.Value)));
                 if (category == ClueCategory.Concept) events.Add(new ConceptDiscovered(new ConceptId(clue.Value)));
+            }
+            EvaluateLogics(state, events);
+        }
+
+        /// <summary>在每次发现后检查灵感；只由已知碎片取得，不能由 UI 或动画提前写入。</summary>
+        private void EvaluateLogics(GameState state, List<DomainEvent> events)
+        {
+            foreach (var logic in rules.Logics)
+            {
+                // 已使用的灵感不应因之后发现新词条而重新出现；未使用时仍由 HashSet 去重。
+                if (state.HasConsumedLogic(logic.Id) || !logic.RequiresClues.All(state.Knows) || !state.AddFact(logic.UnlockFact)) continue;
+                events.Add(new LogicDiscovered(logic.Id));
+                events.Add(new FactAdded(logic.UnlockFact));
+            }
+        }
+
+        /// <summary>消耗本次配方显式要求的灵感，普通世界事实不会被此方法移除。</summary>
+        private void ConsumeRequiredLogics(GameState state, SemanticRecipe recipe, List<DomainEvent> events)
+        {
+            foreach (var logic in rules.Logics.Where(x => recipe.Requires.Contains(x.UnlockFact)))
+            {
+                // 配方许可已在 Combine 的前置校验中确认；两道去重都用于兼容异常预设恢复。
+                if (!state.RemoveFact(logic.UnlockFact)) continue;
+                state.ConsumeLogic(logic.Id);
+                events.Add(new LogicConsumed(logic.Id));
             }
         }
 

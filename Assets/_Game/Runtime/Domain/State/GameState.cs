@@ -13,6 +13,8 @@ namespace Game.Domain
         // 线索、事实、反应、历史分别去重；外部不得得到集合的可写引用。
         private readonly HashSet<ClueId> clues = new HashSet<ClueId>();
         private readonly HashSet<FactId> facts = new HashSet<FactId>();
+        // 灵感是一次性的组合许可；已用记录不能从当前事实反推，否则下一次发现会错误恢复它。
+        private readonly HashSet<string> consumedLogics = new HashSet<string>();
         private readonly HashSet<string> reactions = new HashSet<string>();
         private readonly HashSet<string> recipes = new HashSet<string>();
         private readonly Dictionary<ClueId, ClueCategory> categories;
@@ -67,6 +69,8 @@ namespace Game.Domain
         public bool Knows(ConceptId id) => Knows(new ClueId(id.Value));
         /// <summary>查询事实是否已成立。</summary>
         public bool HasFact(FactId id) => facts.Contains(id);
+        /// <summary>查询指定灵感是否已经被一次成功组合消耗。</summary>
+        public bool HasConsumedLogic(string id) => consumedLogics.Contains(id);
         /// <summary>查询反应是否已经执行。</summary>
         public bool HasFired(string id) => reactions.Contains(id);
         /// <summary>查询配方是否已经由玩家建立。</summary>
@@ -77,6 +81,10 @@ namespace Game.Domain
         internal bool Discover(ClueId id) => clues.Add(id);
         /// <summary>领域内部添加事实，以集合去重保证事件唯一。</summary>
         internal bool AddFact(FactId id) => facts.Add(id);
+        /// <summary>领域内部移除一次性事实，返回是否确实从当前状态消耗。</summary>
+        internal bool RemoveFact(FactId id) => facts.Remove(id);
+        /// <summary>记录已经消耗的灵感，阻止后续观察再次自动授予。</summary>
+        internal bool ConsumeLogic(string id) => consumedLogics.Add(id);
         /// <summary>领域内部标记反应，阻止循环或重复执行。</summary>
         internal bool Fire(string id) => reactions.Add(id);
         /// <summary>领域内部记录已完成的玩家配方。</summary>
