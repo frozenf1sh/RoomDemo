@@ -1,5 +1,15 @@
-// 文件：ApprovedSkyPaint.hlsl。职责：复用已通过星夜的笔触与颜料起伏，支持星光独立显现。
-// 边界：生产适配增加星光权重；原 Hero Shader 保持不变。
+// 文件：ApprovedSkyPaint.hlsl。职责：复用原 Hero 的颜料、暖星与动态笔势。
+// 边界：只把两份有限历史在取色前混合；不移动星位，不添加替代颜料流动的微光。
+TEXTURE2D(_PigmentNext); SAMPLER(sampler_PigmentNext);
+float _SkyHistoryBlend;
+float4 SampleSkyPigment(float2 uv)
+{
+    float4 colour=SAMPLE_TEXTURE2D(_Pigment,sampler_Pigment,uv);
+    // 同一笔触只绘制一次，先混合浓度与厚度，避免两套刷毛轮廓交叉重影。
+    [branch] if(_SkyHistoryBlend>.00001)
+        colour=lerp(colour,SAMPLE_TEXTURE2D(_PigmentNext,sampler_PigmentNext,uv),_SkyHistoryBlend);
+    return colour;
+}
             float3 FlowBrushes(float2 uv,float3 pigment,float2 direction)
             {
                 float2 q=uv*float2(1.7777778,1),grid=floor(q/.036);
@@ -17,7 +27,7 @@
                     float length=.021+seed.x*.030,width=.0035+seed.y*.0040;
                     float taper=sqrt(saturate(1-pow(along/length,2)));
                     float mask=(1-smoothstep(width*taper*.72,width*taper+.0006,abs(side)))*(1-smoothstep(length*.87,length,abs(along)));
-                    float3 colour=SAMPLE_TEXTURE2D(_Pigment,sampler_Pigment,anchor/float2(1.7777778,1)).rgb;
+                    float3 colour=SampleSkyPigment(anchor/float2(1.7777778,1)).rgb;
                     colour*=.80+seed.y*.43;
                     painted+=colour*mask;weight+=mask;
                 }
@@ -27,10 +37,10 @@
             half4 LivingSkyPaint(float2 inputUV)
             {
                 float2 uv=inputUV;
-                float4 paint=SAMPLE_TEXTURE2D(_Pigment,sampler_Pigment,uv);
+                float4 paint=SampleSkyPigment(uv);
                 float2 ts=_Pigment_TexelSize.xy;
-                float h1=SAMPLE_TEXTURE2D(_Pigment,sampler_Pigment,uv+float2(ts.x,0)).a;
-                float h2=SAMPLE_TEXTURE2D(_Pigment,sampler_Pigment,uv+float2(0,ts.y)).a;
+                float h1=SampleSkyPigment(uv+float2(ts.x,0)).a;
+                float h2=SampleSkyPigment(uv+float2(0,ts.y)).a;
                 float relief=clamp((h1-paint.a)*1.3+(h2-paint.a)*.8,-.10,.10);
                 float2 direction=normalize(Velocity(uv)*float2(1.7777778,1)+1e-6);
                 float3 colour=FlowBrushes(uv,paint.rgb,direction)*(1+relief);

@@ -34,6 +34,9 @@
 # 录制文件可能很大，不纳入版本控制。
 /[Rr]ecordings/
 
+# 固定画幅星夜的本地录像、截图与性能取证，不随生产资源提交。
+/Docs/TechnicalArt/Production/FixedView/
+
 # 如需忽略资源商店工具插件，可取消下一行注释。
 # /[Aa]ssets/AssetStoreTools*
 

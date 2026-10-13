@@ -53,6 +53,8 @@ namespace Game.Unity.ArtRebuild
             InstallMaterials(ArtRoot);
             InstallMaterials(GameplayRoot);
             Sky.SeparateLightAndFlow = true;
+            // 新会话取消上一轮颜料历史；只恢复表现，不改变任何世界事实。
+            Sky.ResetEffect();
             Sky.SetCoverage(0);
             Sky.SetFlow(0);
             Sky.LightTo(0, 0);
