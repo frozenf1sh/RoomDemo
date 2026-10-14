@@ -49,6 +49,18 @@ namespace Game.Unity.ArtRebuild
         /// <summary>擦除后不再命中已经不存在的屋顶；标记和整体调查只在实际显现后开放。</summary>
         public bool Pick(Ray ray, out RaycastHit selected)
         {
+            // Unity 的组件启动顺序可能让第一次射线早于显式 Bind；此处只恢复输入适配器引用，
+            // 不创建会话或改写任何领域事实。
+            if (game == null)
+            {
+                game = GetComponent<AtelierGameplay>();
+                session = game != null ? game.Session : null;
+            }
+            if (game == null || session == null || Finale == null)
+            {
+                selected = default;
+                return false;
+            }
             foreach (var hit in Physics.RaycastAll(ray, 40, game.PickingMask, QueryTriggerInteraction.Collide)
                          .OrderBy(h => h.distance))
             {

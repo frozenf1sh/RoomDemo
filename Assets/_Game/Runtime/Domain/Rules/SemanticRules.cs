@@ -10,7 +10,9 @@ namespace Game.Domain
 {
     /// <summary>碎片显示分类；观察是具体细节，概念是联想产物；分类不参与配方判定。</summary>
     public enum ClueCategory { Object = 0, Concept = 1, Modifier = 2, Phrase = 3, Observation = 4 }
-    /// <summary>碎片的稳定身份、中文显示名与类别。</summary>
+    /// <summary>笔记本的词性分栏；只影响显示，不参与配方匹配。</summary>
+    public enum CluePartOfSpeech { Noun = 0, Adjective = 1, Other = 2 }
+    /// <summary>碎片的稳定身份、中文显示名、类别与词性。</summary>
     public sealed class ClueDefinition
     {
         /// <summary>内容的稳定身份，用于查找与去重。</summary>
@@ -19,11 +21,19 @@ namespace Game.Domain
         public string DisplayName { get; }
         /// <summary>碎片的显示分类，不决定配方是否合法。</summary>
         public ClueCategory Category { get; }
+        /// <summary>笔记本左页使用的词性；不改变稳定 ID 或领域匹配规则。</summary>
+        public CluePartOfSpeech PartOfSpeech { get; }
         /// <summary>轻声发现只闪烁小笔记提醒，不使用大的发现面板。</summary>
         public bool QuietDiscovery { get; }
         /// <summary>创建包含中文显示名的碎片定义。</summary>
-        public ClueDefinition(ClueId id, string displayName, ClueCategory category, bool quietDiscovery = false)
-        { Id = id; DisplayName = displayName; Category = category; QuietDiscovery = quietDiscovery; }
+        public ClueDefinition(ClueId id, string displayName, ClueCategory category, bool quietDiscovery = false, CluePartOfSpeech? partOfSpeech = null)
+        {
+            Id = id; DisplayName = displayName; Category = category; QuietDiscovery = quietDiscovery;
+            // 旧内容未显式标注时保持符合玩家直觉的默认分栏，新增内容仍可覆盖。
+            PartOfSpeech = partOfSpeech ?? (category == ClueCategory.Object ? CluePartOfSpeech.Noun
+                : category == ClueCategory.Observation || category == ClueCategory.Modifier ? CluePartOfSpeech.Adjective
+                : CluePartOfSpeech.Other);
+        }
     }
     /// <summary>有限配方：无序精确输入与前置事实，输出线索和／或事实。</summary>
     public sealed class SemanticRecipe
@@ -75,6 +85,26 @@ namespace Game.Domain
         /// <returns>仅当输入与本配方完全相等时返回 true。</returns>
         public bool Matches(IReadOnlyList<ClueId> inputs) => inputs != null && inputs.Count == Inputs.Count && inputs.Distinct().Count() == inputs.Count && Inputs.All(inputs.Contains);
     }
+    /// <summary>灵感的内容定义；第二个所需碎片出现时记入状态，之后才允许关联配方成立。</summary>
+    public sealed class LogicDefinition
+    {
+        /// <summary>灵感的稳定英文标识，统一以 logic. 前缀命名。</summary>
+        public string Id { get; }
+        /// <summary>面向玩家的中文显示名。</summary>
+        public string DisplayName { get; }
+        /// <summary>灵感已经获得的唯一事实记录。</summary>
+        public FactId UnlockFact { get; }
+        /// <summary>触发这条灵感的已知碎片；第二条满足时立即记录。</summary>
+        public IReadOnlyList<ClueId> RequiresClues { get; }
+        /// <summary>复制内容数据，避免运行期修改灵感的取得条件。</summary>
+        public LogicDefinition(string id, string displayName, FactId unlockFact, IReadOnlyList<ClueId> requiresClues)
+        {
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(displayName) || requiresClues == null || requiresClues.Count < 2 || requiresClues.Distinct().Count() != requiresClues.Count)
+                throw new ArgumentException("灵感需要非空标识、显示名与至少两个不同的碎片条件。");
+            Id = id; DisplayName = displayName; UnlockFact = unlockFact;
+            RequiresClues = Array.AsReadOnly(requiresClues.ToArray());
+        }
+    }
     /// <summary>以世界事实控制调查许可与碎片授予的内容数据。</summary>
     public sealed class DiscoveryRule
     {
@@ -120,6 +150,8 @@ namespace Game.Domain
         public IReadOnlyList<FactId> DeclaredFacts { get; }
         /// <summary>有限的可见场景操作；不构成另一套配方或动画框架。</summary>
         public IReadOnlyList<SceneActionRule> SceneActions { get; }
+        /// <summary>由观察累积的灵感；可用状态和已消耗记录均由 GameState 统一保存。</summary>
+        public IReadOnlyList<LogicDefinition> Logics { get; }
         /// <summary>可选的主动收束事实；为空时保留历史内容的连续服从规则。</summary>
         public FactId? CanvasLockFact { get; }
         // 第一版的兼容查询视图；实际匹配始终只使用 ClueId 配方。
@@ -130,13 +162,14 @@ namespace Game.Domain
         /// <summary>从兼容二元配方派生的旧解释视图。</summary>
         public IReadOnlyList<InterpretationRule> Interpretations { get; }
         /// <summary>装载规则并校验唯一性、引用与歧义；旧构造入口会转换成新数据。</summary>
-        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null, SceneActionRule[] sceneActions = null, FactId? canvasLockFact = null)
+        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null, SceneActionRule[] sceneActions = null, FactId? canvasLockFact = null, LogicDefinition[] logics = null)
         {
             // 新内容可以等待玩家亲自交稿，旧内容仍采用既有的三次服从收束。
             CanvasLockFact = canvasLockFact;
             observations = observations ?? Array.Empty<ObservationDiscovery>();
             declaredFacts = declaredFacts ?? Array.Empty<FactId>();
             sceneActions = sceneActions ?? Array.Empty<SceneActionRule>();
+            logics = logics ?? Array.Empty<LogicDefinition>();
             if (sceneActions.Select(x => x.Id).Distinct().Count() != sceneActions.Length || sceneActions.Any(x => !discoveries.Any(d => d.Source == x.Source) || string.IsNullOrWhiteSpace(x.Id) || x.Produces.Count == 0))
                 throw new ArgumentException("场景操作必须有唯一身份、有效来源和非空事实产出。");
             SceneActions = Array.AsReadOnly(sceneActions.ToArray());
@@ -147,6 +180,9 @@ namespace Game.Domain
             // 配方输入和发现产出都必须指向已定义的碎片。
             if (recipes.Any(x => x.Inputs.Concat(x.ProducesClues).Any(c => !clues.Any(d => d.Id == c))) || discoveries.Any(x => x.Grants.Any(c => !clues.Any(d => d.Id == c))))
                 throw new ArgumentException("内容引用了未知碎片。");
+            if (logics.Select(x => x.Id).Distinct().Count() != logics.Length || logics.Select(x => x.UnlockFact).Distinct().Count() != logics.Length ||
+                logics.Any(x => !x.Id.StartsWith("logic.") || x.RequiresClues.Any(c => !clues.Any(d => d.Id == c))))
+                throw new ArgumentException("灵感必须使用 logic. 标识、唯一事实，并且只依赖已定义碎片。");
             // 物体只能由亲点其自身认识，新增配方输出能力不能绕开这个发现约束。
             if (recipes.Any(x => x.ProducesClues.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object)) ||
                 discoveries.Any(x => x.Grants.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object && c.Value != x.Source.Value)))
@@ -163,6 +199,7 @@ namespace Game.Domain
             Clues = Array.AsReadOnly((ClueDefinition[])clues.Clone()); Discoveries = Array.AsReadOnly((DiscoveryRule[])discoveries.Clone());
             Recipes = Array.AsReadOnly((SemanticRecipe[])recipes.Clone()); Reactions = Array.AsReadOnly((ReactionRule[])reactions.Clone());
             Observations = Array.AsReadOnly((ObservationDiscovery[])observations.Clone());
+            Logics = Array.AsReadOnly((LogicDefinition[])logics.Clone());
             // 独立样板可以声明一个事实，无需伪造空反应或新增玩家谜题。
             DeclaredFacts = Array.AsReadOnly(declaredFacts.Distinct().ToArray());
             // 旧视图从统一定义推导，不作为第二份世界状态来源。
@@ -188,6 +225,8 @@ namespace Game.Domain
         public bool IsInspectable(GameState state, ObjectId source) => Discoveries.Any(x => x.Source == source && CanDiscover(state, x));
         /// <summary>发现条件与叙事门槛统一查询，场景表现不能代替领域许可。</summary>
         public bool CanDiscover(GameState state, DiscoveryRule rule) => rule.Requires.All(state.HasFact) && state.DeviationCount >= rule.MinimumDeviations;
+        /// <summary>查询已经获得的灵感，不向 UI 暴露可写状态。</summary>
+        public IEnumerable<LogicDefinition> KnownLogics(GameState state) => Logics.Where(x => state.HasFact(x.UnlockFact));
         /// <summary>查询输入与条件已满足但未完成的配方，仅供调试显示。</summary>
         public IEnumerable<SemanticRecipe> AvailableRecipes(GameState state) => Recipes.Where(x => !state.HasCompleted(x.Id) && x.Inputs.All(state.Knows) && x.Requires.All(state.HasFact) && state.Allows(x.Disposition));
     }

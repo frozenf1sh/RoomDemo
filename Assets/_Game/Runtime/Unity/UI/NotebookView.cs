@@ -42,6 +42,9 @@ namespace Game.Unity
         [SerializeField] private Transform objectList;
         [SerializeField] private Transform conceptList;
         [SerializeField] private Transform observationList;
+        [SerializeField] private Transform logicList;
+        [SerializeField] private Text explorationHint;
+        [SerializeField] private Text logicHint;
         [SerializeField] private Text insightWord;
         [SerializeField] private Transform unifiedWords;
         [SerializeField] private Text canvasMarks;
@@ -52,11 +55,23 @@ namespace Game.Unity
         /// <summary>仅为当前纸面书写演出，不是“生长已解锁”的第二份状态。</summary>
         public bool ConceptFormationPlaying => formedWord != null && Time.unscaledTime - connectedAt < 2;
         /// <summary>把观察和概念分开展示，灰盒兼容场景可以继续只用旧两列。</summary>
-        public void ConfigureExploration(Transform observations, Text word) { observationList = observations; insightWord = word; }
+        /// <remarks>传入 <c>null</c> 只表示不改动既有观察列，避免后续仅配置新词显示时误清空形容词区。</remarks>
+        public void ConfigureExploration(Transform observations, Text word)
+        {
+            if (observations != null) observationList = observations;
+            insightWord = word;
+        }
+        /// <summary>将左页材料按词性分入名词、形容词和其他列；不改变既有碎片分类。</summary>
+        public void ConfigureWordCategories(Transform nouns, Transform adjectives, Transform others)
+        { objectList = nouns; observationList = adjectives; conceptList = others; unifiedWords = null; }
+        /// <summary>配置右页灵感清单与两条探索提示；两者只读取领域状态。</summary>
+        public void ConfigureLogicShelf(Transform shelf, Text objectHint, Text inspirationHint)
+        { logicList = shelf; explorationHint = objectHint; logicHint = inspirationHint; }
         [SerializeField] private Button rowTemplate;
         [SerializeField] private Button interpretButton;
         [SerializeField] private Button openButton;
         [SerializeField] private Button closeButton;
+        [SerializeField] private Button returnButton;
         [SerializeField] private Text selectionText;
         [SerializeField] private Text feedbackText;
         [SerializeField] private Button[] slotButtons;
@@ -105,6 +120,8 @@ namespace Game.Unity
         public void ConfigureSlots(Button[] slots, Text history) { slotButtons = slots; completedText = history; }
         /// <summary>注入面板外的打开按钮与面板内关闭按钮。</summary>
         public void ConfigureControls(Button open, Button close) { openButton = open; closeButton = close; }
+        /// <summary>配置左页返回箭头；点击只合上笔记本，不改变房间事实。</summary>
+        public void ConfigureReturnButton(Button button) { returnButton = button; }
         /// <summary>注入画面上方的获取通知，与观察描述分开显示。</summary>
         public void ConfigureDiscoveryFeedback(GameObject notice, Text text)
         {
@@ -139,7 +156,16 @@ namespace Game.Unity
             ClearDiscoveryReminder();
             interpretButton.onClick.RemoveAllListeners(); interpretButton.onClick.AddListener(InterpretSelected);
             openButton.onClick.RemoveAllListeners(); openButton.onClick.AddListener(Toggle);
-            closeButton.onClick.RemoveAllListeners(); closeButton.onClick.AddListener(() => SetOpen(false));
+            if (closeButton != null)
+            {
+                closeButton.onClick.RemoveAllListeners();
+                closeButton.onClick.AddListener(() => SetOpen(false));
+            }
+            if (returnButton != null)
+            {
+                returnButton.onClick.RemoveAllListeners();
+                returnButton.onClick.AddListener(() => SetOpen(false));
+            }
             for (int i = 0; i < slotButtons.Length; i++) { int index = i; slotButtons[i].onClick.RemoveAllListeners(); slotButtons[i].onClick.AddListener(() => { selected[index] = null; RenderSelection(); }); }
             feedbackText.text = quietStudio ? "" : "把细节放在一起。"; Render();
         }
@@ -231,6 +257,7 @@ namespace Game.Unity
                 Render();
                 ShowDiscovery(discovered.Clue);
             }
+            if (e is LogicDiscovered || e is LogicConsumed) Render();
             if (e is ObjectInspected inspected) feedbackText.text = inspected.Description;
             if (e is InspectionFailed inspectFailed) feedbackText.text = inspectFailed.Reason;
             if (e is CombinationFailed)
@@ -326,6 +353,7 @@ namespace Game.Unity
             var scroll = unifiedWords != null ? unifiedWords.GetComponentInParent<ScrollRect>() : null;
             float savedScroll = scroll != null ? scroll.verticalNormalizedPosition : 1;
             ClearRows(objectList); ClearRows(conceptList); if (observationList != null) ClearRows(observationList);
+            if (logicList != null) ClearRows(logicList);
             if (unifiedWords != null) ClearRows(unifiedWords);
             // 依获得顺序排列，不把思想材料重新分成物品栏和技能栏。
             var definitions = unifiedWords != null ? session.State.KnownClues.Select(id => session.Rules.Clues.Single(x=>x.Id==id))
@@ -333,13 +361,16 @@ namespace Game.Unity
             foreach (var definition in definitions)
             {
                 // 捕获本条碎片的 ID，生成的按钮仅提交选择。
-                var id = definition.Id; bool objectClue = definition.Category == ClueCategory.Object;
-                bool observation = definition.Category == ClueCategory.Observation;
-                var list = unifiedWords != null ? unifiedWords : objectClue ? objectList : observation && observationList != null ? observationList : conceptList;
-                AddRow(list, (objectClue ? "Object_" : observation ? "Observation_" : "Concept_") + id.Value, definition.DisplayName, definition.Category, () => SelectClue(id));
+                var id = definition.Id;
+                var list = unifiedWords != null ? unifiedWords : definition.PartOfSpeech == CluePartOfSpeech.Noun ? objectList
+                    : definition.PartOfSpeech == CluePartOfSpeech.Adjective ? observationList : conceptList;
+                AddRow(list, definition.PartOfSpeech + "_" + id.Value, definition.DisplayName, definition.Category, () => SelectClue(id));
             }
+            if (logicList != null)
+                foreach (var logic in session.Rules.KnownLogics(session.State)) AddLogicRow(logic);
             RenderSelection(); RenderHistory();
             RefreshCanvasMarks();
+            RefreshHints();
             if (scroll != null)
             {
                 Canvas.ForceUpdateCanvases();
@@ -370,6 +401,34 @@ namespace Game.Unity
         }
         /// <summary>先隐藏旧按钮再延迟销毁，避免同一帧残留可点击项。</summary>
         private static void ClearRows(Transform list) { foreach (Transform child in list) { child.gameObject.SetActive(false); Destroy(child.gameObject); } }
+        /// <summary>右页灵感只显示已获得的领域记录，不可拖动也不会与纸面词条争夺层级。</summary>
+        private void AddLogicRow(LogicDefinition logic)
+        {
+            var row = Instantiate(rowTemplate, logicList);
+            row.name = "Logic_" + logic.Id;
+            row.gameObject.SetActive(true);
+            row.interactable = false;
+            var text = row.GetComponentInChildren<Text>();
+            text.text = "灵感 · " + logic.DisplayName;
+            text.fontSize = 18;
+            text.color = new Color(.43f, .30f, .14f);
+            row.GetComponent<LayoutElement>().preferredHeight = 34;
+            row.targetGraphic = null;
+        }
+        /// <summary>提示只归纳当前尚可调查的内容与尚未获得的灵感，不提前透露具体答案。</summary>
+        private void RefreshHints()
+        {
+            if (explorationHint != null)
+            {
+                bool pending = session.Rules.Discoveries.Any(x => session.Rules.CanDiscover(session.State, x) && !session.State.Knows(x.Source));
+                explorationHint.text = pending ? "目前场景中还有物品可探索观察。" : "眼前能观察的物品，已经记下了。";
+            }
+            if (logicHint != null)
+            {
+                bool pending = session.Rules.Logics.Any(x => !session.State.HasFact(x.UnlockFact) && x.RequiresClues.Any(session.State.Knows));
+                logicHint.text = pending ? "还有灵感可观察回忆。" : "继续把词条放到右页，试着落下一笔。";
+            }
+        }
         /// <summary>从模板创建中文条目，并绑定本条碎片的选择回调。</summary>
         private void AddRow(Transform list, string name, string label, ClueCategory category, UnityEngine.Events.UnityAction select)
         {
@@ -398,7 +457,8 @@ namespace Game.Unity
             for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) : i == 2 ? "···" : "放下碎片";
             interpretButton.interactable = SelectedClues.Count >= 2;
             var submit = interpretButton.GetComponentInChildren<Text>();
-            submit.color = new Color(.40f, .29f, .12f, interpretButton.interactable ? 1 : .35f);
+            // 深色纸签上的禁用态仍须保留可读的“解释”，只降低透明度而不改成同色深墨。
+            submit.color = new Color(.96f, .89f, .70f, interpretButton.interactable ? 1 : .72f);
         }
         /// <summary>纸页轻展开并呈现成功墨迹；正式纸面不自动合页，也不判断配方。</summary>
         private void UpdatePaperRitual()

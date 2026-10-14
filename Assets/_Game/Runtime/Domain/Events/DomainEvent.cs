@@ -15,6 +15,22 @@ namespace Game.Domain
         public ClueDiscovered(ClueId clue) { Clue = clue; }
         public override string ToString() => $"[发现] 碎片={Clue}";
     }
+    /// <summary>第二个关联碎片出现后，第一次获得一条可用于组合的灵感。</summary>
+    public sealed class LogicDiscovered : DomainEvent
+    {
+        /// <summary>灵感的稳定英文标识。</summary>
+        public string LogicId { get; }
+        public LogicDiscovered(string logicId) { LogicId = logicId; }
+        public override string ToString() => $"[灵感] {LogicId}";
+    }
+    /// <summary>成功组合后消耗一条一次性灵感。</summary>
+    public sealed class LogicConsumed : DomainEvent
+    {
+        /// <summary>被消耗灵感的稳定英文标识。</summary>
+        public string LogicId { get; }
+        public LogicConsumed(string logicId) { LogicId = logicId; }
+        public override string ToString() => $"[灵感已使用] {LogicId}";
+    }
     /// <summary>玩家成功建立一个有限语义配方。</summary>
     public sealed class CombinationSucceeded : DomainEvent
     {

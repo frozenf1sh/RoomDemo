@@ -31,6 +31,8 @@ namespace Game.Unity.ArtRebuild
         public AtelierCurtainPresenter Curtain;
         public AtelierFinalePresenter Finale;
         public AtelierTrialPresenter Trial;
+        /// <summary>藏品簿只读会话碎片；它覆盖笔记本时优先接收返回输入。</summary>
+        public AtelierCollectionView Collection;
         public AtelierContinuationInput Continuation;
         public Transform CurtainFocusPose;
         public Transform FocusPose, DeskFocusPose, LampFocusPose;
@@ -69,6 +71,8 @@ namespace Game.Unity.ArtRebuild
                 Trial.Bind(Session);
             if (Continuation != null)
                 Continuation.Bind(this);
+            // 核心观察／拾取先完成绑定；藏品 Prefab 的缺失引用不能阻断原有玩法。
+            if (Collection != null) Collection.Bind(Session, Notebook);
             Session.EventRaised += OnEvent;
             Notebook.OpenChanged += OnNotebook;
             ContextAction.gameObject.SetActive(false);
@@ -87,13 +91,14 @@ namespace Game.Unity.ArtRebuild
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (Notebook.IsOpen) Notebook.SetOpen(false);
+                if (Collection != null && Collection.IsOpen) Collection.CloseFromEscape();
+                else if (Notebook.IsOpen) Notebook.SetOpen(false);
                 else if (focused && !transitioning) ReturnToRoom();
                 else SetPaused(!paused);
             }
             bool ending = Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased);
             if (ending) ClearHoverGold();
-            Notebook.ExternalInputBlocked = paused || transitioning || ending ||
+            Notebook.ExternalInputBlocked = paused || transitioning || ending || (Collection != null && Collection.IsOpen) ||
                                             (focused && focusKind == AtelierTargetKind.Manuscript);
             Reminder.gameObject.SetActive(Notebook.HasUnreadDiscoveries && !Notebook.IsOpen && !paused && !ending);
             ReturnButton.gameObject.SetActive(focused && !Notebook.IsOpen && !paused && !transitioning);
@@ -292,7 +297,8 @@ namespace Game.Unity.ArtRebuild
                 Notebook.SetOpen(false); ContextPanel.SetActive(false);
                 HoverText.text = "";
                 focused = true; focusKind = AtelierTargetKind.Manuscript;
-                ManuscriptPanel.SetActive(true); Say("manuscript"); return;
+                if (ManuscriptPanel != null) ManuscriptPanel.SetActive(true);
+                Say("manuscript"); return;
             }
             if (target.Kind == AtelierTargetKind.Brush)
             {
@@ -471,7 +477,7 @@ namespace Game.Unity.ArtRebuild
                 {
                     Notebook.SetOpen(false);
                     ContextPanel.SetActive(false);
-                    ManuscriptPanel.SetActive(false);
+                    if (ManuscriptPanel != null) ManuscriptPanel.SetActive(false);
                     focused = false;
                     strokeActive = false;
                     if (Continuation != null)
