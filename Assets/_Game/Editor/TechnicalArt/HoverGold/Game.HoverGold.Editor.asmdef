@@ -1,0 +1,10 @@
+{
+  "name": "Game.HoverGold.Editor",
+  "rootNamespace": "Game.Editor.TechnicalArt.HoverGold",
+  "references": [
+    "Game.HoverGold",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
+  "includePlatforms": ["Editor"]
+}

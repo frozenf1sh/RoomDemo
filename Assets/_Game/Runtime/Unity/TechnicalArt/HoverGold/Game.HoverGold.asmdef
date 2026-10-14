@@ -1,0 +1,11 @@
+{
+  "name": "Game.HoverGold",
+  "rootNamespace": "Game.Unity.TechnicalArt.HoverGold",
+  "references": [
+    "Unity.Collections",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.InputSystem",
+    "Unity.ugui"
+  ]
+}
