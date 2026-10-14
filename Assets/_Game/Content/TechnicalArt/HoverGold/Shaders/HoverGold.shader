@@ -33,17 +33,21 @@ Shader "Hidden/RoomDemo/HoverGold"
             #pragma vertex StrokeVertex
             #pragma fragment StrokeFragment
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            float _BraidHalfWidth, _BraidOpacity;
+            float _BraidHalfWidth, _BraidOpacity, _BraidFlowDistance, _BraidTravelPhase;
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float2 uv : TEXCOORD0;
+                float2 flow : TEXCOORD1;
+                float3 segment : TEXCOORD2;
                 half4 colour : COLOR;
             };
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float2 flow : TEXCOORD1;
+                float3 segment : TEXCOORD2;
                 half4 colour : COLOR;
             };
             Varyings StrokeVertex(Attributes input)
@@ -51,21 +55,33 @@ Shader "Hidden/RoomDemo/HoverGold"
                 Varyings output;
                 output.positionCS = TransformWorldToHClip(input.positionOS.xyz);
                 output.uv = input.uv;
+                output.flow = input.flow;
+                output.segment = input.segment;
                 output.colour = input.colour;
                 return output;
             }
             half4 StrokeFragment(Varyings input) : SV_Target
             {
+                // 整段金丝的中心、头尾和空段一起顺时针前进；接缝处连续回绕。
+                float distance = frac(input.uv.y - input.segment.x - _BraidTravelPhase + .5) - .5;
+                float span = distance < 0 ? input.segment.y : input.segment.z;
+                float local = abs(distance) / max(.001, span);
+                float envelope = 1 - smoothstep(.25, 1, local);
+                // 线内的亮头与渐暗长尾继续沿同一方向流动。
+                float phase = frac(input.flow.x - _BraidFlowDistance * input.flow.y);
+                float pulse = smoothstep(.06, .68, phase) * (1 - smoothstep(.68, .9, phase));
+                float bright = .26 + .74 * pulse;
+                float strandAlpha = envelope * bright;
                 // 中心线保持清晰；细尾收窄，柔光仅存在于明亮片段的近侧。
                 float across = abs(input.uv.x);
-                float halfWidth = _BraidHalfWidth * (.08 + .92 * sqrt(saturate(input.uv.y)));
+                float halfWidth = _BraidHalfWidth * (.08 + .92 * sqrt(envelope));
                 float aa = max(.4, fwidth(across) * .6);
                 float coverage = 1 - smoothstep(halfWidth - aa, halfWidth + aa, across);
-                float glow = .16 * exp(-pow(across / (halfWidth + .7), 2)) * input.colour.a * input.colour.a;
-                float opacity = (coverage + glow) * _BraidOpacity * input.colour.a;
+                float glow = .16 * exp(-pow(across / (halfWidth + .7), 2)) * strandAlpha * strandAlpha;
+                float opacity = (coverage + glow) * _BraidOpacity * strandAlpha;
                 clip(opacity - .003);
                 float edge = smoothstep(halfWidth * .25, halfWidth, across);
-                half3 gold = input.colour.rgb * (1 - edge * .12);
+                half3 gold = lerp(input.colour.rgb, half3(1, .828, .342), pulse * pulse * .65) * (1 - edge * .12);
                 return half4(gold, saturate(opacity));
             }
             ENDHLSL

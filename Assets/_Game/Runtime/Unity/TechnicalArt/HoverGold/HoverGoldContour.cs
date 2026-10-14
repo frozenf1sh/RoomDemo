@@ -1,5 +1,5 @@
 // 文件：HoverGoldContour.cs
-// 职责：缓存真实物品投影的外轮廓，并沿弧长生成三缕疏松、断续且偶尔交错的游丝。
+// 职责：缓存真实物品投影的外轮廓，生成三条闭合游丝轨迹及顺时针弧长坐标。
 // 边界：只读取几何与摄像机；内部孔洞不描边，GPU 读回只在投影或物品变化时执行。
 using System;
 using System.Collections.Generic;
@@ -8,13 +8,15 @@ using UnityEngine.Rendering;
 
 namespace Game.Unity.TechnicalArt.HoverGold
 {
-    /// <summary>拥有单个物品／镜头组合的轮廓缓存、临时读回纹理及动态光线网格。</summary>
+    /// <summary>拥有单个物品／镜头组合的轮廓缓存、临时读回纹理及固定游丝轨迹网格。</summary>
     internal sealed class HoverGoldContour : IDisposable
     {
         private readonly List<Vector2[]> loops = new();
         private readonly List<Vector2[]> sampledLoops = new();
         private readonly List<Vector3> vertices = new();
         private readonly List<Vector2> uvs = new();
+        private readonly List<Vector2> flowUvs = new();
+        private readonly List<Vector3> segmentUvs = new();
         private readonly List<Color> colours = new();
         private readonly List<int> indices = new();
         private RenderTexture capture;
@@ -24,6 +26,7 @@ namespace Game.Unity.TechnicalArt.HoverGold
         private bool reading, disposed;
         private bool samplesDirty = true;
         private int sampledWidth, sampledHeight;
+        private int meshSignature = int.MinValue;
         private float retryAfter;
 
         /// <summary>仅在外轮廓就绪后存在；本缓存负责释放。</summary>
@@ -231,10 +234,18 @@ namespace Game.Unity.TechnicalArt.HoverGold
             return inside;
         }
 
-        /// <summary>沿真实轮廓弧长生成三个局部片段；保留大片空段、渐变尾部和局部穿插。</summary>
-        public void BuildStroke(Camera view, HoverGoldFeature style, float time)
+        /// <summary>缓存三条闭合曲线；Shader 沿弧长推进金丝片段及其头尾，不平移或旋转轨迹。</summary>
+        public void BuildStroke(Camera view, HoverGoldFeature style)
         {
-            vertices.Clear(); uvs.Clear(); colours.Clear(); indices.Clear();
+            int signature = HashCode.Combine(view.worldToCameraMatrix, view.projectionMatrix,
+                view.pixelRect, style.WidthAt1080, style.BraidOffsetAt1080, style.BraidAmplitudeAt1080, style.Gold);
+            if (!samplesDirty && StrokeMesh != null && signature == meshSignature) return;
+            vertices.Clear();
+            uvs.Clear();
+            flowUvs.Clear();
+            segmentUvs.Clear();
+            colours.Clear();
+            indices.Clear();
             float scale = Mathf.Clamp(view.pixelHeight / 1080f, .65f, 1.5f);
             float halfGeometry = style.WidthAt1080 * scale * .5f + 2.5f;
             // 弧长采样只在轮廓或输出尺寸变化时更新，持续悬停不重复分配采样数组。
@@ -250,38 +261,73 @@ namespace Game.Unity.TechnicalArt.HoverGold
             {
                 if (points.Length < 12) continue;
                 float length = 0;
-                for (int i = 0; i < points.Length; i++) length += Vector2.Distance(points[i], points[(i + 1) % points.Length]);
+                var contourDistances = new float[points.Length + 1];
+                for (int i = 0; i < points.Length; i++)
+                {
+                    length += Vector2.Distance(points[i], points[(i + 1) % points.Length]);
+                    contourDistances[i + 1] = length;
+                }
                 float orientation = Area(points) > 0 ? 1 : -1;
                 for (int strand = 0; strand < 3; strand++)
                 {
-                    int first = vertices.Count;
+                    var centres = new Vector2[points.Length];
+                    var normals = new Vector2[points.Length];
+                    var fronts = new float[points.Length];
+                    var cumulative = new float[points.Length + 1];
+                    float centrePhase = strand == 0 ? .09f : strand == 1 ? .25f : .72f;
+                    float span = strand == 0 ? .095f : strand == 1 ? .105f : .075f;
                     float travelled = 0;
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        if (i > 0) travelled += Vector2.Distance(points[i - 1], points[i]);
+                        Vector2 tangent = (points[(i + 4) % points.Length] - points[(i + points.Length - 4) % points.Length]).normalized;
+                        Vector2 outward = new Vector2(tangent.y, -tangent.x) * orientation;
+                        // 初始片段保持原有弯曲；向外延续成平滑闭合轨迹，供整段金丝继续前进。
+                        float local = (Mathf.Repeat(travelled / length - centrePhase + .5f, 1) - .5f) / span;
+                        float envelope = 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.25f, 1, Mathf.Abs(local)));
+                        float phase = local * Mathf.PI * 1.15f + strand * 1.6f;
+                        float front = Mathf.Sin(local * 2.8f + strand * 2.1f);
+                        float offset = style.BraidOffsetAt1080 + style.BraidAmplitudeAt1080 * Mathf.Sin(phase) + (1 - envelope) * 8;
+                        float continuation = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(1, 2, Mathf.Abs(local)));
+                        float closedPhase = travelled / length * Mathf.PI * 2 + strand * 2.1f;
+                        float closedOffset = style.BraidOffsetAt1080 + 4 + style.BraidAmplitudeAt1080 * .7f * Mathf.Sin(closedPhase);
+                        offset = Mathf.Lerp(offset, closedOffset, continuation) * scale;
+                        front = Mathf.Lerp(front, Mathf.Sin(closedPhase), continuation);
+                        centres[i] = points[i] + outward * offset;
+                        normals[i] = outward;
+                        fronts[i] = front;
+                    }
+                    // 使用每缕偏移后曲线的实际长度，避免转角和曲率变化使流速忽快忽慢。
+                    for (int i = 1; i <= points.Length; i++)
+                        cumulative[i] = cumulative[i - 1] + Vector2.Distance(centres[i - 1], centres[i % points.Length]);
+                    float pathLength = cumulative[points.Length];
+                    float cycles = Mathf.Max(1, Mathf.Round(pathLength / (96 * scale)));
+                    float inverseWavelength = cycles / Mathf.Max(1, pathLength);
+                    // 将原片段的中心和两端映射到各缕真实路径，保留初始长度与疏松分布。
+                    float anchor = MapPathDistance(contourDistances, cumulative, centrePhase);
+                    float before = anchor - MapPathDistance(contourDistances, cumulative, centrePhase - span);
+                    float after = MapPathDistance(contourDistances, cumulative, centrePhase + span) - anchor;
+                    var segment = new Vector3(anchor * -orientation / pathLength,
+                        (orientation < 0 ? before : after) / pathLength,
+                        (orientation < 0 ? after : before) / pathLength);
+                    int first = vertices.Count;
                     for (int i = 0; i <= points.Length; i++)
                     {
                         int index = i % points.Length;
-                        if (i > 0) travelled += Vector2.Distance(points[(i - 1) % points.Length], points[index]);
-                        Vector2 tangent = (points[(index + 4) % points.Length] - points[(index + points.Length - 4) % points.Length]).normalized;
-                        Vector2 outward = new Vector2(tangent.y, -tangent.x) * orientation;
-                        // 三段合计最多覆盖约 55% 弧长；即使移动也不会形成封闭光圈。
-                        float centrePhase = (strand == 0 ? .09f : strand == 1 ? .25f : .72f) + time * style.BraidSpeed * .012f;
-                        float span = strand == 0 ? .095f : strand == 1 ? .105f : .075f;
-                        float local = (Mathf.Repeat(travelled / length - centrePhase + .5f, 1) - .5f) / span;
-                        float envelope = 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.25f, 1, Mathf.Abs(local)));
-                        float phase = local * Mathf.PI * 1.15f + strand * 1.6f + time * .15f;
-                        float front = Mathf.Sin(local * 2.8f + time * .12f + strand * 2.1f);
-                        float offset = (style.BraidOffsetAt1080 + style.BraidAmplitudeAt1080 * Mathf.Sin(phase) + (1 - envelope) * 8) * scale;
-                        Vector2 centre = points[index] + outward * offset;
+                        float front = fronts[index];
                         float depth = view.nearClipPlane * (1.55f - front * .1f);
                         Color colour = Color.Lerp(style.Gold * new Color(.85f, .77f, .62f, 1), new Color(1, .9f, .55f, 1), (front + 1) * .5f).linear;
-                        float bright = .3f + .7f * Mathf.Pow(.5f + .5f * Mathf.Cos(local * Mathf.PI * 1.3f - time * .65f + strand), 3);
-                        colour = Color.Lerp(colour, new Color(1, .92f, .62f, 1).linear, Mathf.Pow(bright, 3) * .65f);
-                        colour.a = envelope * bright;
+                        colour.a = 1;
+                        // 屏幕坐标向上为正：正面积表示逆时针，弧长取反后始终沿顺时针递增。
+                        float clockwiseDistance = cumulative[i] * -orientation;
                         for (int side = -1; side <= 1; side += 2)
                         {
-                            Vector2 screen = centre + outward * (halfGeometry * side);
+                            Vector2 screen = centres[index] + normals[index] * (halfGeometry * side);
                             vertices.Add(view.ScreenToWorldPoint(new Vector3(screen.x + view.pixelRect.x,
                                 screen.y + view.pixelRect.y, depth)));
-                            uvs.Add(new Vector2(halfGeometry * side, envelope));
+                            uvs.Add(new Vector2(halfGeometry * side, clockwiseDistance / pathLength));
+                            flowUvs.Add(new Vector2(clockwiseDistance * inverseWavelength + strand * .21f, inverseWavelength));
+                            segmentUvs.Add(segment);
                             colours.Add(colour);
                         }
                         if (i == 0) continue;
@@ -300,8 +346,27 @@ namespace Game.Unity.TechnicalArt.HoverGold
             StrokeMesh.indexFormat = vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16;
             StrokeMesh.SetVertices(vertices);
             StrokeMesh.SetUVs(0, uvs);
+            StrokeMesh.SetUVs(1, flowUvs);
+            StrokeMesh.SetUVs(2, segmentUvs);
             StrokeMesh.SetColors(colours);
             StrokeMesh.SetTriangles(indices, 0);
+            meshSignature = signature;
+        }
+
+        /// <summary>把可跨闭环接缝的轮廓相位映射到偏移后的游丝弧长，不在接缝处跳变。</summary>
+        private static float MapPathDistance(float[] contour, float[] path, float phase)
+        {
+            float turns = Mathf.Floor(phase);
+            float distance = (phase - turns) * contour[^1];
+            int low = 0, high = contour.Length - 1;
+            while (low + 1 < high)
+            {
+                int middle = (low + high) / 2;
+                if (contour[middle] <= distance) low = middle;
+                else high = middle;
+            }
+            float t = (distance - contour[low]) / Mathf.Max(.0001f, contour[high] - contour[low]);
+            return turns * path[^1] + Mathf.Lerp(path[low], path[high], t);
         }
 
         private static Vector2[] Resample(Vector2[] loop, int width, int height)
