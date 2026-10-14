@@ -147,7 +147,8 @@ namespace Game.Editor.TechnicalArt.HoverGold
             feature.Gold = new Color(.97f, .68f, .22f, 1);
             feature.BraidOffsetAt1080 = 8;
             feature.BraidAmplitudeAt1080 = 7;
-            feature.BraidSpeed = .25f;
+            feature.FlowSpeedAt1080 = 22;
+            feature.StrandLapSeconds = 64;
             feature.BreathAmount = .16f;
             feature.BreathPeriodSeconds = 4.8f;
             feature.Configure(AssetDatabase.LoadAssetAtPath<Shader>(Root + "Shaders/HoverGold.shader"));

@@ -74,6 +74,7 @@ MonoBehaviour:
   Gold: {r: 0.97, g: 0.68, b: 0.22, a: 1}
   BraidOffsetAt1080: 8
   BraidAmplitudeAt1080: 7
-  BraidSpeed: 0.25
+  FlowSpeedAt1080: 22
+  StrandLapSeconds: 64
   BreathAmount: 0.16
   BreathPeriodSeconds: 4.8

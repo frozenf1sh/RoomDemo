@@ -19,7 +19,10 @@ namespace Game.Unity.TechnicalArt.HoverGold
         public Color Gold = new(.97f, .68f, .22f, 1);
         [Range(4, 14)] public float BraidOffsetAt1080 = 8;
         [Range(1, 12)] public float BraidAmplitudeAt1080 = 7;
-        [Range(.05f, 1)] public float BraidSpeed = .25f;
+        /// <summary>1080p 下沿每缕固定曲线的前进速度，单位为屏幕像素／秒。</summary>
+        [Range(4, 48)] public float FlowSpeedAt1080 = 22;
+        /// <summary>三段金丝本身沿闭合轨迹顺时针绕行一周的秒数；与线内流光分别控制。</summary>
+        [Min(20)] public float StrandLapSeconds = 64;
         [Range(0, .35f)] public float BreathAmount = .16f;
         [Min(2)] public float BreathPeriodSeconds = 4.8f;
         private readonly Dictionary<(Camera, HoverGoldTarget), HoverGoldContour> contours = new();
@@ -42,7 +45,7 @@ namespace Game.Unity.TechnicalArt.HoverGold
             pass = new BraidPass(material, this);
         }
 
-            /// <summary>预热并缓存几何轮廓；仅在有悬停或消退时排入游丝。</summary>
+        /// <summary>预热并缓存几何轮廓；仅在有悬停或消退时排入游丝。</summary>
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData data)
         {
             if (pass == null || data.cameraData.cameraType != CameraType.Game) return;
@@ -57,7 +60,7 @@ namespace Game.Unity.TechnicalArt.HoverGold
                     contours[key] = contour = new HoverGoldContour();
                 contour.UpdateSource(camera, target, material);
                 if (target.Opacity <= .0001f || contour.OuterLoopCount == 0) continue;
-                contour.BuildStroke(camera, this, Time.time);
+                contour.BuildStroke(camera, this);
                 pass.Items.Add(new StrokeItem { Mesh = contour.StrokeMesh, Opacity = target.Opacity });
             }
             if (pass.Items.Count > 0) renderer.EnqueuePass(pass);
@@ -100,7 +103,7 @@ namespace Game.Unity.TechnicalArt.HoverGold
             {
                 internal Material Material;
                 internal StrokeItem[] Items;
-                internal float Width, Strength;
+                internal float Width, Strength, FlowDistance, TravelPhase;
             }
 
             private sealed class CompositeData
@@ -134,12 +137,17 @@ namespace Game.Unity.TechnicalArt.HoverGold
                     data.Width = style.WidthAt1080 * Mathf.Clamp(camera.camera.pixelHeight / 1080f, .65f, 1.5f);
                     float breath = 1 - style.BreathAmount * (.5f - .5f * Mathf.Cos(Time.time * Mathf.PI * 2 / Mathf.Max(2, style.BreathPeriodSeconds)));
                     data.Strength = style.Strength * breath;
+                    // 整段金丝及线内明暗沿各自弧长前进；暂停时两种运动与呼吸一起停下。
+                    data.FlowDistance = Time.time * style.FlowSpeedAt1080 * Mathf.Clamp(camera.camera.pixelHeight / 1080f, .65f, 1.5f);
+                    data.TravelPhase = Mathf.Repeat(Time.time / Mathf.Max(20, style.StrandLapSeconds), 1);
                     builder.SetRenderAttachment(colour, 0, AccessFlags.Write);
                     builder.SetRenderAttachmentDepth(depth, AccessFlags.Write);
                     builder.AllowGlobalStateModification(true);
                     builder.SetRenderFunc(static (StrokeData d, RasterGraphContext ctx) =>
                     {
                         ctx.cmd.SetGlobalFloat("_BraidHalfWidth", d.Width * .5f);
+                        ctx.cmd.SetGlobalFloat("_BraidFlowDistance", d.FlowDistance);
+                        ctx.cmd.SetGlobalFloat("_BraidTravelPhase", d.TravelPhase);
                         foreach (var item in d.Items)
                         {
                             ctx.cmd.SetGlobalFloat("_BraidOpacity", item.Opacity * d.Strength);
