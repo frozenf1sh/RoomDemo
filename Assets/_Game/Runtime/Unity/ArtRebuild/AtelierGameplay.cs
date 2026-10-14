@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Game.Application;
 using Game.Domain;
+using Game.Unity.TechnicalArt.HoverGold;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -20,6 +21,7 @@ namespace Game.Unity.ArtRebuild
     public sealed class AtelierGameplay : MonoBehaviour
     {
         public Camera ViewCamera;
+        public HoverGoldCamera HoverGold;
         public NotebookView Notebook;
         public NarrationSystem Narrator;
         public OneLineSubtitle Captions;
@@ -90,28 +92,50 @@ namespace Game.Unity.ArtRebuild
                 else SetPaused(!paused);
             }
             bool ending = Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased);
+            if (ending) ClearHoverGold();
             Notebook.ExternalInputBlocked = paused || transitioning || ending ||
                                             (focused && focusKind == AtelierTargetKind.Manuscript);
             Reminder.gameObject.SetActive(Notebook.HasUnreadDiscoveries && !Notebook.IsOpen && !paused && !ending);
             ReturnButton.gameObject.SetActive(focused && !Notebook.IsOpen && !paused && !transitioning);
-            if (paused || Notebook.IsOpen || transitioning || Mouse.current == null) { HoverText.text = ""; return; }
+            if (paused || Notebook.IsOpen || transitioning || Mouse.current == null)
+            {
+                ClearHoverGold();
+                HoverText.text = "";
+                return;
+            }
             // 主视角不读取拖拽或滚轮镜头输入；近景右键仍保留为明确的返回操作。
             if (focused && Mouse.current.rightButton.wasPressedThisFrame) { ReturnToRoom(); return; }
-            if (focused && focusKind == AtelierTargetKind.Manuscript) return;
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { HoverText.text = ""; return; }
+            if (focused && focusKind == AtelierTargetKind.Manuscript)
+            {
+                ClearHoverGold();
+                return;
+            }
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            {
+                ClearHoverGold();
+                HoverText.text = "";
+                return;
+            }
             var ray = ViewCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
             if (Lamp != null) Lamp.SetPointer(ray, focused && focusKind == AtelierTargetKind.OilLamp);
             RaycastHit hit;
             bool picked = Continuation != null
                 ? Continuation.Pick(ray, out hit)
                 : Physics.Raycast(ray, out hit, 20, PickingMask, QueryTriggerInteraction.Collide);
-            if (!picked) { HoverText.text = ""; return; }
-            var target = hit.collider.GetComponent<AtelierInteractionTarget>();
-            if (Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased))
+            if (!picked)
             {
+                if (HoverGold != null) HoverGold.SetCurrent(null);
                 HoverText.text = "";
                 return;
             }
+            var target = hit.collider.GetComponent<AtelierInteractionTarget>();
+            if (Session.State.CanvasLocked || Session.State.HasFact(AtelierRules.RoomErased))
+            {
+                ClearHoverGold();
+                HoverText.text = "";
+                return;
+            }
+            UpdateHoverGold(target);
             if (Continuation != null && Continuation.Pointer(target, hit,
                 Mouse.current.leftButton.wasPressedThisFrame, Mouse.current.leftButton.isPressed,
                 Mouse.current.leftButton.wasReleasedThisFrame))
@@ -128,6 +152,34 @@ namespace Game.Unity.ArtRebuild
                 if (strokeActive && Mouse.current.leftButton.isPressed) Painting.ContinueStroke(hit.textureCoord);
             }
             else if (target != null && Mouse.current.leftButton.wasPressedThisFrame) Observe(target, hit.textureCoord);
+        }
+
+        private void UpdateHoverGold(AtelierInteractionTarget target)
+        {
+            if (HoverGold == null) return;
+            if (!UnityEngine.Application.isFocused)
+            {
+                ClearHoverGold();
+                return;
+            }
+            // 与点击共用同一次许可拾取；运动中的软物体暂不沿旧轮廓发光。
+            bool moving = target != null &&
+                ((target.Kind == AtelierTargetKind.Curtain || target.Kind == AtelierTargetKind.CurtainCord) && Curtain != null && Curtain.Gathering ||
+                 (target.Kind == AtelierTargetKind.TrialCloth && Trial != null && !Trial.Settled));
+            moving |= target != null && target.Kind == AtelierTargetKind.Brush && Wash != null && Wash.ContactPlaying;
+            bool erasedFrame = target != null && target.Kind == AtelierTargetKind.Window &&
+                               Session.State.HasFact(AtelierRules.FrameErased);
+            if (moving || erasedFrame)
+            {
+                ClearHoverGold();
+                return;
+            }
+            HoverGold.SetCurrent(target != null ? target.HoverVisual : null);
+        }
+
+        private void ClearHoverGold()
+        {
+            if (HoverGold != null) HoverGold.ResetEffect();
         }
 
         private void LateUpdate()
@@ -377,6 +429,7 @@ namespace Game.Unity.ArtRebuild
         }
         private void StartCamera(Vector3 destination, Quaternion rotation, float fov)
         {
+            ClearHoverGold();
             if (cameraMotion != null) StopCoroutine(cameraMotion);
             ContextPanel.SetActive(false);
             cameraMotion = StartCoroutine(MoveCamera(destination, rotation, fov));
@@ -402,6 +455,7 @@ namespace Game.Unity.ArtRebuild
 
         private void OnNotebook(bool open)
         {
+            ClearHoverGold();
             ContextPanel.SetActive(false);
             if (open && Session.State.Knows(AtelierRules.Observation("spread")) && !Session.State.Knows(StudioRules.Flow)) Say("book_open");
         }
@@ -494,18 +548,26 @@ namespace Game.Unity.ArtRebuild
         /// <summary>暂停只冻结表现与输入，不改变领域日序或配方结果。</summary>
         public void SetPaused(bool value)
         {
+            ClearHoverGold();
             paused = value; Time.timeScale = value ? 0 : 1; PausePanel.SetActive(value);
         }
         private void Restart()
         {
+            ClearHoverGold();
             Time.timeScale = 1;
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
         private void OnDestroy()
         {
+            ClearHoverGold();
             Time.timeScale = 1;
             if (Session != null) Session.EventRaised -= OnEvent;
             if (Notebook != null) Notebook.OpenChanged -= OnNotebook;
+        }
+        private void OnDisable() => ClearHoverGold();
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus) ClearHoverGold();
         }
     }
 }

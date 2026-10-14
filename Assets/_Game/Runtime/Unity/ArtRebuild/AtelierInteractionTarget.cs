@@ -2,6 +2,7 @@
 // 职责：在独立逻辑子节点上绑定画室可见来源和有限动作类型。
 // 边界：稳定身份沿用领域内容；碰撞只供指针拾取，不驱动物体物理或修改规则。
 using UnityEngine;
+using Game.Unity.TechnicalArt.HoverGold;
 
 namespace Game.Unity.ArtRebuild
 {
@@ -14,5 +15,7 @@ namespace Game.Unity.ArtRebuild
         public AtelierTargetKind Kind;
         public string ObjectId;
         public string DisplayName;
+        /// <summary>经审核的物品自身视觉；可与其他逻辑部位共用，不改变稳定交互身份。</summary>
+        public HoverGoldTarget HoverVisual;
     }
 }

@@ -2062,6 +2062,7 @@ MonoBehaviour:
   Kind: 0
   ObjectId: atelier.painting
   DisplayName: "\u753B\u5E03"
+  HoverVisual: {fileID: 281669204}
 --- !u!64 &37073103
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3844,6 +3845,7 @@ MonoBehaviour:
   Kind: 17
   ObjectId: studio.room
   DisplayName: "\u6574\u95F4\u753B\u5BA4"
+  HoverVisual: {fileID: 0}
 --- !u!65 &68981146
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -9866,6 +9868,7 @@ GameObject:
   - component: {fileID: 160437749}
   - component: {fileID: 160437751}
   - component: {fileID: 160437750}
+  - component: {fileID: 160437752}
   m_Layer: 0
   m_Name: "\u53EF\u4EE5\u62FF\u8D77\u7684\u64E6\u7B14\u5E03"
   m_TagString: Untagged
@@ -9945,6 +9948,22 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 160437748}
   m_Mesh: {fileID: 4300000, guid: 450e739e2c8c94ace8a7698725aaba6c, type: 2}
+--- !u!114 &160437752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 160437748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 160437750}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &162260866
 GameObject:
   m_ObjectHideFlags: 0
@@ -17577,6 +17596,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 262841564}
+  - component: {fileID: 262841565}
   m_Layer: 0
   m_Name: "\u8F85\u52A9\u5DE5\u4F5C\u53F0\u4E0A\u7684\u5C0F\u6CB9\u706F"
   m_TagString: Untagged
@@ -17600,6 +17620,23 @@ Transform:
   - {fileID: 1604205620}
   m_Father: {fileID: 2109841227}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &262841565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262841563}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 2104424038}
+  - {fileID: 332720891}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &265146946
 GameObject:
   m_ObjectHideFlags: 0
@@ -17738,6 +17775,7 @@ MonoBehaviour:
   Kind: 2
   ObjectId: atelier.brush
   DisplayName: "\u753B\u7B14"
+  HoverVisual: {fileID: 1370126449}
 --- !u!65 &265284224
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -18817,6 +18855,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 281669203}
+  - component: {fileID: 281669204}
   m_Layer: 0
   m_Name: "\u7EF7\u5E03\u4E0E\u6728\u6846"
   m_TagString: Untagged
@@ -18845,6 +18884,27 @@ Transform:
   - {fileID: 1847341756}
   m_Father: {fileID: 2054392900}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &281669204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281669202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 535175170}
+  - {fileID: 551845318}
+  - {fileID: 622080513}
+  - {fileID: 2081322437}
+  - {fileID: 1528599598}
+  - {fileID: 1847341754}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &286506813
 GameObject:
   m_ObjectHideFlags: 0
@@ -21949,6 +22009,7 @@ GameObject:
   - component: {fileID: 332720889}
   - component: {fileID: 332720890}
   - component: {fileID: 332720891}
+  - component: {fileID: 332720892}
   m_Layer: 0
   m_Name: "Visual_\u88F8\u9732\u68C9\u706F\u82AF"
   m_TagString: Untagged
@@ -22028,6 +22089,22 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &332720892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332720888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 332720891}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &333344290
 GameObject:
   m_ObjectHideFlags: 0
@@ -23260,6 +23337,7 @@ MonoBehaviour:
   Kind: 1
   ObjectId: studio.cup
   DisplayName: "\u676F\u91CC\u7684\u6C34"
+  HoverVisual: {fileID: 1548114601}
 --- !u!65 &346016706
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -23451,6 +23529,7 @@ MonoBehaviour:
   Kind: 12
   ObjectId: atelier.trial
   DisplayName: "\u753B\u8FB9\u7684\u6E7F\u8272"
+  HoverVisual: {fileID: 1821735049}
 --- !u!65 &348313112
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -33895,6 +33974,7 @@ MonoBehaviour:
   Kind: 10
   ObjectId: studio.curtain
   DisplayName: "\u7A97\u5E18"
+  HoverVisual: {fileID: 1636674331}
 --- !u!64 &522848288
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -38117,6 +38197,7 @@ GameObject:
   - component: {fileID: 594990378}
   - component: {fileID: 594990380}
   - component: {fileID: 594990379}
+  - component: {fileID: 594990381}
   m_Layer: 0
   m_Name: "\u4E9A\u9EBB\u5E18\u8936_1"
   m_TagString: Untagged
@@ -38196,6 +38277,22 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 594990377}
   m_Mesh: {fileID: 4300000, guid: 8a3be08dd959c4237853a0bcc7b44fe8, type: 2}
+--- !u!114 &594990381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594990377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 594990379}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &596441809
 GameObject:
   m_ObjectHideFlags: 0
@@ -39044,6 +39141,7 @@ MonoBehaviour:
   Kind: 10
   ObjectId: studio.curtain
   DisplayName: "\u7A97\u5E18"
+  HoverVisual: {fileID: 594990381}
 --- !u!64 &612294094
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -46072,6 +46170,7 @@ MonoBehaviour:
   Kind: 3
   ObjectId: atelier.manuscript
   DisplayName: "\u684C\u4E0A\u7684\u4FBF\u6761"
+  HoverVisual: {fileID: 1696648004}
 --- !u!65 &719844368
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -53305,6 +53404,7 @@ MonoBehaviour:
   Kind: 4
   ObjectId: atelier.still_lamp
   DisplayName: "\u684C\u4E0A\u7684\u706F"
+  HoverVisual: {fileID: 900764108}
 --- !u!65 &840060617
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -53871,6 +53971,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 844255129}
+  - component: {fileID: 844255130}
   m_Layer: 0
   m_Name: "\u65E7\u7A97\u4E0E\u4E9A\u9EBB\u5E18"
   m_TagString: Untagged
@@ -53916,6 +54017,26 @@ Transform:
   - {fileID: 1556540571}
   m_Father: {fileID: 2035514407}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &844255130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844255128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 720038294}
+  - {fileID: 1062286971}
+  - {fileID: 188176907}
+  - {fileID: 330610505}
+  - {fileID: 876500622}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &845204608
 GameObject:
   m_ObjectHideFlags: 0
@@ -58878,6 +58999,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 900764107}
+  - component: {fileID: 900764108}
   m_Layer: 0
   m_Name: "\u626B\u63CF\u7EF4\u591A\u5229\u4E9A\u65E7\u6CB9\u706F"
   m_TagString: Untagged
@@ -58901,6 +59023,23 @@ Transform:
   - {fileID: 1995529270}
   m_Father: {fileID: 168246068}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900764108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900764106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 2014985565}
+  - {fileID: 755876322}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &900960859
 GameObject:
   m_ObjectHideFlags: 0
@@ -66854,6 +66993,7 @@ MonoBehaviour:
   Kind: 13
   ObjectId: atelier.trial
   DisplayName: "\u64E6\u7B14\u5E03"
+  HoverVisual: {fileID: 160437752}
 --- !u!65 &1027399799
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -68746,6 +68886,7 @@ MonoBehaviour:
   Kind: 16
   ObjectId: atelier.shared_mark
   DisplayName: "\u63A5\u8FDE\u7684\u7B14\u8FF9"
+  HoverVisual: {fileID: 0}
 --- !u!65 &1055061683
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -74956,6 +75097,7 @@ GameObject:
   - component: {fileID: 1167596966}
   - component: {fileID: 1167596970}
   - component: {fileID: 1167596971}
+  - component: {fileID: 1167596972}
   m_Layer: 0
   m_Name: "\u753B\u5BA4\u4E3B\u955C\u5934"
   m_TagString: MainCamera
@@ -75120,6 +75262,18 @@ MonoBehaviour:
   FilmShader: {fileID: 4800000, guid: 0001c681a094247b8b87431e5209492e, type: 3}
   FilmMesh: {fileID: 4300000, guid: f9fae61f4649642ee8da71e90a99ba72, type: 2}
   FilmVolume: {fileID: 11400000, guid: 477c31dc6a22a49d8a3b015c524ce436, type: 2}
+--- !u!114 &1167596972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1167596964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb7b2147e161345b2bdc74247f073844, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldCamera
 --- !u!1 &1167985747
 GameObject:
   m_ObjectHideFlags: 0
@@ -87303,6 +87457,7 @@ GameObject:
   - component: {fileID: 1370126448}
   - component: {fileID: 1370126446}
   - component: {fileID: 1370126447}
+  - component: {fileID: 1370126449}
   m_Layer: 0
   m_Name: "Visual_\u53EF\u5F2F\u66F2\u7B14\u6BDB\u7684\u626B\u63CF\u753B\u7B14"
   m_TagString: Untagged
@@ -87383,6 +87538,22 @@ Transform:
   - {fileID: 265284222}
   m_Father: {fileID: 921615861}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1370126449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1370126445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 1370126447}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1370221637
 GameObject:
   m_ObjectHideFlags: 0
@@ -90468,6 +90639,7 @@ MonoBehaviour:
   Kind: 9
   ObjectId: studio.lamp_body
   DisplayName: "\u706F\u82AF"
+  HoverVisual: {fileID: 332720892}
 --- !u!65 &1417720968
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -91949,6 +92121,7 @@ MonoBehaviour:
   Kind: 7
   ObjectId: atelier.matches
   DisplayName: "\u706B\u67F4\u76D2\u91CC\u7684\u706B\u67F4"
+  HoverVisual: {fileID: 1796374332}
 --- !u!65 &1448994608
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -94975,6 +95148,7 @@ MonoBehaviour:
   Kind: 8
   ObjectId: atelier.matches
   DisplayName: "\u706B\u67F4\u76D2\u4FA7\u9762\u7684\u7802\u7EB8"
+  HoverVisual: {fileID: 1796374332}
 --- !u!65 &1497997253
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -96654,6 +96828,7 @@ MonoBehaviour:
   Kind: 6
   ObjectId: studio.lamp_body
   DisplayName: "\u5DE6\u8FB9\u7684\u6CB9\u706F"
+  HoverVisual: {fileID: 262841565}
 --- !u!65 &1519795269
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -98389,6 +98564,7 @@ GameObject:
   - component: {fileID: 1548114599}
   - component: {fileID: 1548114598}
   - component: {fileID: 1548114600}
+  - component: {fileID: 1548114601}
   m_Layer: 0
   m_Name: "\u72EC\u7ACB\u6D17\u7B14\u5DE5\u4F5C\u7C07"
   m_TagString: Untagged
@@ -98455,6 +98631,23 @@ MonoBehaviour:
   Injection: 0
   AutomaticTime: 0
   VisualTime: 0
+--- !u!114 &1548114601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1548114597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 881185307}
+  - {fileID: 454664809}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1549237034
 GameObject:
   m_ObjectHideFlags: 0
@@ -100492,6 +100685,7 @@ MonoBehaviour:
   Kind: 14
   ObjectId: studio.ceiling
   DisplayName: "\u5C4B\u9876"
+  HoverVisual: {fileID: 0}
 --- !u!65 &1573667446
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -105609,6 +105803,7 @@ MonoBehaviour:
   Kind: 11
   ObjectId: studio.curtain
   DisplayName: "\u7A97\u5E18\u62C9\u7EF3"
+  HoverVisual: {fileID: 1756456135}
 --- !u!65 &1635536185
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -105641,6 +105836,7 @@ GameObject:
   - component: {fileID: 1636674328}
   - component: {fileID: 1636674330}
   - component: {fileID: 1636674329}
+  - component: {fileID: 1636674331}
   m_Layer: 0
   m_Name: "\u4E9A\u9EBB\u5E18\u8936_0"
   m_TagString: Untagged
@@ -105720,6 +105916,22 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1636674327}
   m_Mesh: {fileID: 4300000, guid: c60aec8552a7d4c2d95c43b591854080, type: 2}
+--- !u!114 &1636674331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636674327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 1636674329}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1637385257
 GameObject:
   m_ObjectHideFlags: 0
@@ -108772,6 +108984,7 @@ GameObject:
   - component: {fileID: 1696648001}
   - component: {fileID: 1696648003}
   - component: {fileID: 1696648002}
+  - component: {fileID: 1696648004}
   m_Layer: 0
   m_Name: "Visual_\u4EA4\u7A3F\u4FBF\u6761"
   m_TagString: Untagged
@@ -108852,6 +109065,22 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1696648000}
   m_Mesh: {fileID: 4300000, guid: 40c4a78ccd63641a99d1df3564bee4fc, type: 2}
+--- !u!114 &1696648004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696648000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 1696648002}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1696939222
 GameObject:
   m_ObjectHideFlags: 0
@@ -113144,6 +113373,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1756456133}
   - component: {fileID: 1756456134}
+  - component: {fileID: 1756456135}
   m_Layer: 0
   m_Name: "\u7ED5\u8FC7\u5BFC\u5411\u73AF\u7684\u95ED\u5408\u4E9A\u9EBB\u7EF3"
   m_TagString: Untagged
@@ -113323,6 +113553,23 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!114 &1756456135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756456132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 1756456134}
+  - {fileID: 1994019410}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1757031830
 GameObject:
   m_ObjectHideFlags: 0
@@ -116037,6 +116284,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1796374331}
+  - component: {fileID: 1796374332}
   m_Layer: 0
   m_Name: "Visual_\u65E7\u7EB8\u706B\u67F4\u76D2"
   m_TagString: Untagged
@@ -116081,6 +116329,58 @@ Transform:
   - {fileID: 1783305373}
   m_Father: {fileID: 871090699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1796374332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796374330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 481998384}
+  - {fileID: 2098094815}
+  - {fileID: 502553400}
+  - {fileID: 1257747720}
+  - {fileID: 148703479}
+  - {fileID: 92953567}
+  - {fileID: 451235904}
+  - {fileID: 1729278923}
+  - {fileID: 496109842}
+  - {fileID: 225595481}
+  - {fileID: 1981904226}
+  - {fileID: 1181189034}
+  - {fileID: 99786819}
+  - {fileID: 1194820594}
+  - {fileID: 121042974}
+  - {fileID: 410744244}
+  - {fileID: 1168172269}
+  - {fileID: 1628715698}
+  - {fileID: 922035439}
+  - {fileID: 897388404}
+  - {fileID: 675387965}
+  - {fileID: 1770505775}
+  - {fileID: 2067732120}
+  - {fileID: 1823355378}
+  - {fileID: 1127241458}
+  - {fileID: 188951867}
+  - {fileID: 295752929}
+  - {fileID: 792727082}
+  - {fileID: 1857343986}
+  - {fileID: 1651446466}
+  - {fileID: 232153360}
+  - {fileID: 877576059}
+  - {fileID: 164671719}
+  - {fileID: 1324627010}
+  - {fileID: 1999225097}
+  - {fileID: 1644950797}
+  - {fileID: 2102871703}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1800656891
 GameObject:
   m_ObjectHideFlags: 0
@@ -117836,6 +118136,7 @@ GameObject:
   - component: {fileID: 1821735046}
   - component: {fileID: 1821735048}
   - component: {fileID: 1821735047}
+  - component: {fileID: 1821735049}
   m_Layer: 0
   m_Name: "\u6CBE\u6E7F\u8272\u7684\u65E7\u6728\u677F"
   m_TagString: Untagged
@@ -117915,6 +118216,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1821735045}
   m_Mesh: {fileID: 4300000, guid: 7e41b3f043b8a46938e10a9101853500, type: 2}
+--- !u!114 &1821735049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1821735045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8998de21a7041cdb0279a83ac812de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldTarget
+  Surfaces:
+  - {fileID: 1821735047}
+  - {fileID: 921698673}
+  FadeInSeconds: 1.35
+  FadeOutSeconds: 0.55
 --- !u!1 &1822140623
 GameObject:
   m_ObjectHideFlags: 0
@@ -122719,6 +123037,7 @@ MonoBehaviour:
   Kind: 5
   ObjectId: studio.window
   DisplayName: "\u7A97\u5916\u7684\u591C\u8272"
+  HoverVisual: {fileID: 844255130}
 --- !u!65 &1886522488
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -127944,6 +128263,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.Unity::Game.Unity.ArtRebuild.AtelierGameplay
   ViewCamera: {fileID: 1167596968}
+  HoverGold: {fileID: 1167596972}
   Notebook: {fileID: 695959057}
   Narrator: {fileID: 695959056}
   Captions: {fileID: 371818304}
@@ -130501,6 +130821,7 @@ MonoBehaviour:
   Kind: 15
   ObjectId: studio.sky
   DisplayName: "\u5C4B\u9876\u5916\u7684\u5929\u7A7A"
+  HoverVisual: {fileID: 0}
 --- !u!65 &2021439098
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -138473,7 +138794,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a89ae342809954014a7b8f5983994d97, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Game.RealtimePainterly::Game.Unity.TechnicalArt.RealtimePainterly.Production.LivingSkyController
   Pigment: {fileID: 6299840544147527054}
   Surface: {fileID: 8020670623220505026}
@@ -138505,7 +138826,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7fe88b8ac5b9a4801a4d96b41fbc3137, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Game.RealtimePainterly::Game.Unity.TechnicalArt.RealtimePainterly.PainterlyInfluence
   Targets:
   - {fileID: 8020670623220505026}
@@ -138585,7 +138906,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b25c8c7c2a79047768b04900d88d1ddf, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Game.RealtimePainterly::Game.Unity.TechnicalArt.RealtimePainterly.GpuPigment
   SimulationShader: {fileID: 4800000, guid: 6c9fb54d1ac4545a49d3597b2937e9e0, type: 3}
   Target: {fileID: 8020670623220505026}

@@ -5,6 +5,7 @@
     "Game.Domain",
     "Game.Application",
     "Game.RealtimePainterly",
+    "Game.HoverGold",
     "Unity.InputSystem",
     "Unity.ugui"
   ],

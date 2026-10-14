@@ -22,6 +22,7 @@ namespace Game.Unity.TechnicalArt.HoverGold
         private RenderTexture capture;
         private byte[] pendingPixels;
         private int captureWidth, captureHeight, requestedSignature;
+        private RectInt captureRegion;
         private int sourceSignature = int.MinValue;
         private bool reading, disposed;
         private bool samplesDirty = true;
@@ -47,8 +48,9 @@ namespace Game.Unity.TechnicalArt.HoverGold
             }
             int signature = SourceSignature(view, target);
             if (reading || signature == sourceSignature || Time.unscaledTime < retryAfter) return;
-            captureWidth = Mathf.Min(1024, Mathf.Max(64, view.pixelWidth));
+            captureWidth = Mathf.Min(1920, Mathf.Max(64, view.pixelWidth));
             captureHeight = Mathf.Max(64, Mathf.RoundToInt(captureWidth * view.pixelHeight / (float)view.pixelWidth));
+            captureRegion = CaptureRegion(view, target, captureWidth, captureHeight);
             capture = new RenderTexture(captureWidth, captureHeight, 24, RenderTextureFormat.ARGB32,
                 RenderTextureReadWrite.Linear)
             {
@@ -104,10 +106,32 @@ namespace Game.Unity.TechnicalArt.HoverGold
                 {
                     if (surface == null) continue;
                     hash = hash * 31 + surface.localToWorldMatrix.GetHashCode();
+                    hash = hash * 31 + surface.bounds.GetHashCode();
                     hash = hash * 31 + (surface.enabled && surface.gameObject.activeInHierarchy ? 1 : 0);
                 }
                 return hash;
             }
+        }
+
+        /// <summary>只扫描目标投影附近的像素；薄笔杆保留全画幅采样精度，不扫描整个房间。</summary>
+        private static RectInt CaptureRegion(Camera view, HoverGoldTarget target, int width, int height)
+        {
+            if (!target.TryGetBounds(out var bounds)) return new RectInt(0, 0, width, height);
+            Vector2 min = Vector2.one, max = Vector2.zero;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = bounds.center + Vector3.Scale(bounds.extents,
+                    new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                Vector3 point = view.WorldToViewportPoint(corner);
+                if (point.z <= view.nearClipPlane) return new RectInt(0, 0, width, height);
+                min = Vector2.Min(min, point);
+                max = Vector2.Max(max, point);
+            }
+            int left = Mathf.Clamp(Mathf.FloorToInt(min.x * width) - 4, 0, width - 1);
+            int bottom = Mathf.Clamp(Mathf.FloorToInt(min.y * height) - 4, 0, height - 1);
+            int right = Mathf.Clamp(Mathf.CeilToInt(max.x * width) + 4, left + 1, width);
+            int top = Mathf.Clamp(Mathf.CeilToInt(max.y * height) + 4, bottom + 1, height);
+            return new RectInt(left, bottom, right - left, top - bottom);
         }
 
         private static long Key(int x, int y) => ((long)(x + 2) << 32) | (uint)(y + 2);
@@ -137,9 +161,9 @@ namespace Game.Unity.TechnicalArt.HoverGold
         private void BuildOuterLoops(byte[] pixels, int width, int height)
         {
             var edges = new Dictionary<long, List<long>>();
-            for (int y = -1; y < height; y++)
+            for (int y = captureRegion.yMin - 1; y < captureRegion.yMax; y++)
             {
-                for (int x = -1; x < width; x++)
+                for (int x = captureRegion.xMin - 1; x < captureRegion.xMax; x++)
                 {
                     int code = (Filled(pixels, x, y, width, height) ? 1 : 0) |
                         (Filled(pixels, x + 1, y, width, height) ? 2 : 0) |
