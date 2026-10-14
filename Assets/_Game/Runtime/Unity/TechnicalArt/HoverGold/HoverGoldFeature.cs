@@ -1,6 +1,6 @@
 // 文件：HoverGoldFeature.cs
 // 职责：把真实外轮廓旁的三缕疏松游丝合成为最上层世界提示，保留渐变尾部和大片空段。
-// 边界：只用于带 HoverGoldPointer 的实验摄像机；不改原材质、正式管线或游戏事实。
+// 边界：仅响应显式的悬停摄像机，不改原材质或游戏事实；许可由玩法输入决定。
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
@@ -26,6 +26,7 @@ namespace Game.Unity.TechnicalArt.HoverGold
         [Range(0, .35f)] public float BreathAmount = .16f;
         [Min(2)] public float BreathPeriodSeconds = 4.8f;
         private readonly Dictionary<(Camera, HoverGoldTarget), HoverGoldContour> contours = new();
+        private readonly List<(Camera, HoverGoldTarget)> stale = new();
         private Material material;
         private BraidPass pass;
 
@@ -50,11 +51,23 @@ namespace Game.Unity.TechnicalArt.HoverGold
         {
             if (pass == null || data.cameraData.cameraType != CameraType.Game) return;
             var camera = data.cameraData.camera;
-            var pointer = camera.GetComponent<HoverGoldPointer>();
-            if (pointer == null || !pointer.isActiveAndEnabled) return;
+            // 场景重开会销毁旧镜头与目标；主动释放其网格，不能跨会话保留悬停资源。
+            stale.Clear();
+            foreach (var pair in contours)
+                if (pair.Key.Item1 == null || pair.Key.Item2 == null || !pair.Key.Item2.isActiveAndEnabled)
+                {
+                    pair.Value.Dispose();
+                    stale.Add(pair.Key);
+                }
+            foreach (var key in stale) contours.Remove(key);
+            var hover = camera.GetComponent<HoverGoldCamera>();
+            if (hover == null || !hover.isActiveAndEnabled) return;
             pass.Items.Clear();
-            foreach (var target in HoverGoldTarget.Active)
+            foreach (var target in hover.Visible)
             {
+                if (target == null || !target.isActiveAndEnabled) continue;
+                bool current = hover.Current == target;
+                if (!current && target.Opacity <= .0001f) continue;
                 var key = (camera, target);
                 if (!contours.TryGetValue(key, out var contour))
                     contours[key] = contour = new HoverGoldContour();

@@ -7,6 +7,7 @@
     "Game.Unity",
     "Game.RealtimePainterly",
     "Game.RealtimePainterly.Editor",
+    "Game.HoverGold",
     "Unity.InputSystem",
     "Unity.ugui",
     "Unity.RenderPipelines.Core.Runtime",

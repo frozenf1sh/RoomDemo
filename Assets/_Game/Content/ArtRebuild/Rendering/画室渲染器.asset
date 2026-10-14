@@ -54,7 +54,8 @@ MonoBehaviour:
   - {fileID: -7925718525651456287}
   - {fileID: 4249211034169120201}
   - {fileID: 6489855328828518076}
-  m_RendererFeatureMap: ad6b866f10d7b46cl
+  - {fileID: 1142556709893545549}
+  m_RendererFeatureMap: e1eecf40fe300292c915521bec3af83abcee7f6e0999105a4d9ef12c462ddb0fl
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
@@ -83,6 +84,29 @@ MonoBehaviour:
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
   m_TileOnlyMode: 0
+--- !u!114 &1142556709893545549
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b88e59b1ee2c4644ae66cda5dd1e518, type: 3}
+  m_Name: "\u60AC\u505C\u91D1\u8272\u6E38\u4E1D"
+  m_EditorClassIdentifier: Game.HoverGold::Game.Unity.TechnicalArt.HoverGold.HoverGoldFeature
+  m_Active: 1
+  effectShader: {fileID: 4800000, guid: fb1c90501974b42998e6c1ebd68032c6, type: 3}
+  WidthAt1080: 3
+  Strength: 0.9
+  Gold: {r: 0.97, g: 0.68, b: 0.22, a: 1}
+  BraidOffsetAt1080: 8
+  BraidAmplitudeAt1080: 7
+  FlowSpeedAt1080: 22
+  StrandLapSeconds: 64
+  BreathAmount: 0.16
+  BreathPeriodSeconds: 4.8
 --- !u!114 &4249211034169120201
 MonoBehaviour:
   m_ObjectHideFlags: 1
