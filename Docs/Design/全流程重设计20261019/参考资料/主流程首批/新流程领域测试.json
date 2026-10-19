@@ -1,0 +1,105 @@
+{
+  "success": true,
+  "command": "command test_status",
+  "data": {
+    "command": "test_status",
+    "parameters": {},
+    "result": {
+      "status": "completed",
+      "duration": 0.03,
+      "summary": {
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "results": [
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.ActionsCannotAwardAnObjectAsAnObservation",
+          "Status": "Passed",
+          "Duration": 0.012003,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.BoundaryAndMiddleChoicesKeepLastStrokeLegal(12)",
+          "Status": "Passed",
+          "Duration": 0.0053223,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.BoundaryAndMiddleChoicesKeepLastStrokeLegal(24)",
+          "Status": "Passed",
+          "Duration": 0.0001871,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.BoundaryAndMiddleChoicesKeepLastStrokeLegal(18)",
+          "Status": "Passed",
+          "Duration": 0.0001439,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.NoBrushAndOutOfBoundsInputCannotMutateArtwork",
+          "Status": "Passed",
+          "Duration": 0.0001774,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.NoteNeverGivesCupAndOpeningBlocksOtherSources",
+          "Status": "Passed",
+          "Duration": 0.0001409,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.OldEpochStaleRevisionAndDuplicateMutationAreRejectedWithoutCharges",
+          "Status": "Passed",
+          "Duration": 0.000227,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.ThreeRecipesDoNotLockOrAdvanceTheCanvas",
+          "Status": "Passed",
+          "Duration": 0.0001563,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.TwoStrokesCannotFinishAndThreeCanDiscardRemainder",
+          "Status": "Passed",
+          "Duration": 0.0004264,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.UndoRefundsExactStrokeAndCannotUndoSealedLayer",
+          "Status": "Passed",
+          "Duration": 0.0002606,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.WashRequiresBothSourcesAndCollectsResultsInSameBatch",
+          "Status": "Passed",
+          "Duration": 0.0004718,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "原图": "Docs/Design/全流程重设计20261019/概念图/策划笔刷/1.png",
+    "正式图样": "Assets/_Game/Content/ArtRebuild/Brushes/FourStage/1.png",
+    "sha256": "112cf52ff05e86baf79e8e8d8604a461d50258be3dbbf908143dce5c8cdd2fd7",
+    "bytes": 1243185
+  },
+  {
+    "原图": "Docs/Design/全流程重设计20261019/概念图/策划笔刷/2.png",
+    "正式图样": "Assets/_Game/Content/ArtRebuild/Brushes/FourStage/2.png",
+    "sha256": "28400145f342ba63ed0fa4252ed97295fb9ead9ab15f1b20df17142cf88e74b7",
+    "bytes": 710502
+  },
+  {
+    "原图": "Docs/Design/全流程重设计20261019/概念图/策划笔刷/3.png",
+    "正式图样": "Assets/_Game/Content/ArtRebuild/Brushes/FourStage/3.png",
+    "sha256": "ce10f4ec6d14ec6f3f0940e5c486415a9766ce0a94746344586eaca69140aa71",
+    "bytes": 483482
+  },
+  {
+    "原图": "Docs/Design/全流程重设计20261019/概念图/策划笔刷/4.png",
+    "正式图样": "Assets/_Game/Content/ArtRebuild/Brushes/FourStage/4.png",
+    "sha256": "b226e79bd383bd70eeeb3fbee5cd74f7c0c235d571c017871b3b73fd2ffa3fd1",
+    "bytes": 901943
+  }
+]

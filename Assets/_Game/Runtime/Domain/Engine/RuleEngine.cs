@@ -145,11 +145,11 @@ namespace Game.Domain
             return true;
         }
 
-        /// <summary>验证亲手操作的真实来源；动作只添加事实，不完成重要解释。</summary>
+        /// <summary>验证亲手操作的真实来源；同批记录事实和当场观察，不完成重要解释。</summary>
         private bool Act(GameState state, PerformSceneAction command, List<DomainEvent> events)
         {
             var rule = rules.SceneActions.FirstOrDefault(x => x.Id == command.ActionId && x.Source == command.Source);
-            bool allowed = rule != null && state.Knows(command.Source) && rule.Requires.All(state.HasFact)
+            bool allowed = rule != null && state.Knows(command.Source) && rule.AdditionalSources.All(state.Knows) && rule.Requires.All(state.HasFact)
                 && !rule.Blocks.Any(state.HasFact) && !state.CanvasLocked;
             if (!allowed)
             {
@@ -160,6 +160,8 @@ namespace Game.Domain
             if (rule.Produces.All(state.HasFact)) return true;
             events.Add(new ObjectInspected(command.Source, rule.Description));
             AddFacts(state, rule.Produces, events);
+            // 有效动作和当场可见的结果同批记录，动画不负责延迟发放观察。
+            GrantClues(state, rule.ProducedObservations, events);
             return true;
         }
 

@@ -1,0 +1,25 @@
+{
+  "自动命令回放": "正常GameSession、现场接触适配器、按钮回调，无DebugGrant",
+  "完成范围": "P00至P07与第一层后的左侧显色",
+  "错误数": 0,
+  "Player日志异常": false,
+  "原始笔印RT发生变化": true,
+  "返回再进RT指纹一致": true,
+  "两笔收层被拒绝": true,
+  "第三笔后完成按钮可用": true,
+  "撤销退款": true,
+  "颜料守恒": true,
+  "构建警告": [
+    "未配置开发Pipeline Runtime",
+    "39个既有Mesh Collider的预烘焙碰撞未启用",
+    "两个未使用的Core Debug Shader因管线标签被剥离"
+  ],
+  "Player未使用后处理的剥离提示": [
+    "Shader 'Hidden/Universal Render Pipeline/GaussianDepthOfField' is not supported or has been stripped from the build (in 'GaussianDepthOfField'). PostProcessing render passes will not execute.",
+    "Shader 'Hidden/Universal Render Pipeline/BokehDepthOfField' is not supported or has been stripped from the build (in 'BokehDepthOfField'). PostProcessing render passes will not execute.",
+    "Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjection'). PostProcessing render passes will not execute."
+  ],
+  "边界": "自动回放和真实构建截图，不是真人鼠标或正式Workspace视觉验收",
+  "新阶段台词句末接续": "N03已播放，过时引导不会整组阻塞",
+  "回主视角说明面板": "旧说明已清除"
+}

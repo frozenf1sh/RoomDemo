@@ -31,17 +31,23 @@ namespace Game.Domain
         public IReadOnlyList<FactId> Blocks { get; }
         /// <summary>操作产生的事实，不直接授予碎片。</summary>
         public IReadOnlyList<FactId> Produces { get; }
+        /// <summary>有效接触同时记录的性质；只能是观察，不授予物体或完整概念。</summary>
+        public IReadOnlyList<ClueId> ProducedObservations { get; }
+        /// <summary>动作所需的其他已亲点来源，如洗笔必须同时认识画笔。</summary>
+        public IReadOnlyList<ObjectId> AdditionalSources { get; }
         /// <summary>成功时的极短世界描述。</summary>
         public string Description { get; }
         /// <summary>缺少条件时说明可见问题。</summary>
         public string LockedDescription { get; }
         /// <summary>复制所有内容数组，防止适配层修改规则。</summary>
-        public SceneActionRule(string id, ObjectId source, FactId[] requires, FactId[] produces, string description, string locked, FactId[] blocks = null)
+        public SceneActionRule(string id, ObjectId source, FactId[] requires, FactId[] produces, string description, string locked, FactId[] blocks = null, ClueId[] observations = null, ObjectId[] additionalSources = null)
         {
-            // 操作只追加领域事实，重复操作不会重复制造状态或计数。
+            // 动作只记录有限事实和当场观察，重复请求不重复制造状态或计数。
             Id = id; Source = source; Requires = Array.AsReadOnly(requires.ToArray());
             Produces = Array.AsReadOnly(produces.ToArray()); Blocks = Array.AsReadOnly((blocks ?? Array.Empty<FactId>()).ToArray());
             Description = description; LockedDescription = locked;
+            ProducedObservations = Array.AsReadOnly((observations ?? Array.Empty<ClueId>()).ToArray());
+            AdditionalSources = Array.AsReadOnly((additionalSources ?? Array.Empty<ObjectId>()).ToArray());
         }
     }
 }

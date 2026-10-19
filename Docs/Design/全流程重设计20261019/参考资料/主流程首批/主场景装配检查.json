@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "command": "command eval",
+  "data": {
+    "command": "eval",
+    "parameters": {
+      "code": "var f=UnityEngine.Object.FindAnyObjectByType<Game.Unity.ArtRebuild.AtelierFlowGameplay>(); return new{newDriver=f.enabled,oldDriver=f.References.enabled,oldPainting=f.References.Painting.enabled,oldNarration=f.References.Narrator.enabled,crayon=f.CrayonPicking!=null,calibration=f.CanvasPort.BrushCalibration!=null,draft=f.Draft!=null,brushCount=f.CanvasPort.Brushes.Length,dirty=f.gameObject.scene.isDirty};"
+    },
+    "result": {
+      "output": null,
+      "diagnostics": [],
+      "success": true,
+      "result": {
+        "newDriver": true,
+        "oldDriver": false,
+        "oldPainting": false,
+        "oldNarration": false,
+        "crayon": true,
+        "calibration": true,
+        "draft": true,
+        "brushCount": 4,
+        "dirty": false
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

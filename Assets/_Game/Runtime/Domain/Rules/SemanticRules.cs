@@ -172,6 +172,9 @@ namespace Game.Domain
             logics = logics ?? Array.Empty<LogicDefinition>();
             if (sceneActions.Select(x => x.Id).Distinct().Count() != sceneActions.Length || sceneActions.Any(x => !discoveries.Any(d => d.Source == x.Source) || string.IsNullOrWhiteSpace(x.Id) || x.Produces.Count == 0))
                 throw new ArgumentException("场景操作必须有唯一身份、有效来源和非空事实产出。");
+            if (sceneActions.Any(x => x.ProducedObservations.Any(c => !clues.Any(d => d.Id == c && d.Category == ClueCategory.Observation)) ||
+                x.AdditionalSources.Any(source => !discoveries.Any(d => d.Source == source))))
+                throw new ArgumentException("动作结果只能记录已定义观察，额外来源必须是可亲点物体。");
             SceneActions = Array.AsReadOnly(sceneActions.ToArray());
             // 一次性验证所有内容身份，尽早暴露策划数据错误。
             if (clues.Select(x => x.Id).Distinct().Count() != clues.Length || discoveries.Select(x => x.Source).Distinct().Count() != discoveries.Length ||

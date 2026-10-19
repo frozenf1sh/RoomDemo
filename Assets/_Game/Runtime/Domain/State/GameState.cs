@@ -10,6 +10,8 @@ namespace Game.Domain
     /// <summary>唯一的领域状态；所有可变集合保持私有。</summary>
     public sealed class GameState
     {
+        /// <summary>四阶段作品与颜料的唯一账本；旧规则不会调用新画布命令。</summary>
+        public AtelierCanvasDocument AtelierCanvas { get; } = new AtelierCanvasDocument();
         // 线索、事实、反应、历史分别去重；外部不得得到集合的可写引用。
         private readonly HashSet<ClueId> clues = new HashSet<ClueId>();
         private readonly HashSet<FactId> facts = new HashSet<FactId>();

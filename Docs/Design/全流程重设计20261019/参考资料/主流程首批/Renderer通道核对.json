@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "command": "command eval",
+  "data": {
+    "command": "eval",
+    "parameters": {
+      "code": "if(UnityEditor.EditorUtility.scriptCompilationFailed) throw new System.Exception(\"编译失败\"); var r=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.Universal.ScriptableRendererData>(\"Assets/_Game/Content/ArtRebuild/Rendering/画室渲染器.asset\"); typeof(Game.Editor.ArtRebuild.AtelierFlowOpeningBuilder).GetMethod(\"SynchronizeFeatureMap\",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic).Invoke(null,new object[]{r}); UnityEditor.EditorUtility.SetDirty(r); UnityEditor.AssetDatabase.SaveAssetIfDirty(r); return new{featureCount=r.rendererFeatures.Count,hasNull=r.rendererFeatures.Any(x=>x==null)};"
+    },
+    "result": {
+      "output": null,
+      "diagnostics": [],
+      "success": true,
+      "result": {
+        "featureCount": 5,
+        "hasNull": false
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

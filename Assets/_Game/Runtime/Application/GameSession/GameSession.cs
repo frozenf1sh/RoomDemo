@@ -11,7 +11,7 @@ using Game.Domain;
 namespace Game.Application
 {
     /// <summary>一次游戏的显式依赖入口；重开游戏时创建新实例。</summary>
-    public sealed class GameSession
+    public sealed partial class GameSession
     {
         // 引擎仅处理规则；会话负责事件发布，使领域测试不需要 Unity 或事件框架。
         private readonly RuleEngine engine;
@@ -69,7 +69,7 @@ namespace Game.Application
         {
             var action = Rules.SceneActions.SingleOrDefault(x => x.Id == actionId && x.Source == source);
             return action != null && !State.CanvasLocked && IsInspectable(source)
-                && action.Requires.All(State.HasFact) && !action.Blocks.Any(State.HasFact)
+                && action.AdditionalSources.All(State.Knows) && action.Requires.All(State.HasFact) && !action.Blocks.Any(State.HasFact)
                 && !action.Produces.All(State.HasFact);
         }
 

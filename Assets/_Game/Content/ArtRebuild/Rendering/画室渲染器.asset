@@ -26,6 +26,20 @@ MonoBehaviour:
     BlurQuality: 0
     Falloff: 100
     SampleCount: -1
+--- !u!114 &-6824467026029348470
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 822a94788fed14d60b3b6baea8725c1e, type: 3}
+  m_Name: "\u9636\u6BB5\u5C40\u90E8\u5E95\u7A3F_\u4FDD\u7559\u73B0\u6709\u901A\u9053"
+  m_EditorClassIdentifier: Game.RealtimePainterly::Game.Unity.TechnicalArt.RealtimePainterly.Production.AtelierDraftFeature
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 67488285d54824d6289ebdfc361e40d8, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55,7 +69,8 @@ MonoBehaviour:
   - {fileID: 4249211034169120201}
   - {fileID: 6489855328828518076}
   - {fileID: 1142556709893545549}
-  m_RendererFeatureMap: e1eecf40fe300292c915521bec3af83abcee7f6e0999105a4d9ef12c462ddb0fl
+  - {fileID: -6824467026029348470}
+  m_RendererFeatureMap: e1eecf40fe300292c915521bec3af83abcee7f6e0999105a4d9ef12c462ddb0f8a7927bc659f4aa1l
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
