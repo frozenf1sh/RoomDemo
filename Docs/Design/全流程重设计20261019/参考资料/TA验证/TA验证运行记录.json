@@ -1,0 +1,40 @@
+{
+  "日期": "2026-10-19",
+  "Unity版本": "6000.6.3f1",
+  "场景数": 5,
+  "独立macOS构建成功": true,
+  "Player五场景连续切换": true,
+  "Player错误回调数": 0,
+  "原生日志批次失效数": 0,
+  "脚本或Shader错误": false,
+  "实际构建截图": [
+    "TA01_局部草稿遮挡.png",
+    "TA02_洗笔反馈.png",
+    "TA03_手镜比较.png",
+    "TA04_刮刀干湿表面.png",
+    "TA05_屋面试刮.png"
+  ],
+  "世界截图及复位检查": "Logs/TAProbes20261019/运行检查.json",
+  "保护文件字节一致": {
+    "Assets/_Game/Content/Scenes/AtelierPlayable.unity": true,
+    "Assets/_Game/Content/Scenes/AtelierNight.unity": true,
+    "Assets/_Game/Content/Scenes/AtelierNight/LightingData.asset": true,
+    "ProjectSettings/QualitySettings.asset": true,
+    "ProjectSettings/GraphicsSettings.asset": true,
+    "ProjectSettings/EditorBuildSettings.asset": true,
+    "Assets/_Game/Content/ArtRebuild/Rendering/画室专用管线.asset": true
+  },
+  "手镜后处理": "独立验证关闭后处理，真实反射RT与构建画面均已查看；完整画室后处理兼容未通过，须另行修复。",
+  "实验管线": "运行时拥有一份副本，关闭GPU常驻批处理；退出后恢复并释放。",
+  "已知限制": [
+    "底稿采用固定世界区域，正式接入仍需Renderer分组和点击许可",
+    "洗笔为有限程序化色丝，不是流体求解",
+    "手镜网格UV投影有内插近似，镜框/工具/碎片/小画含占位",
+    "构建保留未启用景深/投影变体裁剪和阴影图集降级提示",
+    "性能预算、音效、手部、首次玩家理解和真人鼠标操作未验收"
+  ],
+  "边界": "自动运行与截图检查，不等于人工美术验收、正式流程接入或真人试玩通过。",
+  "冻鱼人工确认": "2026-10-19 本次对话确认五份独立TA场景全部通过；只要求限制手镜转角。",
+  "手镜转角范围": "-15至15度，修后自动构建截图复核，等待再次人工确认。",
+  "手镜转角修复后自动检查": "实际构建向接口请求正负35度，实际均夹紧至正负15度；运行错误0，已保存两个端点截图。"
+}
