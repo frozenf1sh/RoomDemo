@@ -1,0 +1,476 @@
+{
+  "success": true,
+  "scene": "Assets/_Game/Content/Scenes/AtelierPlayable.unity",
+  "createdCount": 71,
+  "objectCount": 1888,
+  "comparedProperties": 169551,
+  "snapshotHash": "056269aaecf799e6e6405cde4e77fd19d8f9f6d224bb7580bcf98e1f69b0e705",
+  "protectedFiles": {
+    "ProjectSettings/QualitySettings.asset": "f835d5142fd164cebbebd8d3896196be1e413fc2acf26826dc40e122db757d3c",
+    "ProjectSettings/EditorBuildSettings.asset": "aed2984944503bf5dff418d2a4e6a6a48bc3f994307d99d6a03fd2f40302f23b",
+    "Assets/_Game/Content/Scenes/AtelierNight.unity": "e968658b46ee2df862b0b7d1bb66c20ad3f30d8d368e000dba43b3c2f09628f7"
+  },
+  "modules": [
+    {
+      "path": "独立夜间画室/建筑与木作/左侧厚灰泥墙",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_左侧厚灰泥墙.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/右侧厚灰泥墙",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_右侧厚灰泥墙.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/窗左墙",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_窗左墙.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/窗右墙",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_窗右墙.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/窗下墙",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_窗下墙.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/窗上墙",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_窗上墙.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/真实厚边错缝地板",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_真实厚边错缝地板.prefab",
+      "objects": 117,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/有厚度的擦开屋顶",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_有厚度的擦开屋顶.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/纵向旧木梁_-3.75",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_纵向旧木梁_-3.75.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/纵向旧木梁_-2.05",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_纵向旧木梁_-2.05.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/纵向旧木梁_2.05",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_纵向旧木梁_2.05.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/纵向旧木梁_3.75",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_纵向旧木梁_3.75.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/后墙承重横梁",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_后墙承重横梁.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/前景承重横梁",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_前景承重横梁.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/墙角木立柱_-4.23",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_墙角木立柱_-4.23.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/墙角木立柱_4.23",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_墙角木立柱_4.23.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/墙根压脚木",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_墙根压脚木.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/旧窗与亚麻帘",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_旧窗与亚麻帘.prefab",
+      "objects": 27,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/屋顶干刷残留",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_屋顶干刷残留.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/建筑与木作/开局完整屋顶",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/建筑与木作/PF_开局完整屋顶.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/有磨损的扫描工作台",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_有磨损的扫描工作台.prefab",
+      "objects": 2,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/后移的工作椅",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_后移的工作椅.prefab",
+      "objects": 2,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/画架旁旧凳",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_画架旁旧凳.prefab",
+      "objects": 2,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/Krag 雕脚旧书柜",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_Krag 雕脚旧书柜.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/左侧旧立柜",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_左侧旧立柜.prefab",
+      "objects": 5,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/细木作画架",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_细木作画架.prefab",
+      "objects": 19,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/室内家具/Quixel 厚木工作台",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/室内家具/PF_Quixel 厚木工作台.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/近景枝叶与坡地",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/窗外山谷/PF_近景枝叶与坡地.prefab",
+      "objects": 8,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/近坡石脚小屋",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_近坡石脚小屋.prefab",
+      "objects": 241,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/中坡窄屋",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_中坡窄屋.prefab",
+      "objects": 241,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/远坡旧屋",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_远坡旧屋.prefab",
+      "objects": 241,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_0",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_0.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_1",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_1.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_2",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_2.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_3",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_3.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_4",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_4.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_5",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_5.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_6",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_6.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_7",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_7.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_8",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_8.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_9",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_9.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_10",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_10.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋/山坡树_11",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/村落房屋/PF_山坡树_11.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/中景错落小屋",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/窗外山谷/PF_中景错落小屋.prefab",
+      "objects": 760,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/远山轮廓",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/窗外山谷/PF_远山轮廓.prefab",
+      "objects": 4,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/返工_自然坡地",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/窗外山谷/PF_返工_自然坡地.prefab",
+      "objects": 197,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/返工_完整旧屋",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/窗外山谷/PF_返工_完整旧屋.prefab",
+      "objects": 10,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/窗外山谷/返工_村落土路",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/窗外山谷/PF_返工_村落土路.prefab",
+      "objects": 5,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/原创风景习作/左墙参考习作_0",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/原创风景习作/PF_左墙参考习作_0.prefab",
+      "objects": 6,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/原创风景习作/左墙参考习作_1",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/原创风景习作/PF_左墙参考习作_1.prefab",
+      "objects": 6,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/原创风景习作/背墙构图小稿",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/原创风景习作/PF_背墙构图小稿.prefab",
+      "objects": 6,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/返工_扫描工作簇",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/表现工作簇/PF_返工_扫描工作簇.prefab",
+      "objects": 101,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/返工_辅助工作簇",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/表现工作簇/PF_返工_辅助工作簇.prefab",
+      "objects": 24,
+      "externalReferences": [
+        "独立夜间画室/返工_辅助工作簇/辅助工作台上的小油灯.Surfaces.Array.data[1] -> 新画室玩法/点灯工作簇/Visual_裸露棉灯芯"
+      ]
+    },
+    {
+      "path": "独立夜间画室/桌面与创作痕迹",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/表现工作簇/PF_桌面与创作痕迹.prefab",
+      "objects": 59,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/照明",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/表现工作簇/PF_照明.prefab",
+      "objects": 9,
+      "externalReferences": []
+    },
+    {
+      "path": "独立夜间画室/持续流动的程序化星夜",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/表现工作簇/PF_持续流动的程序化星夜.prefab",
+      "objects": 2,
+      "externalReferences": [
+        "独立夜间画室/持续流动的程序化星夜.FollowCamera -> 独立夜间画室/画室主镜头",
+        "独立夜间画室/持续流动的程序化星夜/星夜参数载体_实际使用固定画幅.OnlyCamera -> 独立夜间画室/画室主镜头"
+      ]
+    },
+    {
+      "path": "新画室玩法/独立洗笔工作簇",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_独立洗笔工作簇.prefab",
+      "objects": 7,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/点灯工作簇",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_点灯工作簇.prefab",
+      "objects": 56,
+      "externalReferences": [
+        "新画室玩法/点灯工作簇.LampLight -> 独立夜间画室/照明/辅助油灯的局部暖光",
+        "新画室玩法/点灯工作簇/Logic_左侧油灯.HoverVisual -> 独立夜间画室/返工_辅助工作簇/辅助工作台上的小油灯"
+      ]
+    },
+    {
+      "path": "新画室玩法/拉帘工作簇",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_拉帘工作簇.prefab",
+      "objects": 41,
+      "externalReferences": [
+        "新画室玩法/拉帘工作簇.Cloth.Array.data[0] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/亚麻帘褶_0",
+        "新画室玩法/拉帘工作簇.Cloth.Array.data[1] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/亚麻帘褶_1",
+        "新画室玩法/拉帘工作簇/Logic_窗帘_0.HoverVisual -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/亚麻帘褶_0",
+        "新画室玩法/拉帘工作簇/Logic_窗帘_1.HoverVisual -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/亚麻帘褶_1"
+      ]
+    },
+    {
+      "path": "新画室玩法/湿色与整体擦除工作簇",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_湿色与整体擦除工作簇.prefab",
+      "objects": 11,
+      "externalReferences": [
+        "新画室玩法/湿色与整体擦除工作簇.ArtRoot -> 独立夜间画室",
+        "新画室玩法/湿色与整体擦除工作簇.GameplayRoot -> 新画室玩法",
+        "新画室玩法/湿色与整体擦除工作簇.RoofSurfaces.Array.data[0] -> 独立夜间画室/建筑与木作/开局完整屋顶",
+        "新画室玩法/湿色与整体擦除工作簇.RoofSurfaces.Array.data[1] -> 独立夜间画室/建筑与木作/有厚度的擦开屋顶",
+        "新画室玩法/湿色与整体擦除工作簇.FrameSurfaces.Array.data[0] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/扫描旧木窗_0/Old_Wooden_Window_vmfwcabdw_Mid",
+        "新画室玩法/湿色与整体擦除工作簇.FrameSurfaces.Array.data[1] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/厚实窗台",
+        "新画室玩法/湿色与整体擦除工作簇.FrameSurfaces.Array.data[2] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/旧木窗楣",
+        "新画室玩法/湿色与整体擦除工作簇.FrameSurfaces.Array.data[3] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/宽窗细木分格/中央分格木",
+        "新画室玩法/湿色与整体擦除工作簇.FrameSurfaces.Array.data[4] -> 独立夜间画室/建筑与木作/旧窗与亚麻帘/宽窗细木分格/水平分格木",
+        "新画室玩法/湿色与整体擦除工作簇.Sky -> 独立夜间画室/持续流动的程序化星夜",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[0] -> 独立夜间画室/照明/从窗洞进入的冷月光",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[1] -> 独立夜间画室/照明/窗台与帘褶的蓝色反弹",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[2] -> 独立夜间画室/照明/桌灯向下的暖工作区",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[3] -> 独立夜间画室/照明/夜间微弱环境方向光",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[4] -> 独立夜间画室/照明/桌灯在画室中的漫反弹",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[5] -> 独立夜间画室/照明/桌灯烘焙柔光",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[6] -> 独立夜间画室/照明/油灯向墙面的柔和散射",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[7] -> 独立夜间画室/照明/辅助油灯的局部暖光",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[8] -> 新画室玩法/点灯工作簇/Visual_手持火柴头/火柴接触小光",
+        "新画室玩法/湿色与整体擦除工作簇.LocalLights.Array.data[9] -> 新画室玩法/点灯工作簇/窗边反射落到左侧案面"
+      ]
+    },
+    {
+      "path": "新画室玩法/Logic_室内遮挡",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_Logic_室内遮挡.prefab",
+      "objects": 158,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/Visual_交稿便条",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_Visual_交稿便条.prefab",
+      "objects": 3,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/EventSystem",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/交互工作簇/PF_EventSystem.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/未读笔记提醒",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_未读笔记提醒.prefab",
+      "objects": 2,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/短暂新发现",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_短暂新发现.prefab",
+      "objects": 2,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/世界字幕",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_世界字幕.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/旁白区域",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_旁白区域.prefab",
+      "objects": 2,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/悬停物体名",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_悬停物体名.prefab",
+      "objects": 1,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/便签阅读",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_便签阅读.prefab",
+      "objects": 4,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/调查与动作",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_调查与动作.prefab",
+      "objects": 4,
+      "externalReferences": []
+    },
+    {
+      "path": "新画室玩法/画室纸面与字幕/返回画室",
+      "asset": "Assets/_Game/Content/Prefabs/AtelierModules/UI/PF_返回画室.prefab",
+      "objects": 2,
+      "externalReferences": []
+    }
+  ],
+  "validation": "连接后与重开后组件数据、引用、层级、Transform均与迁移前一致；尚需运行检查。"
+}

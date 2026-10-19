@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "sessionStarted": true,
+  "keyBindingsValid": true,
+  "notebookOpened": true,
+  "notebookClosed": true,
+  "targets": 19,
+  "graphics": "Metal",
+  "errors": [],
+  "capture": "离屏主镜头，只含世界，不包含Screen Space Overlay UI；不构成真实构建UI验收。",
+  "boundary": "自动启动与组件操作检查，没有真人鼠标试玩，也没有实现或验证新四阶段流程。"
+}
