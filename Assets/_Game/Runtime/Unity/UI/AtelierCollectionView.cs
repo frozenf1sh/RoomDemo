@@ -32,8 +32,10 @@ namespace Game.Unity
         [SerializeField] private Text detailName;
         [SerializeField] private Text detailDescription;
         [SerializeField] private Sprite brushArtwork;
+        [SerializeField] private Texture2D[] fourStageBrushArtwork;
 
         private readonly List<Button> spawnedCards = new List<Button>();
+        private readonly Dictionary<Texture2D, Sprite> generatedArtwork = new Dictionary<Texture2D, Sprite>();
         private GameSession session;
         private NotebookView notebook;
         private List<AtelierCollectionDefinition> owned = new List<AtelierCollectionDefinition>();
@@ -68,6 +70,13 @@ namespace Game.Unity
         public void ConfigureEntryButton(Button button)
         {
             notebookEntryButton = button;
+        }
+
+        /// <summary>注入四阶段笔刷原图；纹理由场景持有，运行时只缓存对应精灵。</summary>
+        public void ConfigureFourStageBrushArtwork(Texture2D[] artwork)
+        {
+            fourStageBrushArtwork = artwork == null ? Array.Empty<Texture2D>() : artwork.ToArray();
+            generatedArtwork.Clear();
         }
 
         /// <summary>绑定会话并恢复为关闭状态；重开时不保留上一局的页码或详情。</summary>
@@ -195,7 +204,18 @@ namespace Game.Unity
 
         private Sprite ArtworkFor(AtelierCollectionDefinition definition)
         {
-            return definition.Id == "atelier.collection.brush" ? brushArtwork : null;
+            if (definition.Id == "atelier.collection.brush") return brushArtwork;
+            const string prefix = "atelier.collection.flow-brush.";
+            if (!definition.Id.StartsWith(prefix)) return null;
+            if (!int.TryParse(definition.Id.Substring(prefix.Length), out int layer)) return null;
+            if (fourStageBrushArtwork == null || layer < 1 || layer > fourStageBrushArtwork.Length) return null;
+            var texture = fourStageBrushArtwork[layer - 1];
+            if (texture == null) return null;
+            if (generatedArtwork.TryGetValue(texture, out var cached)) return cached;
+            // 原始 PNG 的 Alpha 和比例由 Sprite 保留，避免在藏品卡中生成黑色底图。
+            var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, .5f));
+            generatedArtwork.Add(texture, sprite);
+            return sprite;
         }
     }
 }
