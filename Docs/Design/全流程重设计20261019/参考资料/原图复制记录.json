@@ -1,0 +1,26 @@
+[
+  {
+    "名称": "画笔遮帘",
+    "来源": "/Users/frozenf1sh/.codex/generated_images/01a13bb4-1f5d-7521-a47b-bffc1cfd2eb3/exec-214ae217-8e2c-4f36-a62f-171b4395d930.png",
+    "副本": "Docs/Design/全流程重设计20261019/概念图/原有参考/画笔遮帘.png",
+    "sha256": "9dfcd4de30d3560ef1fceb10a392758206ef75d1d3203c785394a043b5ade142"
+  },
+  {
+    "名称": "重影错位",
+    "来源": "/Users/frozenf1sh/.codex/generated_images/01a13bb4-1f5d-7521-a47b-bffc1cfd2eb3/exec-b0942a12-68b9-4ee1-8686-43fde28e8b63.png",
+    "副本": "Docs/Design/全流程重设计20261019/概念图/原有参考/重影错位.png",
+    "sha256": "4ff50a62cd53cca65188543ea663aafb3222619d78c8ec88d76e3c1c60c2a3fb"
+  },
+  {
+    "名称": "未完成底稿",
+    "来源": "/Users/frozenf1sh/.codex/generated_images/01a13bb4-1f5d-7521-a47b-bffc1cfd2eb3/exec-25865c0c-9b3f-42f6-b85c-1c23caef04eb.png",
+    "副本": "Docs/Design/全流程重设计20261019/概念图/原有参考/未完成底稿.png",
+    "sha256": "3121bce82d2aa28a867adc27ec764fcf2c5c50e1707d3c9fb77baf879d927d25"
+  },
+  {
+    "名称": "颜料视野窗",
+    "来源": "/Users/frozenf1sh/.codex/generated_images/01a13bb4-1f5d-7521-a47b-bffc1cfd2eb3/exec-ac1a0a09-e083-49de-8db4-5d288fca623d.png",
+    "副本": "Docs/Design/全流程重设计20261019/概念图/原有参考/颜料视野窗.png",
+    "sha256": "27b9da13f8cb00cc72e2d34c0e28e0245443ecbd0b8b563160efd018d97a94a5"
+  }
+]

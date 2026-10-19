@@ -1,0 +1,194 @@
+{
+  "工具": "内置image_gen",
+  "用途": "仅追溯采用图的最后一次生成或校正指令，图片不是生产资产；中间探索记录已移出项目。",
+  "原记录文件": [
+    "生成提示词.json",
+    "校正提示词补充.json",
+    "校正提示词补充2.json",
+    "校正提示词补充3.json",
+    "校正提示词补充4.json"
+  ],
+  "采用图": [
+    {
+      "id": "K1_A",
+      "title": "局部底稿不覆盖可画区域",
+      "references": [
+        "Docs/Design/全流程重设计20261019/概念图/新生成/K1_A.png"
+      ],
+      "prompt": "Edit the reference screenshot minimally. Keep original camera, lighting, desk, props, room geometry and all charcoal marks inside the WINDOW PANES unchanged. Remove all charcoal strokes overlapping the easel CANVAS and its wooden frame: the entire blank canvas and frame must be completely clean and readable. Restrict lower-left charcoal to the left table / future bust and mirror locations, never on the easel. The small picture on the right sill should remain a neutral pale paper placeholder with a few loose colored lines, no specified house or people. No other edits, no repainting, no new room.",
+      "采用文件": "概念图/新生成/K1_A.png",
+      "sha256": "745a3064874135c8c5c762faaaf2b02fd9856240a2bb25a37398a839bb245086"
+    },
+    {
+      "id": "K1_B",
+      "references": [
+        "Docs/Design/全流程重设计20261019/概念图/新生成/K1_B.png",
+        "Docs/Design/全流程重设计20261019/概念图/新生成/K2_B.png"
+      ],
+      "prompt": "Make ONE local correction to FIRST image: replace the oval mirror face at lower left with a single smooth INTACT uncracked dark-blue reflective surface. Remove ALL radial lines, triangular divisions, cracks or pie-slice patterns INSIDE the oval mirror. Use the smooth mirror treatment of SECOND image. Preserve the gold oval frame and handle and all separate loose mirror shards on the desk beside it. The hand mirror is whole; the separate shards are from another mirror. Do not change anything else: keep window scenery charcoal occluded, bust visible, blank canvas visible, original camera and original room. Small windowsill paper is provisional crayon scribble, retain it. No labels.",
+      "采用文件": "概念图/新生成/K1_B.png",
+      "sha256": "14e1bf7ae80aded600c26041a0d2ec92b0539dedf3d326835be06827900fc24b"
+    },
+    {
+      "id": "K1_C",
+      "references": [
+        "Docs/Design/全流程重设计20261019/概念图/新生成/K1_B.png",
+        "Docs/Design/全流程重设计20261019/参考资料/当前场景主镜头.png"
+      ],
+      "prompt": "Make a precise STAGE THREE screenshot edit of FIRST image. The ONLY change is to remove its charcoal/graphite obscuration over the scenery behind the window, revealing the existing trees, village houses, hill and night sky exactly as in SECOND image. Preserve every other part of FIRST image: plaster bust on the far-left side table in front of easel, intact oval hand mirror and separate loose shards on front-left desk, small colored-stroke paper on right windowsill, blank unobscured canvas and its frame, current lamps, desk, cup, brushes, books, geometry, fixed camera and color grade. Do not remove any newly placed objects. Keep whole room clear; there is no charcoal region remaining. Original blank canvas is intentional for this room-state comparison. This same clear room continues into stage four. No new stars in outdoor sky, no extra lamps or text, no UI, no free reinterpretation.",
+      "采用文件": "概念图/新生成/K1_C.png",
+      "sha256": "5ab05bd8727882c52e9e213f6001b93e92fa2431f0928b77d1a47a004c636b6a"
+    },
+    {
+      "id": "K2_A",
+      "title": "实际杯近景内的散色",
+      "references": [
+        "Docs/Design/全流程重设计20261019/参考资料/当前洗笔近景.png"
+      ],
+      "prompt": "Precise local edit of this actual game screenshot. Keep exact close-up camera, opaque ceramic cup, desk, wood board, note, lights and colors unchanged. Change ONLY the visible elliptical water surface INSIDE the existing cup rim: add a clearly readable blue pigment curl to this water surface. A nearby brush tip may touch the water at its center, but preserve all other brush props. Crucial: absolutely no blue pigment on the opaque OUTSIDE CUP WALL, no transparent cup, no spilling, no enlarged cup, no new artwork, no decorative presentation. Water surface only.",
+      "采用文件": "概念图/新生成/K2_A.png",
+      "sha256": "2c10c1bb85791abf3deb93cdb615d2715880c9bd52e712f0214ae67c59d5913b"
+    },
+    {
+      "id": "K2_B",
+      "references": [
+        "Docs/Design/全流程重设计20261019/概念图/新生成/K2_B.png"
+      ],
+      "prompt": "Correct this screenshot-bound interaction concept while preserving the same room, fixed camera, existing framing, object positions and lighting. The hand mirror used to view the plaster bust must have an INTACT uncracked reflective oval face, rigid ornamental frame and handle. Show a coherent reflected plaster bust that changes with mirror angle, not a random texture or broken mirror. Any loose mirror shards are already separate on the desk next to it and are NOT produced by smashing this intact mirror. No cracks crossing the hand mirror face. Keep plaster bust on left side table, mirror in its existing front-left area. No additional mirrors, floating diagrams, fantasy particles, new written dialogue or UI. It is a positional/reflection relationship concept, not final imported model appearance.",
+      "采用文件": "概念图/新生成/K2_B.png",
+      "sha256": "2273b22a9dd6065289a41084650d3f32fad703aecb595001b0275c5f8ea76fa4"
+    },
+    {
+      "id": "K2_C",
+      "title": "原左灯点燃无重复灯体",
+      "references": [
+        "Docs/Design/全流程重设计20261019/参考资料/当前场景主镜头.png"
+      ],
+      "prompt": "Precise minimal edit of the actual room screenshot. Keep exact fixed camera, all furniture and props. There is ONE existing small unlit ceramic lamp on the far LEFT table. Light only the wick of THAT SAME lamp with a tiny flame, and add a small local warm light pool on its existing table surface. Keep the original lamp body and location exactly. Do not add another lamp, remove or duplicate a lamp body, invent a hood or change the right desk lamp. This concept only demonstrates the immediate light change; no hand or match needs to be shown. Nothing else changes.",
+      "采用文件": "概念图/新生成/K2_C.png",
+      "sha256": "ecd48c0bc8878e1ed3146be3debabcdf600a55b83674de80cf526f14ac335196"
+    },
+    {
+      "id": "K3_A",
+      "title": "笔记材料与两词摆放",
+      "prompt": "Use case: precise-object-edit. Image 1 is the existing blank notebook UI artwork, EDIT TARGET. Keep the book exactly flat and front-on, same paper, borders and page proportions. Add only simple dark-gray Chinese UI labels and thin rules at the specified positions. No new room scene, no perspective, no decorative panels, no inventory icons, rocks, gems, crystals, seashells, leaves, craft ingredients or physical art tools. Left page must be ONE single vertical list of words, not a grid or three columns. Right page is mostly empty and allows at most three word chips. Left column exact text rows: 透明, 蓝色, 流动, 奔放, 杂乱. No thumbnail images needed. Right page place only two small chips 透明 and 蓝色 near upper-middle and neutral faint placement line. At right-page bottom one modest text button 联系. No result preview or success coloring before submit.",
+      "references": [
+        "Assets/_Game/Content/Art/UI/Notebook/Generated/NotebookOpenSpread_v1.png"
+      ],
+      "采用文件": "概念图/新生成/K3_A.png",
+      "sha256": "668bd11cb8ddf78cc08b3c5aba7a1b055542e2f879d5cd40fedf74313e3a4921"
+    },
+    {
+      "id": "K3_B",
+      "title": "原配方与灵感来源",
+      "prompt": "Use case: precise-object-edit. Image 1 is the existing blank notebook UI artwork, EDIT TARGET. Keep the book exactly flat and front-on, same paper, borders and page proportions. Add only simple dark-gray Chinese UI labels and thin rules at the specified positions. No new room scene, no perspective, no decorative panels, no inventory icons, rocks, gems, crystals, seashells, leaves, craft ingredients or physical art tools. Left page must be ONE single vertical list of words, not a grid or three columns. Right page is mostly empty and allows at most three word chips. Left exact list: 固定, 翻转, 黑色, 锋利, 扭曲, 粗犷. Right page two chips 固定 and 翻转, a small result word 扭曲 underneath after submission, and a separate quiet line 已获得新灵感. Tiny corner button 回看来源. Do not invent different input words, source images or recipes.",
+      "references": [
+        "Assets/_Game/Content/Art/UI/Notebook/Generated/NotebookOpenSpread_v1.png"
+      ],
+      "采用文件": "概念图/新生成/K3_B.png",
+      "sha256": "1e4ea7c6669f3a09acbcacdb8f516f0f02c3657150c9e19364eca89c13e63d04"
+    },
+    {
+      "id": "K3_C",
+      "title": "原始卷涡笔刷预览",
+      "prompt": "Use case: precise-object-edit. Image 1 is the existing blank notebook UI artwork, EDIT TARGET. Keep the book exactly flat and front-on, same paper, borders and page proportions. Add only simple dark-gray Chinese UI labels and thin rules at the specified positions. No new room scene, no perspective, no decorative panels, no inventory icons, rocks, gems, crystals, seashells, leaves, craft ingredients or physical art tools. Left page must be ONE single vertical list of words, not a grid or three columns. Right page is mostly empty and allows at most three word chips. Image 2 is original transparent BRUSH ARTWORK, preserve exactly its long S curve with curled ends and blue purple blocky patches; do not replace it with round spiral or thick oil stroke. Left exact list: 透明, 蓝色, 流动, 奔放, 冰蓝, 卷涡. Right top two chips 冰蓝 and 卷涡; middle shows a small copy of Image 2 only on paper, title 第一阶段笔刷. Small bottom caption 关掉笔记本，到画板上绘画. No gem icons or extra decorative elements.",
+      "references": [
+        "Assets/_Game/Content/Art/UI/Notebook/Generated/NotebookOpenSpread_v1.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/1.png"
+      ],
+      "采用文件": "概念图/新生成/K3_C.png",
+      "sha256": "8d1128fee152deaa309c4f6f4f3405dd957cc13e24cb02d5d901e0b978296e09"
+    },
+    {
+      "id": "K4_A",
+      "title": "第一层原图样自由放置",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual canvas-near-view screenshot from the design document. Preserve exact canvas rectangular boundary, easel, room pixels, lighting and camera. Keep size and rotation sliders at the LEFT of canvas and 返回画室 and 完成绘画 at TOP RIGHT as in source. Remove the red/green hand-drawn annotation rectangles and white test scribble, but do not redesign the UI or room. The source bright annotation colors are wireframe annotations, not final art. Use only the supplied transparent brush PNG artwork as stamps, preserve their exact outlines, original patchy colors and aspect ratios. No AI-painted substitute swirls, no complete Van Gogh painting, no added stars, cloud strokes or buildings beyond these stamps. No free color picker or decorative wooden palette. Every stamp is discrete; no continuous painted trail. Image 2 is the first brush stamp, exactly the supplied elongated double-ended S curl, NOT a round galaxy vortex. Replace only canvas interior with the dark-blue EMPTY ground from planner progress example, and FIVE discrete copies of this original stamp at varied sizes and rotations, leaving ample untouched blue areas. UI has only left size/rotation controls, a small remaining paint indicator, and top-right original return/finish buttons. No extra colors or tools.",
+      "references": [
+        "Docs/Design/全流程重设计20261019/参考资料/image3.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/1.png",
+        "Docs/Design/全流程重设计20261019/参考资料/image4.png"
+      ],
+      "采用文件": "概念图/新生成/K4_A.png",
+      "sha256": "af767c6640e0dbc838147905c4705d1081bd2f4b556b89dcc335ca2333838cc4"
+    },
+    {
+      "id": "K4_B",
+      "title": "第二第三层叠加关系",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual canvas-near-view screenshot from the design document. Preserve exact canvas rectangular boundary, easel, room pixels, lighting and camera. Keep size and rotation sliders at the LEFT of canvas and 返回画室 and 完成绘画 at TOP RIGHT as in source. Remove the red/green hand-drawn annotation rectangles and white test scribble, but do not redesign the UI or room. The source bright annotation colors are wireframe annotations, not final art. Use only the supplied transparent brush PNG artwork as stamps, preserve their exact outlines, original patchy colors and aspect ratios. No AI-painted substitute swirls, no complete Van Gogh painting, no added stars, cloud strokes or buildings beyond these stamps. No free color picker or decorative wooden palette. Every stamp is discrete; no continuous painted trail. Image 2 first S-shaped icy-blue curl, Image 3 tall two-prong angular black brush, Image 4 small low blue house-cluster brush. Show these exact stamp shapes accumulating on SAME dark-blue canvas: three S stamps, three tall black stamps, three house-cluster stamps at varied scales. Allow visible overlap and visible empty blue ground. Do not add mountains, detailed houses, fine tree needles, new brush textures or extra colors. Keep LEFT tool strip with size and rotation, TOP RIGHT return/finish.",
+      "references": [
+        "Docs/Design/全流程重设计20261019/参考资料/image3.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/1.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/2.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/3.png"
+      ],
+      "采用文件": "概念图/新生成/K4_B.png",
+      "sha256": "6a5e49df15d32e6273ffbd5264ab82c50e306cfce0aff25cc508a628a5637414"
+    },
+    {
+      "id": "K4_C",
+      "title": "第四层暖星与颜料余量",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual canvas-near-view screenshot from the design document. Preserve exact canvas rectangular boundary, easel, room pixels, lighting and camera. Keep size and rotation sliders at the LEFT of canvas and 返回画室 and 完成绘画 at TOP RIGHT as in source. Remove the red/green hand-drawn annotation rectangles and white test scribble, but do not redesign the UI or room. The source bright annotation colors are wireframe annotations, not final art. Use only the supplied transparent brush PNG artwork as stamps, preserve their exact outlines, original patchy colors and aspect ratios. No AI-painted substitute swirls, no complete Van Gogh painting, no added stars, cloud strokes or buildings beyond these stamps. No free color picker or decorative wooden palette. Every stamp is discrete; no continuous painted trail. Images 2 to 5 are the FOUR exact stamp artworks. Canvas shows accumulated copies of them, distinctly recognizable as the original S curve, two-prong dark shape, low blue house cluster, and paired yellow stars. No other marks are allowed. The result looks like layered supplied stamps with empty dark-blue gaps, not a completed professionally painted Starry Night. A SMALL simple paint meter under the LEFT sliders says 颜料 and 3 / 6. Top right 完成绘画 remains enabled. No new giant final-choice panel.",
+      "references": [
+        "Docs/Design/全流程重设计20261019/参考资料/image3.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/1.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/2.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/3.png",
+        "Docs/Design/全流程重设计20261019/概念图/策划笔刷/4.png"
+      ],
+      "采用文件": "概念图/新生成/K4_C.png",
+      "sha256": "4154a29df50fbde9b37c615fe500c605275b681e52c6144268439a0ae6c6822d"
+    },
+    {
+      "id": "K5_A",
+      "title": "刀刃揭底和刀面涂抹",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual Unity room screenshot. Preserve its exact camera, object positions, room geometry, dark game materials, lighting, field of view and flat screenshot presentation. Change ONLY the specific local parts requested. Do not repaint, beautify, remodel, relight or restage the room. Do not turn it into an oil painting or a paper illustration. No added decorative props, UI panels, arrows, words, photographic depth of field or cinematic effects. The easel stays left, the original cup front center, original window center, original right desk lamp stays right. Create two side-by-side local detail insets at bottom, sourced from the existing blue paint board on the desk; the main room itself is unchanged. Left detail shows palette-knife EDGE peeling only dry blue paint to expose brown wood. Right detail shows same knife FLAT FACE spreading a tiny soft blue patch. No thick fancy oil impasto anywhere else, no new props outside board, no cloth wiping dry paint. This is contact-angle study over actual game board, not a room redesign.",
+      "references": [
+        "Logs/FlowRedesign/Runtime/模块化后主镜头.png"
+      ],
+      "采用文件": "概念图/新生成/K5_A.png",
+      "sha256": "d0a6653122e3e1e913dc7061fe96313e9bd2c48ae5a548c990097723373a24b9"
+    },
+    {
+      "id": "K5_B",
+      "title": "屋顶边缘持久细痕",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual Unity room screenshot. Preserve its exact camera, object positions, room geometry, dark game materials, lighting, field of view and flat screenshot presentation. Change ONLY the specific local parts requested. Do not repaint, beautify, remodel, relight or restage the room. Do not turn it into an oil painting or a paper illustration. No added decorative props, UI panels, arrows, words, photographic depth of field or cinematic effects. The easel stays left, the original cup front center, original window center, original right desk lamp stays right. Only add a VERY SMALL faint blue-gray paint-like scuff at the LEFT edge of intact ceiling, inside visible frame, between existing beams. It is a persistent thin mark, plus two faint cool reflected dots, without a large opening. No cracks exploding, no constellations on roof, no changed painting. All geometry and rest of room pixel-faithful. This only illustrates discoverable location, not a hidden-route hint UI.",
+      "references": [
+        "Logs/FlowRedesign/Runtime/模块化后主镜头.png"
+      ],
+      "采用文件": "概念图/新生成/K5_B.png",
+      "sha256": "e07222bcc9882571f32a3ec19f6043e3ce6664c249a1126f224a67285f2b8812"
+    },
+    {
+      "id": "K5_C",
+      "title": "屋面局部试刮",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual Unity room screenshot. Preserve its exact camera, object positions, room geometry, dark game materials, lighting, field of view and flat screenshot presentation. Change ONLY the specific local parts requested. Do not repaint, beautify, remodel, relight or restage the room. Do not turn it into an oil painting or a paper illustration. No added decorative props, UI panels, arrows, words, photographic depth of field or cinematic effects. The easel stays left, the original cup front center, original window center, original right desk lamp stays right. Only alter a PALM-SIZED PATCH of the upper-left ceiling between existing beams. A palette knife edge has scraped a tiny irregular hole in the gray-blue surface, revealing ordinary dark-blue night behind. Keep all timber beams solid and every wall, furniture, lamp and floor unchanged. No stars yet, no full roof removal, no dramatic lighting or falling debris. Do not zoom or rotate camera.",
+      "references": [
+        "Logs/FlowRedesign/Runtime/模块化后主镜头.png"
+      ],
+      "采用文件": "概念图/新生成/K5_C.png",
+      "sha256": "d0c687863f7aa6699f785984559dc251ff09ca9288b5b57c987a633250514100"
+    },
+    {
+      "id": "K6_A",
+      "title": "常规结局保持画室",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual Unity room screenshot. Preserve its exact camera, object positions, room geometry, dark game materials, lighting, field of view and flat screenshot presentation. Change ONLY the specific local parts requested. Do not repaint, beautify, remodel, relight or restage the room. Do not turn it into an oil painting or a paper illustration. No added decorative props, UI panels, arrows, words, photographic depth of field or cinematic effects. The easel stays left, the original cup front center, original window center, original right desk lamp stays right. Image 2 is the planner canvas progression visual authority. Change only left easel CANVAS interior to a modest arrangement of exactly the four supplied stamp motifs shown in image 2, with visibly discrete shapes and ample dark blue gaps. Very modest warmth from original left lamp. Roof solid, room same, no whole-screen painted texture and no replacement with classical Starry Night.",
+      "references": [
+        "Logs/FlowRedesign/Runtime/模块化后主镜头.png",
+        "Docs/Design/全流程重设计20261019/参考资料/image4.png"
+      ],
+      "采用文件": "概念图/新生成/K6_A.png",
+      "sha256": "832c8c0932766271b1d9b1c2832c1743e260768f1de1d32e71b7ec3ee081fde6"
+    },
+    {
+      "id": "K6_B",
+      "title": "跨材质笔迹待亲点房间",
+      "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, the actual Unity room screenshot. Preserve its exact camera, object positions, room geometry, dark game materials, lighting, field of view and flat screenshot presentation. Change ONLY the specific local parts requested. Do not repaint, beautify, remodel, relight or restage the room. Do not turn it into an oil painting or a paper illustration. No added decorative props, UI panels, arrows, words, photographic depth of field or cinematic effects. The easel stays left, the original cup front center, original window center, original right desk lamp stays right. Only add a partial opening in upper ceiling between solid beams, ordinary deep blue sky behind. Add ONE narrow muted blue-gray dry-paint line continuously crossing original rear plaster wall, wood window frame and linen curtain at the same height. It must be an aligned paint mark, not a blue laser or glowing doorway. Room still intact and unchanged otherwise, no full erasure, no new objects, no text.",
+      "references": [
+        "Logs/FlowRedesign/Runtime/模块化后主镜头.png"
+      ],
+      "采用文件": "概念图/新生成/K6_B.png",
+      "sha256": "b604af2bbe34c85a08dac9ac9bb1ea426466426b47e34d9035d65818ab44a99d"
+    }
+  ],
+  "现实路线": "复用既有星空材质与房间擦除，已弃用K6_C；详见采用与弃用清单.json"
+}

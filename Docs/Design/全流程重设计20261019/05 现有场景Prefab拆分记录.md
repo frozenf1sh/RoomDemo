@@ -163,6 +163,6 @@ unity command run_script --file Tools/Editor/AtelierPrefabModularization.cs --en
 
 运行复查工具：`Tools/Editor/AtelierPrefabRuntimeReview.cs`，启动当前场景、检查关键引用并开合笔记，捕获一次世界主镜头；不模拟真人鼠标，不跑归档旧主线套件。本轮实际结果：脚本编译无诊断，现有会话启动成功，关键引用有效，笔记本开合成功，19个交互目标存在，Metal离屏主镜头可见，运行期收集到0条Error/Exception/Assert。自动调用洗笔近景入口取得参考截图，不是玩家鼠标验收。结果见参考资料/Prefab运行检查.json。
 
-机读迁移报告已复制到参考资料/Prefab迁移报告.json。原始组件快照和恢复点放在本机忽略目录`Logs/FlowRedesign/Prefab/`，不把Unity含身份参数的原始日志作为文档附件。
+机读迁移报告已复制到参考资料/Prefab迁移报告.json。原始组件快照和恢复点原在本机忽略目录`Logs/FlowRedesign/Prefab/`，现已随临时文件移出项目，恢复位置见参考资料/临时文件清理记录.json，不把Unity含身份参数的原始日志作为文档附件。
 
-Unity在本轮打开/保存时自动重写了共享LightingData的序列化文件，已在进程退出后精确恢复到任务开始时的仓库版本；该文件最终不列入改动。没有重新烘焙光照。最终Git核对以此恢复后的状态为准。
+Unity在本轮打开/保存时自动重写了共享LightingData的序列化文件，已在进程退出后精确恢复到任务开始时的仓库版本；该文件最终不列入改动。没有重新烘焙光照。最终Git核对以此恢复后的状态为准。拆分已在9272c09提交并推送；本轮文档清理没有重新运行或改写Unity场景。

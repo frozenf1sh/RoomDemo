@@ -1,0 +1,34 @@
+{
+  "采用图": [
+    "K1_A.png",
+    "K1_B.png",
+    "K1_C.png",
+    "K2_A.png",
+    "K2_B.png",
+    "K2_C.png",
+    "K3_A.png",
+    "K3_B.png",
+    "K3_C.png",
+    "K4_A.png",
+    "K4_B.png",
+    "K4_C.png",
+    "K5_A.png",
+    "K5_B.png",
+    "K5_C.png",
+    "K6_A.png",
+    "K6_B.png"
+  ],
+  "现实路线星空": "沿用AtelierPlayable现有材质、固定画幅与流动效果，不按生成图改造",
+  "明确弃用": [
+    {
+      "source": "/Users/frozenf1sh/.codex/generated_images/01a15337-1eca-7b21-8520-fdf40e2fcd6a/exec-b9045381-7724-4c59-abcc-447fa8cc7049.png",
+      "sha256": "c8b960b018ad6c58fcace229612b314917f6c9aec2741c7ba8c4f57ccf5a4501",
+      "decision": "用户明确弃用；不进入图册或星空实现依据，原始生成文件保留"
+    },
+    {
+      "source": "/Users/frozenf1sh/.codex/generated_images/01a15337-1eca-7b21-8520-fdf40e2fcd6a/exec-ba2aef56-7217-46cf-a099-d8b91ced5bc5.png",
+      "sha256": "85e9fabd2daff7f23b4cd56809942114da3a6841ef36a2cf2ea5ee757042707f",
+      "decision": "用户明确弃用；不进入图册或星空实现依据，原始生成文件保留"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原始笔刷与有限颜料画布原型</title>
+<style>
+@font-face{font-family:ProjectNoto;src:url('../../../../Assets/ThirdParty/NotoSans/NotoSansCJKsc-Regular.otf')}*{box-sizing:border-box}body{margin:0;background:#191b20;color:#eee9dc;font-family:ProjectNoto,system-ui,sans-serif}header{max-width:1320px;margin:auto;padding:22px 24px 14px}h1{font-size:21px;margin:0 0 9px}p{font-size:14px;color:#c9c4b6;line-height:1.7;margin:5px 0}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}.frame{position:relative;max-width:1320px;aspect-ratio:1280/720;margin:auto;background:#201c18 url('../参考资料/当前画布近景.png') center/100% 100% no-repeat;overflow:hidden}.work{position:absolute;left:21.4%;top:9.7%;width:57.2%;height:81.5%;background:#16284c}.work canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}.tools{position:absolute;left:2%;top:14%;width:18%;padding:16px 12px;background:rgba(28,25,20,.97);color:#eee4cc}.tools label{display:block;font-size:16px;margin:0 0 17px}.tools input{width:100%;margin-top:9px;accent-color:#c6ad70}.tools output{font-size:13px;display:block;margin-top:4px}.tools img{display:block;max-width:90%;height:88px;object-fit:contain;margin:0 auto 16px}.tools progress{width:100%;height:11px;accent-color:#b6a16c}.tools .small{font-size:12px;margin:8px 0;line-height:1.6}.top{position:absolute;right:2%;top:10%;width:15%;display:grid;gap:9px;background:#201b16;padding:8px}.top button{padding:11px 4px;border:1px solid #877857;background:#322c21;color:#eee4cc;font-size:16px}.top button:not(:disabled):hover{background:#50452e}.undo{width:100%;padding:8px;border:1px solid #6e634c;color:#ddd5be;background:#2c271e}.status{position:absolute;right:2%;top:32%;width:15%;font-size:13px;line-height:1.7;background:rgba(26,24,21,.94);padding:10px}.footer{max-width:1320px;margin:auto;padding:16px 24px 30px;font-size:14px;line-height:1.8}.footer button{color:#dfd4b9;background:#302d26;border:1px solid #6f6856;padding:7px 12px}.end{position:absolute;inset:0;display:grid;place-content:center;background:#10151ad9;text-align:center}.end[hidden]{display:none}.end h2{font-size:26px}.end button{padding:10px}.fault{color:#ffc9b5}@media(max-width:850px){.frame{min-height:540px;aspect-ratio:auto;background-size:auto 100%}.work{left:22%;top:18%;width:56%;height:65%}.tools{left:1%;width:20%;padding:10px 7px}.tools label{font-size:13px}.tools img{height:55px}.top{right:1%;width:20%;top:1%}.top button{font-size:13px}.status{right:1%;top:auto;bottom:1%;width:20%;font-size:12px}.footer{padding:12px}}button:focus-visible,input:focus-visible{outline:2px solid #e4c685;outline-offset:3px}
+</style>
+</head>
+<body>
+<header><h1>画布操作原型</h1><p>使用策划提供的四张原始图样。每次点按放一笔，按住拖动调整这一笔的位置，松开提交。左侧调整大小和旋转；三笔后可以提前完成，默认五或六笔用尽颜料。</p><p>仅演示画布输入与颜料预算，没有接入 Unity、世界互动或新流程。场景底图来自现有画室的实际近景，控件位置沿用策划文档。</p></header>
+<main class="frame">
+ <div class="work"><canvas id="art" width="1024" height="820" aria-label="四阶段绘画画布"></canvas><canvas id="preview" width="1024" height="820" aria-label="当前笔刷预览"></canvas></div>
+ <section class="tools" aria-label="原稿左侧画布控件">
+  <img id="brush" alt="当前原始笔刷图样">
+  <label>调节画笔大小<input id="size" type="range" min="12" max="24" value="18" step="1"><output id="sizeValue"></output></label>
+  <label>调节画笔旋转<input id="angle" type="range" min="-180" max="180" value="0" step="5"><output id="angleValue">0°</output></label>
+  <div>颜料 <progress id="paint" max="100" value="100"></progress></div>
+  <div id="count" class="small"></div><button id="undo" class="undo" type="button">撤销本层上一笔</button>
+ </section>
+ <section class="top"><button id="back" type="button">返回画室</button><button id="finish" type="button" disabled>完成绘画</button></section>
+ <div id="status" class="status" role="status" aria-live="polite">正在载入原始笔刷……</div>
+ <div id="end" class="end" hidden><h2>四层绘画完成</h2><p>此原型到此结束，不播放结局。</p><button id="again" type="button">重新试画</button></div>
+</main>
+<div class="footer"><span id="phase"></span>　<button id="reset" type="button">重新试画</button><p>位置和重叠自由。大小范围会在落笔前按剩余颜料收紧，最后一笔的预览与实际结果相同。原型不包含刮刀、世界遮罩和边缘Alpha面积许可。</p><p id="ledger"></p></div>
+<script>
+'use strict';
+// 文件职责：只演示原始图样的放置、有限颜料与撤销，不写Unity或世界事实。
+const $=id=>document.getElementById(id);
+const planned=[6,5,5,6], names=['第一阶段','第二阶段','第三阶段','第四阶段'];
+const art=$('art'), hover=$('preview'), ctx=art.getContext('2d'), ghost=hover.getContext('2d');
+const sources=[1,2,3,4].map(i=>'../概念图/策划笔刷/'+i+'.png');
+let discarded=[0,0,0,0], images=[], boxes=[], layers=[[],[],[],[]], layer=0, pending=null, dragging=false, loaded=false;
+const used=()=>layers[layer].reduce((n,s)=>n+s.q,0);
+function bounds(){const r=100-used(),m=planned[layer]-layers[layer].length;return m>0?{r,m,lo:Math.max(12,r-(m-1)*24),hi:Math.min(24,r-(m-1)*12)}:{r:0,m:0,lo:0,hi:0};}
+function stamp(g,s,opacity=1){const box=boxes[s.layer],im=images[s.layer];const max=[340,410,300,210][s.layer]*Math.sqrt(s.q/18);const k=max/Math.max(box.w,box.h);g.save();g.globalAlpha=opacity;g.translate(s.x,s.y);g.rotate(s.angle*Math.PI/180);g.drawImage(im,box.x,box.y,box.w,box.h,-box.w*k/2,-box.h*k/2,box.w*k,box.h*k);g.restore();}
+function repaint(){ctx.fillStyle='#142440';ctx.fillRect(0,0,art.width,art.height);for(const list of layers)for(const s of list)stamp(ctx,s);}
+function update(message){const b=bounds(),n=layers[layer].length;const v=Math.max(b.lo,Math.min(b.hi,Number($('size').value)||18));$('size').min=b.lo;$('size').max=b.hi;$('size').value=v;$('size').disabled=!b.m;$('sizeValue').textContent=b.m?'本笔颜料 '+v+'　可用 '+b.lo+'–'+b.hi:'颜料已用完';$('paint').value=b.r;$('count').textContent=n+' / '+planned[layer]+' 笔　剩余 '+b.r;$('finish').disabled=n<3;$('undo').disabled=n===0;$('phase').textContent=names[layer]+' · 原始 '+(layer+1)+'.png';$('brush').src=sources[layer];$('status').textContent=message||(n<3?'再落'+(3-n)+'笔后可完成':b.r?'还有颜料，可以继续':'颜料已用完，可以完成');$('ledger').textContent='本层已用 '+used()+' + 剩余 '+b.r+' = 100。完成本层后，未用颜料不转移。';}
+function point(e){const b=hover.getBoundingClientRect();return{x:(e.clientX-b.left)*hover.width/b.width,y:(e.clientY-b.top)*hover.height/b.height};}
+function preview(e){if(!loaded||!bounds().m)return;const p=point(e);pending={...p,q:Number($('size').value),angle:Number($('angle').value),layer};ghost.clearRect(0,0,hover.width,hover.height);stamp(ghost,pending,.55);}
+hover.addEventListener('pointermove',preview);
+hover.addEventListener('pointerdown',e=>{if(e.button!==0||!loaded||!bounds().m)return;dragging=true;hover.setPointerCapture(e.pointerId);preview(e);});
+hover.addEventListener('pointerup',e=>{if(!dragging||!pending)return;const p=point(e);dragging=false;if(hover.hasPointerCapture(e.pointerId))hover.releasePointerCapture(e.pointerId);if(p.x>=0&&p.x<=hover.width&&p.y>=0&&p.y<=hover.height){const b=bounds();if(pending.q>=b.lo&&pending.q<=b.hi)layers[layer].push({...pending,...p});}pending=null;ghost.clearRect(0,0,hover.width,hover.height);repaint();update();});
+function cancel(){dragging=false;pending=null;ghost.clearRect(0,0,hover.width,hover.height);}
+hover.addEventListener('pointercancel',cancel);hover.addEventListener('pointerleave',()=>{if(!dragging)cancel();});window.addEventListener('blur',cancel);window.addEventListener('keydown',e=>{if(e.key==='Escape')cancel();});
+$('size').addEventListener('input',()=>{cancel();update();});$('angle').addEventListener('input',()=>{$('angleValue').textContent=$('angle').value+'°';cancel();});
+$('undo').addEventListener('click',()=>{cancel();layers[layer].pop();repaint();update();});
+$('finish').addEventListener('click',()=>{if(layers[layer].length<3)return;cancel();discarded[layer]=100-used();if(layer===3){$('end').hidden=false;return;}layer++;$('size').value=18;$('angle').value=0;$('angleValue').textContent='0°';update();});
+$('back').addEventListener('click',()=>{cancel();update('本原型没有画室交互。当前作品和颜料已保留。');});
+function reset(){discarded=[0,0,0,0];layers=[[],[],[],[]];layer=0;cancel();$('end').hidden=true;$('size').value=18;$('angle').value=0;$('angleValue').textContent='0°';repaint();update();}
+$('reset').addEventListener('click',reset);$('again').addEventListener('click',reset);
+Promise.all(sources.map(src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('无法载入原始笔刷 '+src));im.src=src;}))).then(result=>{images=result;boxes=[{"x": 334, "y": 639, "w": 1275, "h": 650}, {"x": 696, "y": 201, "w": 533, "h": 1351}, {"x": 353, "y": 890, "w": 1290, "h": 391}, {"x": 364, "y": 548, "w": 1217, "h": 763}];loaded=true;reset();}).catch(e=>{$('status').textContent=e.message;$('status').classList.add('fault');});
+// 只暴露审查快照，便于核对原型预算，不能用于Unity状态或路线判定。
+window.canvasPrototype={snapshot:()=>({layer,remaining:100-used(),count:layers[layer].length,discarded:[...discarded],bounds:bounds(),layers:layers.map(x=>x.map(s=>({...s}))),loaded})};
+</script>
+</body></html>

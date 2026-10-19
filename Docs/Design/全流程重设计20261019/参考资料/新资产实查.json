@@ -1,0 +1,155 @@
+[
+  {
+    "文件": "/Users/frozenf1sh/Downloads/袋装美味动物的涌现/手镜.zip",
+    "字节": 17430193,
+    "sha256": "5f5ab61757d559ad1c50afae21090cda9652733022e980898845a17d0bfee7d7",
+    "展开字节": 17429211,
+    "文件列表": [
+      {
+        "名称": "source/oval_mirror.fbx",
+        "字节": 13448308
+      },
+      {
+        "名称": "textures/TexturesCom_Paint_GoldFake_1K_albedo.png",
+        "字节": 1027427
+      },
+      {
+        "名称": "textures/TexturesCom_Paint_GoldFake_1K_roughness.png",
+        "字节": 350301
+      },
+      {
+        "名称": "textures/mirrorGlossiness.png",
+        "字节": 1431421
+      },
+      {
+        "名称": "textures/TexturesCom_Paint_GoldFake_1K_normal.png",
+        "字节": 1170010
+      },
+      {
+        "名称": "textures/TexturesCom_Paint_GoldFake_1K_metallic.png",
+        "字节": 1744
+      }
+    ]
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/袋装美味动物的涌现/石膏像.zip",
+    "字节": 44942581,
+    "sha256": "2edc224288d5ca5e46fb55624dd0294507c6133f0563d80949178ad2bd986625",
+    "展开字节": 44941813,
+    "文件列表": [
+      {
+        "名称": "source/david_sf.fbx",
+        "字节": 1398684
+      },
+      {
+        "名称": "textures/x_low_roughness.jpg",
+        "字节": 5505740
+      },
+      {
+        "名称": "textures/x_low_AO.jpg",
+        "字节": 1468248
+      },
+      {
+        "名称": "textures/x_low_normal.png",
+        "字节": 31937591
+      },
+      {
+        "名称": "textures/x_low_albedo.jpg",
+        "字节": 4434610
+      },
+      {
+        "名称": "textures/x_low_metallic.jpg",
+        "字节": 196940
+      }
+    ]
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/袋装美味动物的涌现/碎镜片.fbx",
+    "字节": 43136,
+    "sha256": "bff62c16dacca6e8599ff2b97504c7632faacb0503a8c301e874914ea5e5507e"
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/袋装美味动物的涌现/蜡笔画.zip",
+    "字节": 18440122,
+    "sha256": "476b81c132bba75a17c7a4b4d637c490e4a81511c775fbb8ab57f09628dc9518",
+    "展开字节": 18439318,
+    "文件列表": [
+      {
+        "名称": "source/Worn_Paper_Figures_FBX.fbx",
+        "字节": 30176
+      },
+      {
+        "名称": "textures/Figure_Paper_Papers_Metallic.png",
+        "字节": 16411
+      },
+      {
+        "名称": "textures/Figure_Paper_Papers_Normal.png",
+        "字节": 9080536
+      },
+      {
+        "名称": "textures/Figure_Paper_Papers_BaseColor.png",
+        "字节": 9279016
+      },
+      {
+        "名称": "textures/Figure_Paper_Papers_Mat_Roughness.png",
+        "字节": 33179
+      }
+    ]
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/笔刷/1.png",
+    "字节": 1243185,
+    "sha256": "112cf52ff05e86baf79e8e8d8604a461d50258be3dbbf908143dce5c8cdd2fd7",
+    "尺寸": [
+      2048,
+      2048
+    ],
+    "通道": "RGBA",
+    "透明范围": [
+      0,
+      255
+    ]
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/笔刷/2.png",
+    "字节": 710502,
+    "sha256": "28400145f342ba63ed0fa4252ed97295fb9ead9ab15f1b20df17142cf88e74b7",
+    "尺寸": [
+      2048,
+      2048
+    ],
+    "通道": "RGBA",
+    "透明范围": [
+      0,
+      255
+    ]
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/笔刷/3.png",
+    "字节": 483482,
+    "sha256": "ce10f4ec6d14ec6f3f0940e5c486415a9766ce0a94746344586eaca69140aa71",
+    "尺寸": [
+      2048,
+      2048
+    ],
+    "通道": "RGBA",
+    "透明范围": [
+      0,
+      255
+    ]
+  },
+  {
+    "文件": "/Users/frozenf1sh/Downloads/笔刷/4.png",
+    "字节": 901943,
+    "sha256": "b226e79bd383bd70eeeb3fbee5cd74f7c0c235d571c017871b3b73fd2ffa3fd1",
+    "尺寸": [
+      2048,
+      2048
+    ],
+    "通道": "RGBA",
+    "透明范围": [
+      0,
+      255
+    ]
+  }
+]

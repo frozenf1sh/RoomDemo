@@ -1,0 +1,876 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-10-14T18:44:35.000Z" agent="Codex" version="25.0.3" type="device">
+  <diagram id="opening-roots" name="01 开局交互独立树根">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2380" pageHeight="3260" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="r1_root" value="R01 便条" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_s1" value="点便条：打开浮层并请求开场旁白" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r1_root" target="r1_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_s2" value="只得到便条词条；不授予杯／笔等物品" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r1_s1" target="r1_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_s3" value="右键或 Esc 合上；不是流程硬门" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r1_s2" target="r1_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_root" value="R02 空白画布" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_s1" value="首点：只拉近到画布" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="160" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r2_root" target="r2_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_s2" value="未选现实来源：提示先选杯／笔／灯／窗" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r2_s1" target="r2_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_s3" value="有来源后短拖一笔，或点画三笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r2_s2" target="r2_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_s4" value="提交＝画布＋来源＋画笔；结果是固定构图笔触" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="520" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r2_s3" target="r2_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_root" value="R03 杯里的水" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_s1" value="首点：进入杯边近景，记录平静水面" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="160" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r3_root" target="r3_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_s2" value="同时选中“杯”这一幅画的 motif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r3_s1" target="r3_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_s3" value="返回主视角，再近看画布落笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r3_s2" target="r3_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_s4" value="全体静物完成且画笔已知后，水近景再点画笔洗笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="520" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r3_s3" target="r3_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_s5" value="笔尖离水后再点水，才记录散开水纹" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="640" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r3_s4" target="r3_s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_root" value="R04 杯沿画笔" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_s1" value="首点：取得画笔并选中“笔” motif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="160" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r4_root" target="r4_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_s2" value="首次点击可能只把镜头拉近" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r4_s1" target="r4_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_s3" value="返回主视角，再点画布短拖／三点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r4_s2" target="r4_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_s4" value="洗笔是另一上下文：水近景＋全体静物完成后再点笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="520" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r4_s3" target="r4_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_root" value="R05 桌上主灯" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_s1" value="点桌上灯：取得静物来源并选灯 motif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="160" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r5_root" target="r5_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_s2" value="这不是左侧待点燃油灯" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r5_s1" target="r5_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_s3" value="点画布短拖／三点，先画固定灯形" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r5_s2" target="r5_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_root" value="R06 窗外夜景" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_s1" value="点窗景：取得窗来源并选窗 motif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="160" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r6_root" target="r6_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_s2" value="点画布短拖／三点，画入固定构图" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r6_s1" target="r6_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_s3" value="窗帘变化是另一条实际操作链" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r6_s2" target="r6_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_root" value="R07 左侧油灯" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1000" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_s1" value="首点：进入近景并记下熄灭状态" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r7_root" target="r7_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_s2" value="近景点火柴盒取一根火柴" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r7_s1" target="r7_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_s3" value="点砂纸划亮；火柴约 7.5 秒熄灭" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r7_s2" target="r7_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_s4" value="把火柴头送近裸灯芯再点；太远只提示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r7_s3" target="r7_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_s5" value="火苗稳定约 1.8 秒后再点灯取亮起观察" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1600" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r7_s4" target="r7_s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_s6" value="熄灭＋亮起观察 →“点亮”（见第 2 页）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1720" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r7_s5" target="r7_s6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_root" value="R08 灯芯" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1000" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_s1" value="主视角首点：与油灯相同，只近看／记熄灭" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r8_root" target="r8_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_s2" value="没有燃烧火柴：提示先取火并划亮" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r8_s1" target="r8_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_s3" value="有火且接触距离够：再次点灯芯才点燃" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r8_s2" target="r8_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_s4" value="等火苗稳定，再点灯芯／灯观察亮起" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r8_s3" target="r8_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_root" value="R09 火柴盒" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1000" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_s1" value="从主视角首点：先拉近到油灯工作区" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r9_root" target="r9_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_s2" value="近景再次点盒子，才拿到一根火柴" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r9_s1" target="r9_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_s3" value="熄灭后可重新取火；再去点砂纸" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r9_s2" target="r9_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_root" value="R10 砂纸边" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1000" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_s1" value="从主视角首点：先拉近到油灯工作区" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r10_root" target="r10_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_s2" value="须已拿火柴；近景点砂纸才会划亮" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r10_s1" target="r10_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_s3" value="火柴有时限；熄灭后可重新划亮" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r10_s2" target="r10_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_root" value="R11 窗帘布" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1000" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_s1" value="首点：进入窗边近景，记录遮挡状态" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r11_root" target="r11_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_s2" value="点左侧拉绳启动收帘（不用拖绳）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r11_s1" target="r11_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_s3" value="等帘环／布褶落稳约 4.8 秒" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r11_s2" target="r11_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_s4" value="再点帘布得拉开观察" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r11_s3" target="r11_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_s5" value="遮挡＋拉开观察 →“打开”（第 2 页）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1600" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r11_s4" target="r11_s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_root" value="R12 帘子拉绳" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1000" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_s1" value="主视角首点：只切到窗边近景并记遮挡" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r12_root" target="r12_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_s2" value="近景再点绳才启动收帘" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r12_s1" target="r12_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_s3" value="落稳前点布只会提示等待" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r12_s2" target="r12_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_s4" value="落稳后点布取得拉开观察 →“打开”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r12_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r12_s3" target="r12_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_root" value="R13 画边湿色" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_s1" value="首点：近看木板并记擦前湿色" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2080" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r13_root" target="r13_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_s2" value="点擦笔布选工具" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r13_s1" target="r13_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_s3" value="在湿色左端按住，贴板向右擦完整条" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2320" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r13_s2" target="r13_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_s4" value="只有完整横向接触才提交；短擦会保留局部" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2440" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r13_s3" target="r13_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_s5" value="等布落稳，再点木纹记擦后底色" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2560" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r13_s4" target="r13_s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_s6" value="擦前＋擦后 →“擦除”（第 2 页）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2680" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r13_e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r13_s5" target="r13_s6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_root" value="R14 擦笔布" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_s1" value="主视角首点：只进入木板近景" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="2080" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r14_root" target="r14_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_s2" value="先点湿色木板取得擦前观察" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="2200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r14_s1" target="r14_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_s3" value="再点布选为工具" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="2320" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r14_s2" target="r14_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_s4" value="从左向右完成整条擦拭" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="2440" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r14_s3" target="r14_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_s5" value="布落稳后点木纹取得擦后观察" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="2560" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r14_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r14_s4" target="r14_s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_root" value="R15 屋顶" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_s1" value="开局可先亲点，取得“屋顶”词条" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2080" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r15_root" target="r15_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_s2" value="只有学会“擦除”后，擦除＋屋顶才有结果" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r15_s1" target="r15_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_s3" value="不要求先画完静物；提交即擦开约 7.5 秒" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2320" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r15_s2" target="r15_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_s4" value="屋顶落稳后，梁间天空才可被拾取" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="2440" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r15_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r15_s3" target="r15_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_root" value="R16 N：笔记本" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_s1" value="N 打开／合上笔记本；词条在左页" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="2080" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r16_root" target="r16_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_s2" value="左页选词、右页落位；最多三个临时词" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="2200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r16_s1" target="r16_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_s3" value="必须点“解释”才判断；淡线不预判" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="2320" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r16_s2" target="r16_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_s4" value="失败可移回词条；成功后清空纸面" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="2440" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r16_e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r16_s3" target="r16_s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_root" value="R17 Esc／右键" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_s1" value="Esc 优先关藏品簿／笔记；再退近景；否则暂停" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="2080" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r17_root" target="r17_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_s2" value="近景右键也返回主视角" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="2200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r17_s1" target="r17_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_s3" value="暂停菜单可重开；重开清理本局事实" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="2320" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r17_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r17_s2" target="r17_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_root" value="R18 悬停物体" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_s1" value="悬停只显示金丝轮廓，不收集材料" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="2080" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r18_root" target="r18_s1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_s2" value="笔记／暂停／镜头转场时清除" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="2200" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r18_s1" target="r18_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_s3" value="软物体运动或结尾时也不显示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="2320" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r18_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="r18_s2" target="r18_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1_footer" value="读图：绿色无入边节点＝各自独立的开局根；蓝色＝局部操作；紫色＝输出给第 2 页配方。&lt;br&gt;屋顶外天空、接连笔迹、房间均不是开局可点根：见第 2 页动态门槛。" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3040" width="2220" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="recipes-routes" name="02 配方汇流与双线收束">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3380" pageHeight="3380" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="p2_banner" value="实际流程：局部观察与动作 → 笔记本明确提交 → 规则结果 → 两条收束" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="3200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_note" value="阅读口径：根交互来自第 1 页。攻略推荐顺序不等于程序前置；除局部动作和下列事实门槛外，玩家可交错操作。" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="3200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_cup" value="画布＋杯＋笔&lt;br&gt;→ 杯静物落笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="400" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_brush" value="画布＋笔&lt;br&gt;→ 画笔静物落笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="400" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_lamp" value="画布＋桌上主灯＋笔&lt;br&gt;→ 灯静物落笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="400" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_window" value="画布＋窗景＋笔&lt;br&gt;→ 窗景静物落笔" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="400" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="stilllife_join" value="四项静物全齐&lt;br&gt;→ StillLifePainted" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="640" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="stilllife_note" value="程序用途：延迟开场旁白＋开放洗笔动作。&lt;br&gt;它不是交稿硬门槛；“画笔静物落笔”也不在交稿配方里。" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="640" width="620" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_join_0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#d79b00;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#6b4f00;" edge="1" parent="1" source="sk_cup" target="stilllife_join">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_join_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#d79b00;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#6b4f00;" edge="1" parent="1" source="sk_brush" target="stilllife_join">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_join_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#d79b00;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#6b4f00;" edge="1" parent="1" source="sk_lamp" target="stilllife_join">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sk_join_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#d79b00;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#6b4f00;" edge="1" parent="1" source="sk_window" target="stilllife_join">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_head" value="水／“流动”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="880" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_idea" value="平静水面＋散开水纹&lt;br&gt;→ 流动" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1000" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_picture" value="流动＋画里的水&lt;br&gt;→ 画中添水纹（服从）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1120" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_picture_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="flow_idea" target="flow_picture">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_cup" value="流动＋杯里的水&lt;br&gt;→ 现实杯水流动（偏离）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1240" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_cup_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="flow_picture" target="flow_cup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="light_head" value="灯／“点亮”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="760" y="880" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="light_idea" value="熄灭＋亮起观察&lt;br&gt;→ 点亮" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1000" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="light_picture" value="点亮＋画里的灯&lt;br&gt;→ 画中添亮色（服从）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1120" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="light_picture_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="light_idea" target="light_picture">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="light_cup" value="点亮＋杯里的水&lt;br&gt;→ 杯水发光（可选偏离）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1240" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="light_cup_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="light_picture" target="light_cup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="light_sky" value="点亮＋天空&lt;br&gt;→ 星光变亮（后段偏离）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1360" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="light_sky_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="light_cup" target="light_sky">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="open_head" value="帘／“打开”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="880" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="open_idea" value="遮住＋拉开观察&lt;br&gt;→ 打开" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1000" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="open_picture" value="打开＋画里的窗&lt;br&gt;→ 画中补窗边（服从）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="1120" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="open_picture_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="open_idea" target="open_picture">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_head" value="湿色／“擦除”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="880" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_idea" value="擦前湿色＋擦后底色&lt;br&gt;→ 擦除" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="1000" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_frame" value="擦除＋窗框&lt;br&gt;→ 擦去窗框（可选偏离）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="1120" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_frame_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="erase_idea" target="erase_frame">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_roof" value="擦除＋屋顶&lt;br&gt;→ 擦开屋顶（现实路线）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="1240" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_roof_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="erase_frame" target="erase_roof">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_room" value="擦除＋房间&lt;br&gt;→ 擦去画室（终局门槛）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2200" y="1360" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="erase_room_next" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="erase_roof" target="erase_room">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="routes_banner" value="分岔不是开局选项：由玩家第一次成功把概念解释到现实物体来转向" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1600" width="3200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_title" value="路线 A｜定稿" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1720" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_pics" value="画中水流＋画中灯亮＋画中窗开" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1840" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_deviation" value="曾有现实偏离？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1840" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_ready" value="从未偏离&lt;br&gt;→ ReadyToDeliver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1960" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_focus" value="近看整张画；点空处" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="2080" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_button" value="出现“就交这张”&lt;br&gt;玩家还要再点一次" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="2200" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_end" value="明确提交交稿&lt;br&gt;→ CanvasLocked；画室保留" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="2320" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeA_block" value="若已偏离：不显示定稿入口" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;fontSize=11;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1960" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ra_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeA_pics" target="routeA_deviation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ra_yes" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeA_deviation" target="routeA_ready">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ra_no" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeA_deviation" target="routeA_block">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ra_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeA_ready" target="routeA_focus">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ra_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeA_focus" target="routeA_button">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ra_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeA_button" target="routeA_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_title" value="路线 B｜擦开画室" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="1720" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_entry" value="任一现实解释成功&lt;br&gt;→ RealityTouched" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;fontSize=11;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="1840" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_optional" value="可早发生：流动＋杯水&lt;br&gt;点亮＋杯水／擦除＋窗框" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="1960" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_roof" value="擦除＋屋顶&lt;br&gt;→ RoofErased" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="2080" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_wait" value="等待擦开并落稳约 7.5 秒&lt;br&gt;这之后天空才可点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="2200" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_light" value="点亮＋亲点天空&lt;br&gt;→ SkyLit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="2320" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_flow" value="流动＋亲点天空&lt;br&gt;→ SkyFlow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="2320" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_full" value="SkyLit＋SkyFlow&lt;br&gt;→ FullSky（两步可换序）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="2440" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_mark" value="笔迹显现后约 5 秒&lt;br&gt;亲点“接连的笔迹”&lt;br&gt;→ SharedMarkSeen＋WholeObserved" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="2560" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_room" value="再亲点右侧墙面&lt;br&gt;→ 得到“房间”词条" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="2680" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_roomgate" value="擦除＋房间&lt;br&gt;须 RoofErased＋FullSky＋两项亲点事实" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="2800" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="routeB_end" value="约 16 秒统一擦除&lt;br&gt;→ RoomErased；流动星夜结尾" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="2920" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_1" value="主线推荐" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_entry" target="routeB_roof">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_roof" target="routeB_wait">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_wait" target="routeB_light">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_wait" target="routeB_flow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_5a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_light" target="routeB_full">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_5b" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_flow" target="routeB_full">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_full" target="routeB_mark">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_mark" target="routeB_room">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_room" target="routeB_roomgate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rb_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="routeB_roomgate" target="routeB_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_opening_note" value="关键错位：擦笔布／屋顶线索／点灯／拉帘都能在静物完成前启动。普通场景动作本身不算偏离；成功提交“概念＋现实对象”才改变路线。&lt;br&gt;未接入的“纸上的湿色／纸面流动”候选不属于可玩路线。" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3160" width="3200" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="diagnosis" name="03 不合理点与优先级">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2380" pageHeight="2420" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="p3_banner" value="流程诊断｜按对首次理解与路线可读性的影响排序" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1f4e78;strokeColor=#163a5a;fontStyle=1;fontSize=15;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="2220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1" value="P0-1｜作画像选菜单" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=12;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1_cause" value="来源物件先选固定 motif，之后回主视角再点画布" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1_impact" value="玩家预期拿笔直接画；实际是反复切镜头后播放固定短笔触" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1_remedy" value="让画布成为主入口；笔／颜料直接参与落笔，实物只作观察参照" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="640" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_1" target="issue_1_cause">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_1_cause" target="issue_1_impact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_1_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_1_impact" target="issue_1_remedy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2" value="P0-2｜开局没有阶段门" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=12;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="940" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2_cause" value="湿色、屋顶、油灯、帘布各有局部约束，却没有整体阶段状态" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2_impact" value="推荐顺序只写在攻略里；玩家可以越过叙事铺垫先做后段操作" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="940" y="520" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2_remedy" value="保留自由观察；关键变化动作按当前阶段放行，或提供即时上下文提示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="640" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_2" target="issue_2_cause">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_2_cause" target="issue_2_impact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_2_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_2_impact" target="issue_2_remedy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3" value="P0-3｜旁白会抢断且不补播" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=12;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="280" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3_cause" value="每次 Say 都 ReplaceAll；请求时就记一次性；延迟句没有完整阶段校验" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3_impact" value="后来一句截断当前说明，旧句不会重放；顺序快时提示互相覆盖" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="520" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3_remedy" value="改成阶段化队列；剧情前进时取消过期延时；只在真正播出后消耗一次" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="640" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_3" target="issue_3_cause">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_3_cause" target="issue_3_impact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_3_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_3_impact" target="issue_3_remedy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4" value="P1-4｜现实路线暗中锁定" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;fontColor=#6b4f00;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4_cause" value="任一成功的现实解释计偏离；交稿要求从未偏离" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4_impact" value="一次尝试就隐藏“就交这张”；台词批评越界，但没说路线已转向" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4_remedy" value="首次转向时明确说明可达后果并保留回旋；不必增加路线选择弹窗" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1600" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_4" target="issue_4_cause">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_4_cause" target="issue_4_impact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_4_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_4_impact" target="issue_4_remedy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5" value="P1-5｜“共同开场”不是实际门槛" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;fontColor=#6b4f00;" vertex="1" parent="1">
+          <mxGeometry x="940" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5_cause" value="定稿只查三项画中解释和零偏离；不查 BrushSketched／StillLifePainted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5_impact" value="玩家可跳过独立画笔静物，也可能拿不到预期的“东西都在了”旁白" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="940" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5_remedy" value="决定哪些开场事实必须完成，再让规则门槛、叙述和攻略用同一套条件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="1600" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_5" target="issue_5_cause">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_5_cause" target="issue_5_impact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_5_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_5_impact" target="issue_5_remedy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6" value="P1-6｜两个“灯”容易混淆" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;fontColor=#6b4f00;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1240" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6_cause" value="桌上主灯是静物来源；左侧油灯才是点火、前后观察来源" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="1360" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6_impact" value="画灯与点灯相邻但对象不同；首次探索可能把角色意图理解错" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="1480" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6_remedy" value="在悬停名、近景提示和旁白中持续区分“画面参考灯”与“待点油灯”" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="1600" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6_e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_6" target="issue_6_cause">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_6_cause" target="issue_6_impact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="issue_6_e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#64748b;strokeWidth=1.3;endArrow=classic;endFill=1;fontSize=10;fontColor=#334155;" edge="1" parent="1" source="issue_6_impact" target="issue_6_remedy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3_evidence" value="依据：Docs/Design/玩法流程.md；AtelierGameplay.cs（Observe／Say／AfterStillLife 等）；AtelierContinuationInput.cs（Pick／Pointer）；AtelierRules.cs（配方门槛）；AtelierNarration.cs；NarrationSystem.cs；AtelierPlayable.unity。&lt;br&gt;本图是当前代码与场景配置的静态流程评估；没有把自动回放当作真人鼠标直觉验收。" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2200" width="2220" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
