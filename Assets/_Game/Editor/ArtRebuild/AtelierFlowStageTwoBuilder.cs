@@ -194,6 +194,7 @@ namespace Game.Editor.ArtRebuild
             flow.Draft.StageFourObjects = Array.Empty<Renderer>();
             flow.Draft.RoofObjects = Array.Empty<Renderer>();
             flow.Draft.RestoreStage(0,true);
+            AtelierMirrorContactRevision.Apply(flow);
             foreach (var target in new Object[] { flow,flow.Draft,flow.CrayonPicking })
             {
                 EditorUtility.SetDirty(target);

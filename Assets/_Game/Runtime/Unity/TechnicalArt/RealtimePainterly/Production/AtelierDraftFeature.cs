@@ -60,6 +60,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                 internal Vector4 Amounts, Opening;
                 internal Vector4[] ClearCenters, ClearExtents;
                 internal int ClearCount;
+                internal Vector4[] ContactCenters, ContactSizes;
+                internal int ContactCount;
                 internal float Density;
             }
 
@@ -101,6 +103,22 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                         data.ClearExtents[index] = bounds.extents + Vector3.one * .006f;
                     }
                 }
+                // 接触区单独冻结，不扩大物件AABB，避免把附近未来物件和背景一起恢复。
+                data.ContactCenters = new Vector4[12];
+                data.ContactSizes = new Vector4[12];
+                data.ContactCount = 0;
+                foreach (var region in Probe.ContactRegions)
+                {
+                    if (region == null || region.Anchor == null || !region.Anchor.gameObject.activeInHierarchy
+                        || region.Stage < 1 || region.Stage > 4 || data.ContactCount >= 12) continue;
+                    float weight = Probe.WeightForStage(region.Stage);
+                    if (weight <= 0) continue;
+                    int index = data.ContactCount++;
+                    Vector3 position = region.Anchor.position;
+                    data.ContactCenters[index] = new Vector4(position.x,position.y,position.z,weight);
+                    data.ContactSizes[index] = new Vector4(Mathf.Max(.01f,region.Radii.x),
+                        Mathf.Max(.01f,region.Radii.y),region.HeightTolerance,0);
+                }
                 data.Density = Probe.Density;
                 builder.UseTexture(data.Source);
                 builder.UseTexture(data.Depth);
@@ -117,6 +135,9 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                     d.Material.SetInt("_ClearCount",d.ClearCount);
                     d.Material.SetVectorArray("_ClearCenters",d.ClearCenters);
                     d.Material.SetVectorArray("_ClearExtents",d.ClearExtents);
+                    d.Material.SetInt("_ContactCount",d.ContactCount);
+                    d.Material.SetVectorArray("_ContactCenters",d.ContactCenters);
+                    d.Material.SetVectorArray("_ContactSizes",d.ContactSizes);
                     Blitter.BlitTexture(context.cmd, d.Source, new Vector4(1, 1, 0, 0), d.Material, 0);
                 });
                 resources.cameraColor = output;

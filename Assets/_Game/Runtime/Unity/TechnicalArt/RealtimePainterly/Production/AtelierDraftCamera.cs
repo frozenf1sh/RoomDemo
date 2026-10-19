@@ -5,6 +5,16 @@ using System;
 using UnityEngine;
 namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
 {
+    /// <summary>物件脚边的水平承托面显色；锚点与阶段许可都由场景显式配置。</summary>
+    [Serializable]
+    public sealed class AtelierDraftContactRegion
+    {
+        public Transform Anchor;
+        [Range(1,4)] public int Stage = 1;
+        public Vector2 Radii = new Vector2(.3f,.25f);
+        [Range(.005f,.06f)] public float HeightTolerance = .025f;
+    }
+
     /// <summary>世界锚定的显色清单；阶段推进不会解除整片背景的遮挡。</summary>
     public sealed class AtelierDraftCamera : MonoBehaviour
     {
@@ -19,6 +29,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         public Renderer[] StageFourObjects = Array.Empty<Renderer>();
         // 屋顶单列，任何RestoreStage调用都不能顺带开放屋顶。
         public Renderer[] RoofObjects = Array.Empty<Renderer>();
+        public AtelierDraftContactRegion[] ContactRegions = Array.Empty<AtelierDraftContactRegion>();
         private readonly float[] weights = new float[5];
         private int targetStage;
         private float roofWeight;
@@ -55,6 +66,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             StageThreeObjects = source.StageThreeObjects;
             StageFourObjects = source.StageFourObjects;
             RoofObjects = source.RoofObjects;
+            ContactRegions = source.ContactRegions;
             targetStage = source.targetStage;
             for (int index = 0; index < weights.Length; index++) weights[index] = source.weights[index];
             roofWeight = source.roofWeight;

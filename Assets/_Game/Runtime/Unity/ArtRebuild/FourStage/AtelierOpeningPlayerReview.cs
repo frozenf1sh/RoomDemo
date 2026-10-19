@@ -13,13 +13,24 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 namespace Game.Unity.ArtRebuild
 {
-    /// <summary>P00至P07的实际Player验证；使用正常会话，禁止调试授予。</summary>
+    /// <summary>前两阶段的实际运行回放；使用正常会话，禁止调试授予。</summary>
     public sealed class AtelierOpeningPlayerReview : MonoBehaviour
     {
         private string output;
         private readonly List<string> errors=new List<string>();
         private void OnEnable() => UnityEngine.Application.logMessageReceivedThreaded += Collect;
         private void OnDestroy() => UnityEngine.Application.logMessageReceivedThreaded -= Collect;
+        /// <summary>明确调用时在Editor复用正常命令回放；不更改开场、阶段或领域事实。</summary>
+        /// <param name="directory">本机取证输出目录。</param>
+        public static void StartEditorReview(string directory)
+        {
+            if (!UnityEngine.Application.isEditor || !UnityEngine.Application.isPlaying)
+                throw new InvalidOperationException("请先在Editor进入Play再发起运行检查。");
+            if (FindAnyObjectByType<AtelierOpeningPlayerReview>() != null)
+                throw new InvalidOperationException("已有运行检查正在执行。");
+            var node = new GameObject("前两阶段Editor显式命令回放");
+            node.AddComponent<AtelierOpeningPlayerReview>().output = Path.GetFullPath(directory);
+        }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Create()
         {
@@ -86,7 +97,23 @@ namespace Game.Unity.ArtRebuild
             Check(Mathf.Abs(ceilingPixel.b-ceilingPixel.r)<.05f,"天花板没有进入外围草稿。");
             Destroy(frame);
             flow.Observe(Target(AtelierTargetKind.WashWater));yield return new WaitForSeconds(1.4f);
-            flow.Observe(Target(AtelierTargetKind.Brush));flow.Observe(Target(AtelierTargetKind.WashWater));
+            Check(flow.WaterObservation != null && flow.WaterObservation.gameObject.activeSelf
+                && flow.WaterObservation.text == "杯子上靠着一个沾着蓝色颜料的笔，洗一下比较好", "洗笔杯左上角说明未更新。");
+            yield return Shot("03b_洗笔杯说明与桌面接触显色");
+            refs.Notebook.Toggle();
+            yield return null;
+            Check(!flow.WaterObservation.gameObject.activeSelf,"笔记打开时洗笔说明仍然显示。");
+            yield return null;
+            yield return null;
+            refs.Notebook.Toggle();
+            yield return null;
+            yield return null;
+            yield return null;
+            Check(flow.WaterObservation.gameObject.activeSelf,"笔记关闭后洗笔说明未恢复。");
+            flow.Observe(Target(AtelierTargetKind.Brush));
+            Check(flow.WaterObservation.text == "把笔尖浸到水里洗一下吧", "画笔左上角说明未更新。");
+            yield return Shot("03c_画笔说明与杯沿间距");
+            flow.Observe(Target(AtelierTargetKind.WashWater));
             Check(!flow.Session.State.HasFact(AtelierFlowRules.Washed),"开始靠近就错误提交了洗笔事实。");
             yield return new WaitForSeconds(1.7f);
             Check(flow.Session.State.HasFact(AtelierFlowRules.Washed),"真实笔尖接触未提交动作。");
@@ -222,6 +249,7 @@ namespace Game.Unity.ArtRebuild
             string[] collected;lock(errors) collected=errors.ToArray();
             File.WriteAllText(Path.Combine(output,"运行结果.txt"),"前两阶段与旁白后逐物件显色自动构建回放完成。\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第三、四阶段玩法尚待下一批接入。");
             UnityEngine.Application.logMessageReceivedThreaded-=Collect;
+            if (UnityEngine.Application.isEditor) { Destroy(gameObject); yield break; }
             UnityEngine.Application.Quit(collected.Length==0?0:1);
         }
         private IEnumerator Shot(string name)

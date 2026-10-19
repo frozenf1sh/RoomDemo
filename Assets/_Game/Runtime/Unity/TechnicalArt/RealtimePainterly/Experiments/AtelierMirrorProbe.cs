@@ -25,7 +25,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
         private bool surfaceWasEnabled;
         private Production.AtelierDraftCamera reflectedDraft;
         private Camera reflected;
-        private RenderTexture texture;
+        private RenderTexture renderTarget, texture;
         private Material originalMaterial, mirrorMaterial;
         private MeshFilter filter;
         private Mesh originalMesh, mirrorMesh;
@@ -44,11 +44,20 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
         private void OnEnable()
         {
             if (!Application.isPlaying || Source == null || Surface == null) return;
+            // 关闭场景重载的Editor再次Play时，旧会话的时间不能延后第一帧反射。
+            nextFrame = 0;
             var node = new GameObject("TA验证_手镜镜像摄像机") { hideFlags = HideFlags.HideAndDontSave };
             reflected = node.AddComponent<Camera>();
             reflected.enabled = false;
             if (CompositeAfterPost) reflectedDraft = node.AddComponent<Production.AtelierDraftCamera>();
-            texture = new RenderTexture(Resolution, Resolution, 24, RenderTextureFormat.ARGB32)
+            // URP摄像机输出要求深度，RenderGraph采样导入则只能含颜色。
+            // 分开拥有两张RT，提交完成后只复制颜色，避免异常中断Forward+任务收尾。
+            renderTarget = new RenderTexture(Resolution, Resolution, 24, RenderTextureFormat.ARGB32)
+            {
+                name = "TA验证_手镜摄像机颜色与深度", hideFlags = HideFlags.HideAndDontSave
+            };
+            renderTarget.Create();
+            texture = new RenderTexture(Resolution, Resolution, 0, RenderTextureFormat.ARGB32)
             {
                 name = "TA验证_手镜实时画幅", hideFlags = HideFlags.HideAndDontSave
             };
@@ -66,7 +75,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
             projectedUV = new Vector2[vertices.Length];
             Surface.sharedMaterial = mirrorMaterial;
             Surface.SetPropertyBlock(null);
-            request = new UniversalRenderPipeline.SingleCameraRequest { destination = texture };
+            request = new UniversalRenderPipeline.SingleCameraRequest { destination = renderTarget };
             if (CompositeAfterPost) Surface.enabled = false;
             Active.Add(this);
         }
@@ -95,7 +104,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
             reflected.clearFlags = CameraClearFlags.SolidColor;
             reflected.backgroundColor = new Color(.012f, .018f, .025f, 1);
             reflected.cullingMask = Source.cullingMask & ~(1 << 30) & ~(1 << 31);
-            reflected.targetTexture = texture;
+            reflected.targetTexture = renderTarget;
             reflected.worldToCameraMatrix = Source.worldToCameraMatrix * matrix;
             reflected.transform.position = matrix.MultiplyPoint(Source.transform.position);
             Vector3 clipPoint = reflected.worldToCameraMatrix.MultiplyPoint(point + normal * .003f);
@@ -115,6 +124,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
                 RenderPipeline.SubmitRenderRequest(reflected, request);
             }
             finally { GL.invertCulling = previous; }
+            // 只拷贝第0颜色附件，不把摄像机深度带进主镜头的颜色采样句柄。
+            Graphics.CopyTexture(renderTarget,0,0,texture,0,0);
             // 纹理绑定到自有材质，避免Player中批处理路径忽略镜面纹理属性块。
             mirrorMaterial.SetTexture("_BaseMap", texture);
             // 平面顶点和它的镜像位置重合。用真实镜头投影更新有限椭圆网格UV，
@@ -139,6 +150,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
             if (Surface != null && originalMaterial != null) Surface.sharedMaterial = originalMaterial;
             if (mirrorMaterial != null) { Destroy(mirrorMaterial); mirrorMaterial = null; }
             if (texture != null) { texture.Release(); Destroy(texture); texture = null; }
+            if (renderTarget != null) { renderTarget.Release(); Destroy(renderTarget); renderTarget = null; }
             if (reflected != null) { Destroy(reflected.gameObject); reflected = null; }
         }
     }

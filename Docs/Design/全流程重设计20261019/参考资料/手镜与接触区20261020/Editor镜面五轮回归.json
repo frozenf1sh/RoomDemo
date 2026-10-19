@@ -1,0 +1,56 @@
+{
+  "scope": "Editor Play，独立视觉预览，非正常流程或真人操作",
+  "configuration": "摄像机输出保留24位深度，仅复制颜色至无深度的RenderGraph导入纹理",
+  "cycles": [
+    {
+      "cycle": 1,
+      "start": 454,
+      "end": {
+        "errors": 0,
+        "warnings": 0,
+        "frame": 478,
+        "angle": 0
+      }
+    },
+    {
+      "cycle": 2,
+      "start": 480,
+      "end": {
+        "errors": 0,
+        "warnings": 0,
+        "frame": 506,
+        "angle": -15
+      }
+    },
+    {
+      "cycle": 3,
+      "start": 508,
+      "end": {
+        "errors": 0,
+        "warnings": 0,
+        "frame": 533,
+        "angle": -15
+      }
+    },
+    {
+      "cycle": 4,
+      "start": 535,
+      "end": {
+        "errors": 0,
+        "warnings": 0,
+        "frame": 560,
+        "angle": -15
+      }
+    },
+    {
+      "cycle": 5,
+      "start": 563,
+      "end": {
+        "errors": 0,
+        "warnings": 0,
+        "frame": 588,
+        "angle": -15
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "scope": "Editor正常速度前两阶段命令及按钮回调，不是真人鼠标",
+  "console": {
+    "frame": 2037,
+    "errors": 0,
+    "warnings": 0,
+    "stage": 3,
+    "review": false,
+    "roof": 0,
+    "mirrorRTReleased": true
+  },
+  "reviewResult": "前两阶段与旁白后逐物件显色自动构建回放完成。\n错误数：0\n\n边界：自动命令及按钮回调，不是真人鼠标操作。第三、四阶段玩法尚待下一批接入。"
+}

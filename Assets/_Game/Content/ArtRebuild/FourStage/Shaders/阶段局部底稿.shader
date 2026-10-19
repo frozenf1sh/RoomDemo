@@ -21,6 +21,8 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
             float4 _DraftAmounts, _Opening;
             float4 _ClearCenters[32], _ClearExtents[32];
             int _ClearCount;
+            float4 _ContactCenters[12], _ContactSizes[12];
+            int _ContactCount;
             float _DraftDensity;
 
             float Hash(float3 p) { return frac(sin(dot(p,float3(12.9898,78.233,37.719)))*43758.5453); }
@@ -48,10 +50,22 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
                 float keep=0;
                 [loop] for(int region=0;region<_ClearCount;region++)
                     keep=max(keep,Box(world,_ClearCenters[region].xyz,_ClearExtents[region].xyz,.004)*_ClearCenters[region].w);
+                float3 normal=SampleSceneNormals(uv);
+                [loop] for(int contact=0;contact<_ContactCount;contact++)
+                {
+                    float3 relative=world-_ContactCenters[contact].xyz;
+                    float2 radius=_ContactSizes[contact].xy;
+                    float distance=length(relative.xz/radius);
+                    // 柔和、不规则的边缘只沿真实水平承托面展开，不能爬上墙和屋顶。
+                    float edge=distance+(Hash(floor(world*85))-.5)*.045;
+                    float patch=1-smoothstep(.65,1,edge);
+                    float height=1-smoothstep(_ContactSizes[contact].z*.6,_ContactSizes[contact].z,abs(relative.y));
+                    patch*=height*smoothstep(.55,.85,normal.y);
+                    keep=max(keep,patch*_ContactCenters[contact].w);
+                }
                 float local=max(left*_DraftAmounts.x,windowMask*_DraftAmounts.y);
                 float amount=saturate(max(local,_DraftAmounts.w)*(1-keep)*_DraftDensity);
                 float luma=dot(original,float3(.2126,.7152,.0722));
-                float3 normal=SampleSceneNormals(uv);
                 float normalEdge=length(ddx(normal))+length(ddy(normal));
                 float depthEdge=abs(ddx(LinearEyeDepth(raw,_ZBufferParams)))+abs(ddy(LinearEyeDepth(raw,_ZBufferParams)));
                 float contour=saturate(normalEdge*2.6+depthEdge*2.0);

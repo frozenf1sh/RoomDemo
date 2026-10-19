@@ -28,6 +28,7 @@ namespace Game.Unity.ArtRebuild
         public Transform CrayonFocus;
         public Transform PlasterFocus, MirrorFocus, DryBrushFocus, ShardsFocus;
         public AtelierFlowMirror Mirror;
+        [Tooltip("洗笔杯与画笔的左上角世界说明；独立于旁白字幕")] public Text WaterObservation;
         /// <summary>阶段旁白和显色期间统一阻断世界及UI输入。</summary>
         public bool IsStageTransition { get; private set; }
         private int pendingStage = 1;
@@ -77,6 +78,7 @@ namespace Game.Unity.ArtRebuild
             References.QuitButton.onClick.AddListener(() => UnityEngine.Application.Quit());
             References.PausePanel.SetActive(false);
             References.ContextPanel.SetActive(false);
+            HideWaterObservation();
             References.ManuscriptPanel.SetActive(false);
             References.ContextAction.gameObject.SetActive(false);
             References.ReturnButton.gameObject.SetActive(false);
@@ -106,6 +108,7 @@ namespace Game.Unity.ArtRebuild
             }
             if (!GameplayInputEnabled)
             {
+                HideWaterObservation();
                 References.Notebook.ExternalInputBlocked = true;
                 References.Reminder.gameObject.SetActive(false);
                 References.ReturnButton.gameObject.SetActive(false);
@@ -113,6 +116,14 @@ namespace Game.Unity.ArtRebuild
                 CancelPointer();
                 ClearHover();
                 return;
+            }
+            if (WaterObservation != null)
+            {
+                // 笔记关闭还有两帧输入隔离，之后由当前近景恢复说明，避免被隔离帧永久藏掉。
+                bool visible = focus == "water" && !paused && !transitioning && !References.Notebook.IsOpen
+                    && !string.IsNullOrEmpty(lastObservation);
+                if (WaterObservation.gameObject.activeSelf != visible) WaterObservation.gameObject.SetActive(visible);
+                if (visible) WaterObservation.rectTransform.anchoredPosition = new Vector2(36,Voice.ActiveKey == "" ? -28 : -150);
             }
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
@@ -319,6 +330,7 @@ namespace Game.Unity.ArtRebuild
         }
         private void OnNotebook(bool open)
         {
+            HideWaterObservation();
             blockedThroughFrame = Time.frameCount + 1;
             CancelPointer();
             if (Mirror != null) Mirror.CancelDrag();
@@ -326,6 +338,7 @@ namespace Game.Unity.ArtRebuild
             ClearHover();
             References.ContextPanel.SetActive(false);
             if (!open && IsCanvasFocused) RefreshCanvasControls();
+            else if (!open && focus == "water" && !string.IsNullOrEmpty(lastObservation)) Show(lastObservation);
         }
 
         /// <summary>由场景接线或UI生命周期注册接管；只取消临时输入，不改变作品与颜料。</summary>
@@ -342,6 +355,7 @@ namespace Game.Unity.ArtRebuild
         public void ReturnToRoom()
         {
             if (!GameplayInputEnabled || transitioning) return;
+            HideWaterObservation();
             CancelPointer();
             StopObservationPaging();
             Wash.CancelContact();
@@ -366,6 +380,7 @@ namespace Game.Unity.ArtRebuild
         }
         private void StartMove(Vector3 position, Quaternion rotation, float fov)
         {
+            HideWaterObservation();
             CancelPointer();
             StopObservationPaging();
             ClearHover();
@@ -397,11 +412,24 @@ namespace Game.Unity.ArtRebuild
         private void Show(string text)
         {
             StopObservationPaging();
+            HideWaterObservation();
+            if (focus == "water" && WaterObservation != null)
+            {
+                // 物件说明独占自己的节点；N02播放时下移，避免与旁白重叠。
+                References.ContextPanel.SetActive(false);
+                WaterObservation.text = text;
+                WaterObservation.gameObject.SetActive(true);
+                return;
+            }
             References.ObservationText.text=text;
             References.ContextPanel.SetActive(true);
             References.ContextAction.gameObject.SetActive(false);
             // 新阶段长介绍按完整句翻页，沿用临时调查视图，不把整段挤成两行后截断。
             if (text.Length > 32) observationPaging = StartCoroutine(PageObservation(text));
+        }
+        private void HideWaterObservation()
+        {
+            if (WaterObservation != null) WaterObservation.gameObject.SetActive(false);
         }
         private IEnumerator PageObservation(string text)
         {
@@ -450,6 +478,8 @@ namespace Game.Unity.ArtRebuild
             Wash.CancelContact();
             if (Mirror != null) Mirror.CancelDrag();
             paused=value;
+            if (value) HideWaterObservation();
+            else if (focus == "water" && !string.IsNullOrEmpty(lastObservation)) Show(lastObservation);
             References.PausePanel.SetActive(value);
             Time.timeScale=value?0:1;
         }

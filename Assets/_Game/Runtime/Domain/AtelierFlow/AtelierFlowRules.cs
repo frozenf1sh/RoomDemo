@@ -60,8 +60,8 @@ namespace Game.Domain
             }
             // 便条是可选动机说明；开场UI输入锁不伪装成“已读便条”的领域事实。
             Object(AtelierRules.Manuscript, "催稿便条", "快交稿了，我还是一点想法都没有。");
-            Object(StudioRules.Cup, "杯里的水", "一杯水而已。它可以映出你。", C("transparent"), C("mapping"));
-            Object(AtelierRules.Brush, "洗笔画笔", "把笔尖放进水里。");
+            Object(StudioRules.Cup, "洗笔杯", "杯子上靠着一个沾着蓝色颜料的笔，洗一下比较好", C("transparent"), C("mapping"));
+            Object(AtelierRules.Brush, "洗笔画笔", "把笔尖浸到水里洗一下吧");
             Object(Crayon, "蜡笔画", "真怀念那时候奔放又杂乱的笔触。", C("free"), C("messy"));
             Object(AtelierRules.Painting, "画布", "");
             Object(Plaster, "石膏像", "很枯燥。是的，但不去钻研它们，就无法表达出更多的事物。是这样没错……", C("fixed"), C("pale"), C("regular"));

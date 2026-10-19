@@ -17,6 +17,7 @@ namespace Game.Unity.ArtRebuild
         private Material original, owned;
         private MaterialPropertyBlock block;
         private Quaternion dry;
+        private Vector3 dryPosition;
         private bool requested, submitted;
         private float age, progress, clock;
         /// <summary>接触动作仍在进行时不沿旧轮廓显示金丝。</summary>
@@ -31,6 +32,7 @@ namespace Game.Unity.ArtRebuild
             Water.sharedMaterial = owned;
             dry = Quaternion.FromToRotation(Vector3.right,new Vector3(-.85f,.48f,.21f).normalized);
             Brush.localRotation = dry;
+            dryPosition = Brush.localPosition;
             progress = session.State.HasFact(AtelierFlowRules.Washed) ? 1 : 0;
         }
         /// <summary>先核对已调查来源；开始动作不提前写洗笔事实。</summary>
@@ -41,7 +43,13 @@ namespace Game.Unity.ArtRebuild
             return true;
         }
         /// <summary>暂停、失焦或退出近景取消尚未发生的接触；已成立的结果保留。</summary>
-        public void CancelContact() { requested = false; if (Brush != null) Brush.localRotation = dry; }
+        public void CancelContact()
+        {
+            requested = false;
+            if (Brush == null || session == null) return;
+            Brush.localRotation = dry;
+            Brush.localPosition = dryPosition;
+        }
         private void Update()
         {
             if (session == null) return;
@@ -53,6 +61,8 @@ namespace Game.Unity.ArtRebuild
                 float contact = Mathf.SmoothStep(0,1,Mathf.InverseLerp(.05f,.55f,age)) * (1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(2.1f,2.8f,age)));
                 var down = Quaternion.FromToRotation(Vector3.right,new Vector3(-.80f,-.57f,.20f).normalized);
                 Brush.localRotation = Quaternion.Slerp(dry,down,contact);
+                // 静置抬高后同时下探三厘米，让笔尖真正浸水；取消时恢复自身静置位置。
+                Brush.localPosition = dryPosition + Vector3.down * (.03f*contact);
                 float tip = Bristles.transform.TransformPoint(new Vector3(Bristles.sharedMesh.bounds.min.x,0,0)).y;
                 // 这是本次输入的几何接触判断；停止或中断不会再从旧计时器发命令。
                 if (!submitted && tip < Water.bounds.center.y + .008f)
