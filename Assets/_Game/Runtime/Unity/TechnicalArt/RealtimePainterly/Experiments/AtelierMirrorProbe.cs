@@ -1,6 +1,7 @@
 // 文件：AtelierMirrorProbe.cs
 // 职责：给独立手镜验证提供真实平面反射、斜置比较和可控更新频率。
 // 边界：只拥有镜像镜头、RT及运行时材质和网格，不读取或修改GameState。
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -14,6 +15,15 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
         [Tooltip("完整镜面，不包含镜框")] public Renderer Surface;
         [Range(128, 1024)] public int Resolution = 512;
         [Range(5, 30)] public int FramesPerSecond = 15;
+        public bool CompositeAfterPost;
+        public Shader CompositeShader;
+        /// <summary>有效镜面注册表，停用时立即移除，Feature按真实Source筛选。</summary>
+        public static readonly HashSet<AtelierMirrorProbe> Active = new HashSet<AtelierMirrorProbe>();
+        internal RTHandle TextureHandle { get; private set; }
+        internal Material CompositeMaterial => mirrorMaterial;
+        internal Mesh CompositeMesh => mirrorMesh;
+        private bool surfaceWasEnabled;
+        private Production.AtelierDraftCamera reflectedDraft;
         private Camera reflected;
         private RenderTexture texture;
         private Material originalMaterial, mirrorMaterial;
@@ -25,6 +35,11 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
         private float nextFrame;
         /// <summary>仅供构建取证读取现有RT；资源仍归镜面组件释放。</summary>
         internal RenderTexture ReviewTexture => texture;
+        /// <summary>只读反射纹理，运行取证读取后不能释放或替换。</summary>
+        public RenderTexture ReflectionTexture => texture;
+
+        /// <summary>供主流程验收读取真实摄像机设置，不改变后处理开关。</summary>
+        public bool SourceUsesPostProcessing => Source != null && Source.GetUniversalAdditionalCameraData().renderPostProcessing;
 
         private void OnEnable()
         {
@@ -32,14 +47,17 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
             var node = new GameObject("TA验证_手镜镜像摄像机") { hideFlags = HideFlags.HideAndDontSave };
             reflected = node.AddComponent<Camera>();
             reflected.enabled = false;
+            if (CompositeAfterPost) reflectedDraft = node.AddComponent<Production.AtelierDraftCamera>();
             texture = new RenderTexture(Resolution, Resolution, 24, RenderTextureFormat.ARGB32)
             {
                 name = "TA验证_手镜实时画幅", hideFlags = HideFlags.HideAndDontSave
             };
             texture.Create();
+            TextureHandle = RTHandles.Alloc(texture);
+            surfaceWasEnabled = Surface.enabled;
             originalMaterial = Surface.sharedMaterial;
-            mirrorMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "TA验证_自有镜面材质" };
-            mirrorMaterial.SetColor("_BaseColor", new Color(.86f,.86f,.86f,1));
+            mirrorMaterial = new Material(CompositeAfterPost ? CompositeShader : Shader.Find("Universal Render Pipeline/Unlit")) { name = "TA验证_自有镜面材质" };
+            if (!CompositeAfterPost) mirrorMaterial.SetColor("_BaseColor", new Color(.86f,.86f,.86f,1));
             filter = Surface.GetComponent<MeshFilter>();
             originalMesh = filter.sharedMesh;
             mirrorMesh = Instantiate(originalMesh);
@@ -49,6 +67,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
             Surface.sharedMaterial = mirrorMaterial;
             Surface.SetPropertyBlock(null);
             request = new UniversalRenderPipeline.SingleCameraRequest { destination = texture };
+            if (CompositeAfterPost) Surface.enabled = false;
+            Active.Add(this);
         }
 
         private void LateUpdate()
@@ -85,6 +105,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
             var cameraData = reflected.GetUniversalAdditionalCameraData();
             cameraData.renderPostProcessing = false;
             cameraData.antialiasing = AntialiasingMode.None;
+            var sourceDraft = Source.GetComponent<Production.AtelierDraftCamera>();
+            if (reflectedDraft != null && sourceDraft != null) reflectedDraft.CopyVisualState(sourceDraft);
             bool previous = GL.invertCulling;
             try
             {
@@ -107,6 +129,10 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Experiments
 
         private void OnDisable()
         {
+            Active.Remove(this);
+            if (Surface != null && originalMesh != null) Surface.enabled = surfaceWasEnabled;
+            TextureHandle?.Release();
+            TextureHandle = null;
             // 资源完全归本验证组件，退出Play后不留下共享RT或隐藏摄像机。
             if (filter != null && originalMesh != null) filter.sharedMesh = originalMesh;
             if (mirrorMesh != null) { Destroy(mirrorMesh); mirrorMesh = null; }

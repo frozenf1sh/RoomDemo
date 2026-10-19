@@ -27,7 +27,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             pass = new DraftPass(material);
         }
 
-        /// <summary>只处理带视觉组件的主镜头，镜面和天空源镜头不进入该通道。</summary>
+        /// <summary>只处理带视觉组件的镜头；反射复制主镜头许可，天空源不进入该通道。</summary>
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData data)
         {
             if (pass == null || data.cameraData.cameraType != CameraType.Game) return;
@@ -83,17 +83,23 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                 data.Amounts = new Vector4(Probe.LeftDraft, Probe.WindowDraft, Probe.Ghost, Probe.SurroundingsDraft);
                 data.Opening = new Vector4(Probe.OpeningDarkness,Probe.OpeningBlur,0,0);
                 // 每次记录冻结世界包围体；杯沿画笔移动时使用同一帧实际边界。
-                data.ClearCenters = new Vector4[16];
-                data.ClearExtents = new Vector4[16];
+                data.ClearCenters = new Vector4[32];
+                data.ClearExtents = new Vector4[32];
                 // RenderGraph复用Data，计数须逐帧归零，不能沿用上一帧已占满的槽位。
                 data.ClearCount = 0;
-                foreach (var target in Probe.ClearObjects)
+                for (int stage = 0; stage <= 4; stage++)
                 {
-                    if (target == null || !target.enabled || !target.gameObject.activeInHierarchy || data.ClearCount >= 16) continue;
-                    var bounds = target.bounds;
-                    int index = data.ClearCount++;
-                    data.ClearCenters[index] = bounds.center;
-                    data.ClearExtents[index] = bounds.extents + Vector3.one * .012f;
+                    float weight = Probe.WeightForStage(stage);
+                    if (weight <= 0) continue;
+                    foreach (var target in Probe.ObjectsForStage(stage))
+                    {
+                        if (target == null || !target.enabled || !target.gameObject.activeInHierarchy || data.ClearCount >= 32) continue;
+                        var bounds = target.bounds;
+                        int index = data.ClearCount++;
+                        // w保存每组的平滑显色量；屋顶仍有独立的第0组许可。
+                        data.ClearCenters[index] = new Vector4(bounds.center.x,bounds.center.y,bounds.center.z,weight);
+                        data.ClearExtents[index] = bounds.extents + Vector3.one * .006f;
+                    }
                 }
                 data.Density = Probe.Density;
                 builder.UseTexture(data.Source);

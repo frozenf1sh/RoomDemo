@@ -33,6 +33,10 @@ namespace Game.Unity.ArtRebuild
         private IEnumerator Start()
         {
             Directory.CreateDirectory(output);UnityEngine.Application.runInBackground=true;
+            string[] arguments = Environment.GetCommandLineArgs();
+            int speedAt = Array.IndexOf(arguments,"--atelier-review-speed");
+            if (speedAt >= 0 && speedAt+1 < arguments.Length && float.TryParse(arguments[speedAt+1],out var speed))
+                Time.timeScale = Mathf.Clamp(speed,1,8);
             yield return null;
             var flow=FindAnyObjectByType<AtelierFlowGameplay>();
             if(flow==null) { File.WriteAllText(Path.Combine(output,"运行结果.txt"),"缺少新流程控制器。");UnityEngine.Application.Quit(1);yield break; }
@@ -59,20 +63,20 @@ namespace Game.Unity.ArtRebuild
             Check(!refs.Reminder.gameObject.activeSelf,"开场显示了笔记按钮。");
             Check(!flow.Session.State.Knows(StudioRules.Cup) && !flow.Session.State.Knows(AtelierRules.Manuscript)
                 && !flow.Session.State.Knows(AtelierFlowRules.Crayon),"开场输入锁仍授予了物件。");
-            yield return new WaitForSecondsRealtime(1.2f);
+            yield return new WaitForSeconds(1.2f);
             yield return Shot("01_黑场与失焦渐退");
-            yield return new WaitForSecondsRealtime(4);
+            yield return new WaitForSeconds(4);
             yield return Shot("02_旁白期间草稿遮挡");
             float deadline = Time.realtimeSinceStartup + 70;
             while (flow.IsOpening && Time.realtimeSinceStartup < deadline) yield return null;
             Check(!flow.IsOpening,"完整开场旁白未交回操作。");
-            yield return new WaitForSecondsRealtime(.15f);
+            yield return new WaitForSecondsRealtime(.2f);
             Check(flow.GameplayInputEnabled && refs.Reminder.gameObject.activeSelf,"旁白结束后笔记入口未恢复。");
             Check(!flow.Session.State.HasFact(AtelierFlowRules.IntroRead),"旁白结束伪装成已读便签。");
             refs.Notebook.Toggle();
             Check(refs.Notebook.IsOpen,"旁白结束后无法打开笔记。");
             refs.Notebook.Toggle();
-            yield return new WaitForSecondsRealtime(.1f);
+            yield return new WaitForSecondsRealtime(.15f);
             yield return Shot("03_第一阶段允许行动");
             var frame = ScreenCapture.CaptureScreenshotAsTexture();
             var point = refs.ViewCamera.WorldToScreenPoint(flow.CanvasPort.Surface.bounds.center);
@@ -81,26 +85,27 @@ namespace Game.Unity.ArtRebuild
             Check(canvasPixel.b > canvasPixel.r + .06f,"可交互画布被外围底稿误遮挡。");
             Check(Mathf.Abs(ceilingPixel.b-ceilingPixel.r)<.05f,"天花板没有进入外围草稿。");
             Destroy(frame);
-            flow.Observe(Target(AtelierTargetKind.WashWater));yield return new WaitForSecondsRealtime(1.4f);
+            flow.Observe(Target(AtelierTargetKind.WashWater));yield return new WaitForSeconds(1.4f);
             flow.Observe(Target(AtelierTargetKind.Brush));flow.Observe(Target(AtelierTargetKind.WashWater));
             Check(!flow.Session.State.HasFact(AtelierFlowRules.Washed),"开始靠近就错误提交了洗笔事实。");
-            yield return new WaitForSecondsRealtime(1.7f);
+            yield return new WaitForSeconds(1.7f);
             Check(flow.Session.State.HasFact(AtelierFlowRules.Washed),"真实笔尖接触未提交动作。");
             Check(flow.Session.State.Knows(AtelierFlowRules.C("blue"))&&flow.Session.State.Knows(AtelierFlowRules.C("flow")),"洗笔结果没有同次收录。");
             yield return Shot("04_接触与散色");
-            flow.ReturnToRoom();yield return new WaitForSecondsRealtime(1.4f);
+            flow.ReturnToRoom();yield return new WaitForSeconds(1.4f);
             var screen=refs.ViewCamera.WorldToScreenPoint(flow.CrayonPicking.bounds.center);
             var ray=refs.ViewCamera.ScreenPointToRay(screen);
             var hits=Physics.RaycastAll(ray,40,refs.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x=>x.distance).ToArray();
             Check(hits.Length>0&&hits[0].collider==flow.CrayonPicking,"小画主视角射线被其他Collider挡住。");
-            flow.ObserveCrayon();yield return new WaitForSecondsRealtime(1.4f);
+            flow.ObserveCrayon();yield return new WaitForSeconds(1.4f);
+            yield return Shot("04b_正式蜡笔画贴图");
             flow.Session.Combine(new[]{AtelierFlowRules.C("transparent"),AtelierFlowRules.C("blue")});
             flow.Session.Combine(new[]{AtelierFlowRules.C("flow"),AtelierFlowRules.C("free")});
             flow.Session.Combine(new[]{new ClueId("atelier.flow.ice_blue"),new ClueId("atelier.flow.swirl")});
             Check(flow.Session.State.Knows(AtelierFlowRules.Brush(1)),"正常配方未形成第一笔刷。");
             Check(!flow.Session.State.CanvasLocked,"第三次概念配方错误触发了旧收束。");
-            flow.ReturnToRoom();yield return new WaitForSecondsRealtime(1.4f);
-            flow.Observe(Target(AtelierTargetKind.Painting));yield return new WaitForSecondsRealtime(1.4f);
+            flow.ReturnToRoom();yield return new WaitForSeconds(1.4f);
+            flow.Observe(Target(AtelierTargetKind.Painting));yield return new WaitForSeconds(1.4f);
             var canvas=flow.CanvasPort;
             var paintingTarget = Target(AtelierTargetKind.Painting);
             var paintingCollider = paintingTarget.GetComponent<Collider>();
@@ -125,25 +130,97 @@ namespace Game.Unity.ArtRebuild
             yield return Shot("05_三笔真实作品");
             string artwork=Hash(canvas.CanvasTexture as RenderTexture);
             Check(artwork != blank, "接受三笔后作品纹理仍然为空。");
-            flow.ReturnToRoom();yield return new WaitForSecondsRealtime(1.4f);
-            flow.Observe(Target(AtelierTargetKind.Painting));yield return new WaitForSecondsRealtime(1.4f);
+            flow.ReturnToRoom();yield return new WaitForSeconds(1.4f);
+            flow.Observe(Target(AtelierTargetKind.Painting));yield return new WaitForSeconds(1.4f);
             Check(artwork==Hash(canvas.CanvasTexture as RenderTexture),"返回再进入改变或丢失了作品。");
             Check(refs.ContextAction.interactable,"三笔后完成按钮没有开放。");
-            refs.ContextAction.onClick.Invoke();yield return new WaitForSecondsRealtime(4.5f);
+            refs.ContextAction.onClick.Invoke();yield return new WaitForSeconds(4.5f);
             Check(flow.Voice.ActiveKey == "N03", "新阶段旁白被过时开场队列拖延。 ");
             Check(!refs.ContextPanel.activeSelf, "回到主视角重新弹出了旧物件说明。");
             Check(flow.Session.State.HasFact(AtelierFlowRules.Finished(1)),"真实完成按钮没有推进首层。");
             Check(canvas.Document.Layers[0].CommittedUnits+canvas.Document.Layers[0].DiscardedUnits==100,"首层颜料账本不守恒。");
-            Check(flow.Draft.LeftDraft<.01f&&flow.Draft.WindowDraft>.95f&&flow.Draft.SurroundingsDraft<.01f,"首层后区域显色错误。");
-            yield return Shot("06_收层后左侧显色");
-            Check(!flow.Session.State.HasFact(AtelierFlowRules.IntroRead),"未读便签的第一层被暗中补了阅读事实。");
+            Check(flow.IsStageTransition && !flow.GameplayInputEnabled,"阶段旁白期间提前交回输入。");
+            Check(flow.Draft.WeightForStage(2) == 0,"N03没有播完就提前显色。");
+            Check(flow.Draft.SurroundingsDraft>.99f && flow.Draft.WeightForStage(0)==0,"阶段推进提前清除了背景或屋顶草稿。");
+            yield return Shot("06_N03期间新物件仍为草稿");
+            deadline = Time.realtimeSinceStartup+70;
+            while (!flow.GameplayInputEnabled && Time.realtimeSinceStartup<deadline) yield return null;
+            Check(flow.Draft.WeightForStage(2)>.99f,"N03结束后第二阶段未增量显色。");
+            Check(flow.Draft.WeightForStage(1)>.99f && flow.Draft.WeightForStage(0)==0,"第二阶段丢失首阶段显色或误揭屋顶。");
+            yield return Shot("07_第二阶段仅新增四类物件");
+            var allTargets = FindObjectsByType<AtelierInteractionTarget>();
+            AtelierInteractionTarget Second(AtelierTargetKind kind) => allTargets.First(x=>x.Kind==kind);
+            foreach (var kind in new[] { AtelierTargetKind.Plaster,AtelierTargetKind.HandMirror,AtelierTargetKind.DryBrush,AtelierTargetKind.MirrorShards })
+            {
+                var source = Second(kind);
+                var sourceCollider = source.GetComponent<Collider>();
+                var sourceRay = refs.ViewCamera.ScreenPointToRay(refs.ViewCamera.WorldToScreenPoint(sourceCollider.bounds.center));
+                var sourceHits = Physics.RaycastAll(sourceRay,40,refs.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x=>x.distance).ToArray();
+                Check(sourceHits.Length>0 && sourceHits[0].collider==sourceCollider,"第二阶段来源拾取被挡："+kind);
+                flow.Observe(source);
+                yield return new WaitForSeconds(1.5f);
+                if (kind == AtelierTargetKind.HandMirror)
+                {
+                    Check(!flow.Session.State.Knows(AtelierFlowRules.C("flip")),"拿起手镜自动授予了翻转。");
+                    yield return Shot("09_手镜正视真实反射");
+                    var mirrorFrame = ScreenCapture.CaptureScreenshotAsTexture();
+                    var mirrorScreen = refs.ViewCamera.WorldToScreenPoint(flow.Mirror.Reflection.Surface.transform.TransformPoint(flow.Mirror.Reflection.Surface.GetComponent<MeshFilter>().sharedMesh.bounds.center));
+                    int clippedWhite = 0, samples = 0;
+                    for (int y = -24; y <= 24; y++) for (int x = -24; x <= 24; x++)
+                    {
+                        Color pixel = mirrorFrame.GetPixel(Mathf.Clamp((int)mirrorScreen.x+x,0,mirrorFrame.width-1),Mathf.Clamp((int)mirrorScreen.y+y,0,mirrorFrame.height-1));
+                        if (pixel.r>.97f && pixel.g>.97f && pixel.b>.97f) clippedWhite++;
+                        samples++;
+                    }
+                    Check(clippedWhite<samples*.15f,"镜面附近出现大面积白色溢出。");
+                    Destroy(mirrorFrame);
+                    var mirrorTexture = flow.Mirror.Reflection.ReflectionTexture;
+                    var oldRT = RenderTexture.active;
+                    RenderTexture.active = mirrorTexture;
+                    var mirrorImage = new Texture2D(mirrorTexture.width,mirrorTexture.height,TextureFormat.RGBA32,false);
+                    mirrorImage.ReadPixels(new Rect(0,0,mirrorTexture.width,mirrorTexture.height),0,0);
+                    mirrorImage.Apply();
+                    File.WriteAllBytes(Path.Combine(output,"09b_真实镜像RT.png"),mirrorImage.EncodeToPNG());
+                    RenderTexture.active = oldRT;
+                    Destroy(mirrorImage);
+                    flow.Mirror.TurnTo(35);
+                    yield return new WaitForSeconds(.5f);
+                    Check(Mathf.Abs(flow.Mirror.Angle-15)<.01f,"手镜没有限制到15度。");
+                    Check(flow.Session.State.Knows(AtelierFlowRules.C("flip")),"主动转动没有记录翻转。");
+                    Check(flow.Mirror.Reflection.SourceUsesPostProcessing,"镜面兼容关闭了主镜头后处理。");
+                    yield return Shot("10_手镜15度比较");
+                }
+                else yield return Shot(kind == AtelierTargetKind.Plaster ? "08_石膏像" : kind == AtelierTargetKind.DryBrush ? "11_干画笔" : "12_已有碎镜片");
+                flow.ReturnToRoom();
+                yield return new WaitForSeconds(1.5f);
+            }
+            flow.Session.Combine(new[]{AtelierFlowRules.C("fixed"),AtelierFlowRules.C("flip")});
+            flow.Session.Combine(new[]{AtelierFlowRules.C("black"),AtelierFlowRules.C("sharp")});
+            flow.Session.Combine(new[]{new ClueId("atelier.flow.twisted"),new ClueId("atelier.flow.rough")});
+            Check(flow.Session.State.Knows(AtelierFlowRules.Brush(2)),"第二阶段正常配方未形成柏影笔刷。");
+            flow.Observe(Target(AtelierTargetKind.Painting));
+            yield return new WaitForSeconds(1.5f);
+            string firstLayer = Hash(canvas.CanvasTexture as RenderTexture);
+            for (int index = 0; index < 5; index++)
+                Check(canvas.Commit(new Vector2(.18f+index*.15f,.30f+index*.06f),canvas.DefaultCost,index*3).Accepted,"柏影笔印未被接受。");
+            Check(canvas.Document.Current.RemainingPaint==0 && canvas.Document.Current.Count==5,"柏影层未按5笔合法用尽。");
+            Check(canvas.Document.Layers[0].Count==3 && firstLayer!=Hash(canvas.CanvasTexture as RenderTexture),"柏影层没有保留第一层并新增图样。");
+            yield return Shot("13_卷涡与柏影真实叠层");
+            refs.ContextAction.onClick.Invoke();
+            yield return new WaitForSeconds(2);
+            Check(flow.IsStageTransition && flow.Voice.ActiveKey=="N04","第二层没有进入N04过场。");
+            Check(flow.Draft.WeightForStage(3)==0 && flow.Draft.WeightForStage(0)==0,"N04未结束就提前显色或揭屋顶。");
+            yield return Shot("14_N04阶段过场");
+            deadline = Time.realtimeSinceStartup+70;
+            while (!flow.GameplayInputEnabled && Time.realtimeSinceStartup<deadline) yield return null;
+            Check(flow.Session.State.HasFact(AtelierFlowRules.Finished(2)),"第二层完成按钮没有推进。");
+            Check(flow.Draft.WeightForStage(0)==0 && flow.Draft.SurroundingsDraft>.99f,"第二层完成误揭屋顶或全部房间。");
             flow.Observe(Target(AtelierTargetKind.Manuscript));
             Check(refs.ManuscriptPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).Any(x=>x.text==AtelierOpeningCopy.NoteBody),"便签仍显示旧作画目标。");
-            yield return Shot("07_第一人称新便签");
+            yield return Shot("15_便签回看");
             flow.ReturnToRoom();
-            Check(!flow.IsOpening && flow.Draft.SurroundingsDraft<.01f,"读便签重新开始了开场或遮挡。");
             string[] collected;lock(errors) collected=errors.ToArray();
-            File.WriteAllText(Path.Combine(output,"运行结果.txt"),"第一阶段开场修订自动构建回放完成。\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第二阶段玩法尚待下一批接入。");
+            File.WriteAllText(Path.Combine(output,"运行结果.txt"),"前两阶段与旁白后逐物件显色自动构建回放完成。\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第三、四阶段玩法尚待下一批接入。");
             UnityEngine.Application.logMessageReceivedThreaded-=Collect;
             UnityEngine.Application.Quit(collected.Length==0?0:1);
         }

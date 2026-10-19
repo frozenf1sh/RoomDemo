@@ -105,6 +105,55 @@ namespace Game.Tests
             Assert.IsFalse(game.CommitAtelierStroke(game.SessionEpoch,0,new AtelierStroke("outside",1,-1,5000,0,17)).Accepted);
             Assert.AreEqual(0,game.State.AtelierCanvas.Revision);
         }
+        private void StageTwo()
+        {
+            Ready();Stroke(17);Stroke(17);Stroke(17);
+            game.FinishAtelierLayer(game.SessionEpoch,game.State.AtelierCanvas.Revision);
+        }
+        [Test] public void StageTwoSourcesCannotBeInspectedBeforeFirstLayerFinishes()
+        {
+            foreach (var source in new[] { AtelierFlowRules.Plaster, AtelierFlowRules.HandMirror, AtelierFlowRules.DryBrush, AtelierFlowRules.MirrorShards })
+            {
+                Assert.IsFalse(game.IsInspectable(source));
+                game.Inspect(source);
+                Assert.IsFalse(game.State.Knows(source));
+            }
+        }
+        [Test] public void MirrorObservationRequiresOwnSourceAndNeverAwardsPlaster()
+        {
+            StageTwo();
+            game.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("flip")));
+            game.Inspect(AtelierFlowRules.HandMirror);
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("flip")));
+            game.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("flip")));
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.Plaster));
+            Assert.IsEmpty(game.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare"));
+        }
+        [Test] public void SecondBrushRequiresFourPersonalSourcesAndPreservesFirstLayer()
+        {
+            StageTwo();
+            var first = game.State.AtelierCanvas.Layers[0].Strokes.ToArray();
+            game.Inspect(AtelierFlowRules.Plaster);game.Inspect(AtelierFlowRules.HandMirror);
+            game.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");
+            game.Inspect(AtelierFlowRules.DryBrush);
+            game.Combine(new[]{AtelierFlowRules.C("black"),AtelierFlowRules.C("sharp")});
+            Assert.IsFalse(game.State.Knows(new ClueId("atelier.flow.rough")));
+            game.Inspect(AtelierFlowRules.MirrorShards);
+            game.Combine(new[]{AtelierFlowRules.C("fixed"),AtelierFlowRules.C("flip")});
+            game.Combine(new[]{AtelierFlowRules.C("black"),AtelierFlowRules.C("sharp")});
+            game.Combine(new[]{new ClueId("atelier.flow.twisted"),new ClueId("atelier.flow.rough")});
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.Brush(2)));
+            for (int index = 0; index < 5; index++) Assert.IsTrue(Stroke(20).Accepted);
+            Assert.AreEqual(0,game.State.AtelierCanvas.Current.RemainingPaint);
+            Assert.IsFalse(game.State.HasFact(AtelierFlowRules.Finished(2)));
+            Assert.IsTrue(game.FinishAtelierLayer(game.SessionEpoch,game.State.AtelierCanvas.Revision).Accepted);
+            Assert.AreEqual(3,AtelierFlowRules.Stage(game.State));
+            CollectionAssert.AreEqual(first,game.State.AtelierCanvas.Layers[0].Strokes);
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.Brush(3)));
+            Assert.IsFalse(game.State.CanvasLocked);
+        }
         [Test] public void ActionsCannotAwardAnObjectAsAnObservation()
         {
             var id=new ObjectId("test.source");var clue=new ClueId(id.Value);

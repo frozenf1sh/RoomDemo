@@ -19,7 +19,7 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
             TEXTURE2D_X_FLOAT(_ProbeDepth);
             TEXTURE2D_X(_ProbeNormals);
             float4 _DraftAmounts, _Opening;
-            float4 _ClearCenters[16], _ClearExtents[16];
+            float4 _ClearCenters[32], _ClearExtents[32];
             int _ClearCount;
             float _DraftDensity;
 
@@ -47,7 +47,7 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
                 float left=Box(world,float3(-2.45,1.10,-.40),float3(1.70,.75,1.10),.055);
                 float keep=0;
                 [loop] for(int region=0;region<_ClearCount;region++)
-                    keep=max(keep,Box(world,_ClearCenters[region].xyz,_ClearExtents[region].xyz,.006));
+                    keep=max(keep,Box(world,_ClearCenters[region].xyz,_ClearExtents[region].xyz,.004)*_ClearCenters[region].w);
                 float local=max(left*_DraftAmounts.x,windowMask*_DraftAmounts.y);
                 float amount=saturate(max(local,_DraftAmounts.w)*(1-keep)*_DraftDensity);
                 float luma=dot(original,float3(.2126,.7152,.0722));

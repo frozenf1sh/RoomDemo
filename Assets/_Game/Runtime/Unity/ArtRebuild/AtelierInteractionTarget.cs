@@ -7,7 +7,7 @@ using Game.Unity.TechnicalArt.HoverGold;
 namespace Game.Unity.ArtRebuild
 {
     /// <summary>当前阶段已经具备真实表现的交互对象类型。</summary>
-    public enum AtelierTargetKind { Painting, WashWater, Brush, Manuscript, StillLamp, Window, OilLamp, Matches, MatchStriker, Wick, Curtain, CurtainCord, Trial, TrialCloth, Ceiling, Sky, SharedMark, Room }
+    public enum AtelierTargetKind { Painting, WashWater, Brush, Manuscript, StillLamp, Window, OilLamp, Matches, MatchStriker, Wick, Curtain, CurtainCord, Trial, TrialCloth, Ceiling, Sky, SharedMark, Room, Plaster, HandMirror, MirrorShards, DryBrush }
 
     /// <summary>可见模型与逻辑拾取分开，模型替换不改变身份。</summary>
     public sealed class AtelierInteractionTarget : MonoBehaviour

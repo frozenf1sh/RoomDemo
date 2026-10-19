@@ -2,6 +2,8 @@
 // 职责：装配四阶段首批会话，处理真实调查、洗笔、单枚落笔、返回与暂停。
 // 边界：只通过GameSession改变世界；不加载旧静物规则，不拥有UI同学的Workspace实现。
 using System.Collections;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Linq;
 using Game.Application;
 using Game.Domain;
@@ -13,7 +15,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 namespace Game.Unity.ArtRebuild
 {
-    /// <summary>第一批P00至P07闭环；未来UI直接绑定CanvasPort，不复制颜料状态。</summary>
+    /// <summary>前两阶段P00至P12闭环；未来UI直接绑定CanvasPort，不复制颜料状态。</summary>
     [DefaultExecutionOrder(100)]
     public sealed class AtelierFlowGameplay : MonoBehaviour
     {
@@ -24,6 +26,13 @@ namespace Game.Unity.ArtRebuild
         public AtelierFlowNarration Voice;
         public Collider CrayonPicking;
         public Transform CrayonFocus;
+        public Transform PlasterFocus, MirrorFocus, DryBrushFocus, ShardsFocus;
+        public AtelierFlowMirror Mirror;
+        /// <summary>阶段旁白和显色期间统一阻断世界及UI输入。</summary>
+        public bool IsStageTransition { get; private set; }
+        private int pendingStage = 1;
+        private string pendingNarration = "N01";
+        private bool waitingForReveal;
         /// <summary>场景唯一的新流程会话，UI读取快照并调用用例。</summary>
         public GameSession Session { get; private set; }
         /// <summary>当前机位是否接受画布输入，不代表任何领域事实。</summary>
@@ -35,7 +44,7 @@ namespace Game.Unity.ArtRebuild
         /// <summary>开场旁白播放完前，世界、笔记和画布控件共同关闭输入。</summary>
         public bool IsOpening { get; private set; } = true;
         /// <summary>UI只读的玩法输入许可；UI打开状态仍由各模块自行消费。</summary>
-        public bool GameplayInputEnabled => !IsOpening && Time.frameCount > blockedThroughFrame;
+        public bool GameplayInputEnabled => !IsOpening && !IsStageTransition && Time.frameCount > blockedThroughFrame;
         /// <summary>正式Workspace接管时停用默认盖章和旧画布按钮，其他世界交互继续工作。</summary>
         public bool UsesExternalCanvasWorkspace { get; private set; }
         /// <summary>UI优先收起笔记内的导读或详情，返回true表示已消费本次Esc。</summary>
@@ -45,7 +54,7 @@ namespace Game.Unity.ArtRebuild
         private Vector3 home;
         private Quaternion homeTurn;
         private float homeFov;
-        private Coroutine movement;
+        private Coroutine movement, observationPaging;
         private Vector2 pendingUV;
         private int pendingCost, pendingRevision;
         private string pendingEpoch;
@@ -80,15 +89,21 @@ namespace Game.Unity.ArtRebuild
 
         private void OnNarrationCompleted(string key)
         {
-            if (key != "N01" || !IsOpening) return;
-            // 不写阅读完成或任何物件事实；这里只交回输入，结束帧的按键不穿透。
-            IsOpening = false;
-            blockedThroughFrame = Time.frameCount + 1;
-            CancelPointer();
+            if (key != pendingNarration) return;
+            // 完整组结束后才开始显色；输入继续锁到渐显完成，不借此写任何领域事实。
+            Draft.RestoreStage(pendingStage,false);
+            waitingForReveal = true;
+            pendingNarration = "";
         }
         private void Update()
         {
             if (Session == null) return;
+            if (waitingForReveal && !Draft.RevealAnimating)
+            {
+                waitingForReveal = false;
+                IsOpening = IsStageTransition = false;
+                blockedThroughFrame = Time.frameCount + 1;
+            }
             if (!GameplayInputEnabled)
             {
                 References.Notebook.ExternalInputBlocked = true;
@@ -121,6 +136,11 @@ namespace Game.Unity.ArtRebuild
             var mouse = Mouse.current;
             if (mouse.rightButton.wasPressedThisFrame && focus != "") { ReturnToRoom();return; }
             if (focus == "note") return;
+            if (focus == "mirror")
+            {
+                Mirror.HandleInput();
+                return;
+            }
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             var ray = References.ViewCamera.ScreenPointToRay(mouse.position.ReadValue());
             var hits = Physics.RaycastAll(ray,40,References.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x => x.distance);
@@ -176,6 +196,9 @@ namespace Game.Unity.ArtRebuild
         private bool Allowed(AtelierInteractionTarget target)
         {
             if (!GameplayInputEnabled) return false;
+            if (target.Kind == AtelierTargetKind.Plaster || target.Kind == AtelierTargetKind.HandMirror ||
+                target.Kind == AtelierTargetKind.DryBrush || target.Kind == AtelierTargetKind.MirrorShards)
+                return Draft.VisibleStage >= 2 && Session.IsInspectable(new ObjectId(target.ObjectId));
             if (target.Kind == AtelierTargetKind.Manuscript) return true;
             if (target.Kind == AtelierTargetKind.Brush || target.Kind == AtelierTargetKind.WashWater || target.Kind == AtelierTargetKind.Painting)
                 return Session.IsInspectable(new ObjectId(target.ObjectId));
@@ -204,6 +227,18 @@ namespace Game.Unity.ArtRebuild
                 Session.Inspect(StudioRules.Cup);
                 if (focus != "water") Focus("water",References.DeskFocusPose,43);
                 else if (brushSelected && !Wash.RequestContact()) Show("先亲点杯水和洗笔画笔。");
+            }
+            else if (target.Kind == AtelierTargetKind.Plaster || target.Kind == AtelierTargetKind.HandMirror ||
+                target.Kind == AtelierTargetKind.DryBrush || target.Kind == AtelierTargetKind.MirrorShards)
+            {
+                Session.Inspect(new ObjectId(target.ObjectId));
+                if (target.Kind == AtelierTargetKind.HandMirror)
+                {
+                    Mirror.Begin();
+                    Focus("mirror",MirrorFocus,51);
+                }
+                else Focus("object",target.Kind == AtelierTargetKind.Plaster ? PlasterFocus :
+                    target.Kind == AtelierTargetKind.DryBrush ? DryBrushFocus : ShardsFocus,46);
             }
             else if (target.Kind == AtelierTargetKind.Painting)
             {
@@ -246,10 +281,9 @@ namespace Game.Unity.ArtRebuild
             {
                 if (fact.Fact == AtelierFlowRules.Finished(1))
                 {
-                    Draft.RestoreStage(2,false);
-                    Voice.Play("N03");
-                    ReturnToRoom();
+                    BeginStageTransition(2,"N03");
                 }
+                if (fact.Fact == AtelierFlowRules.Finished(2)) BeginStageTransition(3,"N04");
                 if (fact.Fact == AtelierFlowRules.Washed) brushSelected = false;
             }
             if (value is CombinationSucceeded combination)
@@ -258,14 +292,37 @@ namespace Game.Unity.ArtRebuild
                 if (Session.State.Knows(new ClueId("atelier.flow.ice_blue")) &&
                     Session.State.Knows(new ClueId("atelier.flow.swirl")))
                     Voice.Play("N02");
-                if (combination.RecipeId == "atelier.flow.recipe.brush.1")
+                if (combination.RecipeId == "atelier.flow.recipe.brush.1" || combination.RecipeId == "atelier.flow.recipe.brush.2")
                     Show("关掉笔记本，再点画布。");
             }
+        }
+        /// <summary>先退出近景，再锁输入并等待整组旁白；不提前改变底稿清单。</summary>
+        private void BeginStageTransition(int stage, string narration)
+        {
+            ReturnToRoom();
+            References.Notebook.SetOpen(false);
+            pendingStage = stage;
+            pendingNarration = narration;
+            waitingForReveal = false;
+            IsStageTransition = true;
+            References.Notebook.ExternalInputBlocked = true;
+            Voice.Play(narration);
+        }
+        /// <summary>由实际转镜输入提交观察；摆放动画、开场或被UI捕获时不会调用动作。</summary>
+        public void CompareMirror()
+        {
+            if (!GameplayInputEnabled || paused || transitioning || focus != "mirror" || References.Notebook.IsOpen) return;
+            if (Mathf.Abs(Mirror.Angle) < 8) return;
+            if (Session.State.HasFact(AtelierFlowRules.MirrorCompared)) return;
+            Session.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");
+            if (Session.State.Knows(AtelierFlowRules.Plaster)) Show("再规矩的形，翻过来就不压我了。");
         }
         private void OnNotebook(bool open)
         {
             blockedThroughFrame = Time.frameCount + 1;
             CancelPointer();
+            if (Mirror != null) Mirror.CancelDrag();
+            StopObservationPaging();
             ClearHover();
             References.ContextPanel.SetActive(false);
             if (!open && IsCanvasFocused) RefreshCanvasControls();
@@ -286,7 +343,9 @@ namespace Game.Unity.ArtRebuild
         {
             if (!GameplayInputEnabled || transitioning) return;
             CancelPointer();
+            StopObservationPaging();
             Wash.CancelContact();
+            if (Mirror != null) Mirror.End();
             References.ManuscriptPanel.SetActive(false);
             if (focus == "note")
             {
@@ -308,6 +367,7 @@ namespace Game.Unity.ArtRebuild
         private void StartMove(Vector3 position, Quaternion rotation, float fov)
         {
             CancelPointer();
+            StopObservationPaging();
             ClearHover();
             References.ContextPanel.SetActive(false);
             if (movement != null) StopCoroutine(movement);
@@ -336,9 +396,43 @@ namespace Game.Unity.ArtRebuild
         }
         private void Show(string text)
         {
+            StopObservationPaging();
             References.ObservationText.text=text;
             References.ContextPanel.SetActive(true);
             References.ContextAction.gameObject.SetActive(false);
+            // 新阶段长介绍按完整句翻页，沿用临时调查视图，不把整段挤成两行后截断。
+            if (text.Length > 32) observationPaging = StartCoroutine(PageObservation(text));
+        }
+        private IEnumerator PageObservation(string text)
+        {
+            var pages = new List<string>();
+            // 保留原句，只在口语停顿处分行，避免旧Text把“哦，”拆到两行。
+            text = text.Replace("……哦，","……\n哦，");
+            string page = "";
+            foreach (string sentence in Regex.Split(text,@"(?<=[。！？])"))
+            {
+                string next = sentence.Trim();
+                if (next.Length == 0) continue;
+                if (page.Length > 0 && page.Length + next.Length > 32)
+                {
+                    pages.Add(page);
+                    page = "";
+                }
+                page += next;
+            }
+            if (page.Length > 0) pages.Add(page);
+            foreach (string content in pages)
+            {
+                References.ObservationText.text = content;
+                yield return new WaitForSeconds(2+content.Length*.07f);
+            }
+            observationPaging = null;
+        }
+        private void StopObservationPaging()
+        {
+            if (observationPaging == null) return;
+            StopCoroutine(observationPaging);
+            observationPaging = null;
         }
         private void CancelPointer()
         {
@@ -354,14 +448,16 @@ namespace Game.Unity.ArtRebuild
         {
             CancelPointer();
             Wash.CancelContact();
+            if (Mirror != null) Mirror.CancelDrag();
             paused=value;
             References.PausePanel.SetActive(value);
             Time.timeScale=value?0:1;
         }
-        private void OnApplicationFocus(bool active) { if(!active) { CancelPointer();if(Wash!=null) Wash.CancelContact(); } }
+        private void OnApplicationFocus(bool active) { if(!active) { CancelPointer();if(Wash!=null) Wash.CancelContact();if(Mirror!=null) Mirror.CancelDrag(); } }
         private void Restart() { Time.timeScale=1;SceneManager.LoadScene(SceneManager.GetActiveScene().path); }
         private void OnDestroy()
         {
+            StopObservationPaging();
             Time.timeScale=1;
             if (Voice != null) Voice.LineCompleted -= OnNarrationCompleted;
             if(Session!=null) Session.EventRaised-=OnEvent;
