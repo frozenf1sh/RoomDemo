@@ -9,6 +9,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using Game.Domain;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 namespace Game.Unity.ArtRebuild
 {
     /// <summary>P00至P07的实际Player验证；使用正常会话，禁止调试授予。</summary>
@@ -31,7 +33,7 @@ namespace Game.Unity.ArtRebuild
         private IEnumerator Start()
         {
             Directory.CreateDirectory(output);UnityEngine.Application.runInBackground=true;
-            yield return new WaitForSecondsRealtime(2);
+            yield return null;
             var flow=FindAnyObjectByType<AtelierFlowGameplay>();
             if(flow==null) { File.WriteAllText(Path.Combine(output,"运行结果.txt"),"缺少新流程控制器。");UnityEngine.Application.Quit(1);yield break; }
             var refs=flow.References;
@@ -39,11 +41,46 @@ namespace Game.Unity.ArtRebuild
             AtelierInteractionTarget Target(AtelierTargetKind kind) => kind == AtelierTargetKind.Painting
                 ? flow.CanvasPort.Surface.GetComponentsInChildren<AtelierInteractionTarget>(true).First(x => x.Kind == kind)
                 : refs.GetComponentsInChildren<AtelierInteractionTarget>(true).First(x => x.Kind == kind);
-            yield return Shot("01_未读便条");
-            Check(!flow.Session.State.Knows(StudioRules.Cup),"开局不得代授杯子。");
-            flow.Observe(Target(AtelierTargetKind.Manuscript));yield return Shot("02_原有便条");
-            flow.ReturnToRoom();yield return new WaitForSecondsRealtime(1.2f);
-            yield return Shot("03_阶段一底稿");
+            yield return Shot("00_黑场旁白");
+            Check(flow.IsOpening,"进场没有立即锁定开场输入。");
+            Check(flow.Draft.SurroundingsDraft > .99f,"第一帧未建立外围草稿。");
+            flow.Observe(Target(AtelierTargetKind.Manuscript));
+            flow.Observe(Target(AtelierTargetKind.WashWater));
+            flow.ObserveCrayon();
+            refs.Reminder.onClick.Invoke();
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.N,Key.Escape,Key.Space));
+            yield return null;
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState());
+            yield return null;
+            InputSystem.RemoveDevice(keyboard);
+            Check(!refs.Notebook.IsOpen && !flow.IsPaused,"开场N/Esc触发了笔记或暂停。");
+            Check(!refs.ManuscriptPanel.activeSelf,"开场点击穿透到便签。");
+            Check(!refs.Reminder.gameObject.activeSelf,"开场显示了笔记按钮。");
+            Check(!flow.Session.State.Knows(StudioRules.Cup) && !flow.Session.State.Knows(AtelierRules.Manuscript)
+                && !flow.Session.State.Knows(AtelierFlowRules.Crayon),"开场输入锁仍授予了物件。");
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Shot("01_黑场与失焦渐退");
+            yield return new WaitForSecondsRealtime(4);
+            yield return Shot("02_旁白期间草稿遮挡");
+            float deadline = Time.realtimeSinceStartup + 70;
+            while (flow.IsOpening && Time.realtimeSinceStartup < deadline) yield return null;
+            Check(!flow.IsOpening,"完整开场旁白未交回操作。");
+            yield return new WaitForSecondsRealtime(.15f);
+            Check(flow.GameplayInputEnabled && refs.Reminder.gameObject.activeSelf,"旁白结束后笔记入口未恢复。");
+            Check(!flow.Session.State.HasFact(AtelierFlowRules.IntroRead),"旁白结束伪装成已读便签。");
+            refs.Notebook.Toggle();
+            Check(refs.Notebook.IsOpen,"旁白结束后无法打开笔记。");
+            refs.Notebook.Toggle();
+            yield return new WaitForSecondsRealtime(.1f);
+            yield return Shot("03_第一阶段允许行动");
+            var frame = ScreenCapture.CaptureScreenshotAsTexture();
+            var point = refs.ViewCamera.WorldToScreenPoint(flow.CanvasPort.Surface.bounds.center);
+            Color canvasPixel = frame.GetPixel(Mathf.RoundToInt(point.x),Mathf.RoundToInt(point.y));
+            Color ceilingPixel = frame.GetPixel(Mathf.RoundToInt(frame.width*.9f),Mathf.RoundToInt(frame.height*.9f));
+            Check(canvasPixel.b > canvasPixel.r + .06f,"可交互画布被外围底稿误遮挡。");
+            Check(Mathf.Abs(ceilingPixel.b-ceilingPixel.r)<.05f,"天花板没有进入外围草稿。");
+            Destroy(frame);
             flow.Observe(Target(AtelierTargetKind.WashWater));yield return new WaitForSecondsRealtime(1.4f);
             flow.Observe(Target(AtelierTargetKind.Brush));flow.Observe(Target(AtelierTargetKind.WashWater));
             Check(!flow.Session.State.HasFact(AtelierFlowRules.Washed),"开始靠近就错误提交了洗笔事实。");
@@ -71,6 +108,10 @@ namespace Game.Unity.ArtRebuild
             var canvasHits = Physics.RaycastAll(canvasRay,40,refs.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x=>x.distance).ToArray();
             Check(canvasHits.Length > 0 && canvasHits[0].collider == paintingCollider, "画布近景射线被其他Collider挡住。");
             if (canvasHits.Length > 0) Check(canvasHits[0].textureCoord.sqrMagnitude > .01f, "画布UV拾取无效。");
+            flow.SetExternalCanvasWorkspaceActive(true);
+            yield return null;
+            Check(!refs.ContextAction.gameObject.activeSelf && !refs.ReturnButton.gameObject.activeSelf,"外部Workspace接管后旧画布控件仍在抢输入。");
+            flow.SetExternalCanvasWorkspaceActive(false);
             string blank = Hash(canvas.CanvasTexture as RenderTexture);
             Check(!canvas.Commit(new Vector2(0,0),canvas.DefaultCost,0).Accepted,"画外大半笔印未被阻止。");
             Check(canvas.Commit(new Vector2(.3f,.58f),canvas.DefaultCost,0).Accepted,"第一笔未被接受。");
@@ -93,10 +134,16 @@ namespace Game.Unity.ArtRebuild
             Check(!refs.ContextPanel.activeSelf, "回到主视角重新弹出了旧物件说明。");
             Check(flow.Session.State.HasFact(AtelierFlowRules.Finished(1)),"真实完成按钮没有推进首层。");
             Check(canvas.Document.Layers[0].CommittedUnits+canvas.Document.Layers[0].DiscardedUnits==100,"首层颜料账本不守恒。");
-            Check(flow.Draft.LeftDraft<.01f&&flow.Draft.WindowDraft>.95f,"首层后区域显色错误。");
+            Check(flow.Draft.LeftDraft<.01f&&flow.Draft.WindowDraft>.95f&&flow.Draft.SurroundingsDraft<.01f,"首层后区域显色错误。");
             yield return Shot("06_收层后左侧显色");
+            Check(!flow.Session.State.HasFact(AtelierFlowRules.IntroRead),"未读便签的第一层被暗中补了阅读事实。");
+            flow.Observe(Target(AtelierTargetKind.Manuscript));
+            Check(refs.ManuscriptPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).Any(x=>x.text==AtelierOpeningCopy.NoteBody),"便签仍显示旧作画目标。");
+            yield return Shot("07_第一人称新便签");
+            flow.ReturnToRoom();
+            Check(!flow.IsOpening && flow.Draft.SurroundingsDraft<.01f,"读便签重新开始了开场或遮挡。");
             string[] collected;lock(errors) collected=errors.ToArray();
-            File.WriteAllText(Path.Combine(output,"运行结果.txt"),"P00至P07自动构建回放完成。\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第二阶段玩法尚待下一批接入。");
+            File.WriteAllText(Path.Combine(output,"运行结果.txt"),"第一阶段开场修订自动构建回放完成。\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第二阶段玩法尚待下一批接入。");
             UnityEngine.Application.logMessageReceivedThreaded-=Collect;
             UnityEngine.Application.Quit(collected.Length==0?0:1);
         }

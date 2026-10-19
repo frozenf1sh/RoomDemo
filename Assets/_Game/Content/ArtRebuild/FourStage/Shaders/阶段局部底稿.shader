@@ -1,6 +1,6 @@
-// 文件：局部炭稿.shader
-// 职责：保留房间原图，只在世界空间左侧物件组和窗洞之后合成稳定炭线。
-// 边界：测试管线专用，不作为全屏模糊，不读写玩法状态。
+// 文件：阶段局部底稿.shader
+// 职责：第一阶段保留当前可交互物件，其余表面使用稳定炭线；开场从黑场与失焦恢复。
+// 边界：模糊仅限开场；常态用世界锚定底稿，不读写玩法状态。
 Shader "Hidden/RoomDemo/Atelier/LocalDraft"
 {
     SubShader
@@ -18,7 +18,9 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
             TEXTURE2D_X_FLOAT(_ProbeDepth);
             TEXTURE2D_X(_ProbeNormals);
-            float4 _DraftAmounts;
+            float4 _DraftAmounts, _Opening;
+            float4 _ClearCenters[16], _ClearExtents[16];
+            int _ClearCount;
             float _DraftDensity;
 
             float Hash(float3 p) { return frac(sin(dot(p,float3(12.9898,78.233,37.719)))*43758.5453); }
@@ -27,9 +29,8 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
                 float3 q=abs(p-c)-e;
                 return 1-smoothstep(-feather,feather,max(q.x,max(q.y,q.z)));
             }
-            half4 Frag(Varyings i):SV_Target
+            float3 ComposeDraft(float2 uv)
             {
-                float2 uv=i.texcoord;
                 float3 original=SAMPLE_TEXTURE2D_X(_BlitTexture,sampler_LinearClamp,uv).rgb;
                 float raw=SAMPLE_TEXTURE2D_X(_ProbeDepth,sampler_PointClamp,uv).r;
                 float depth=raw;
@@ -44,7 +45,11 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
                 float windowMask=(1-smoothstep(-.06,.06,max(windowEdge.x,windowEdge.y)))*step(2.65,world.z)*step(0,direction.z);
                 // 左侧包围体止于画架前方，杯、便签和完整画布不进入此区域。
                 float left=Box(world,float3(-2.45,1.10,-.40),float3(1.70,.75,1.10),.055);
-                float amount=saturate(max(left*_DraftAmounts.x,windowMask*_DraftAmounts.y)*_DraftDensity);
+                float keep=0;
+                [loop] for(int region=0;region<_ClearCount;region++)
+                    keep=max(keep,Box(world,_ClearCenters[region].xyz,_ClearExtents[region].xyz,.006));
+                float local=max(left*_DraftAmounts.x,windowMask*_DraftAmounts.y);
+                float amount=saturate(max(local,_DraftAmounts.w)*(1-keep)*_DraftDensity);
                 float luma=dot(original,float3(.2126,.7152,.0722));
                 float3 normal=SampleSceneNormals(uv);
                 float normalEdge=length(ddx(normal))+length(ddy(normal));
@@ -71,7 +76,23 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
                     float3 shifted=SAMPLE_TEXTURE2D_X(_BlitTexture,sampler_LinearClamp,uv+float2(1.7,-.6)/_ScreenParams.xy).rgb;
                     colour=lerp(colour,(colour+shifted)*.5,_DraftAmounts.z);
                 }
-                return half4(colour,1);
+                return colour;
+            }
+            half4 Frag(Varyings i):SV_Target
+            {
+                float2 uv=i.texcoord;
+                float3 colour=ComposeDraft(uv);
+                if(_Opening.y>.001)
+                {
+                    // 采样已经遮挡的画面，不在黑场退去时短暂泄露彩色未开放场景。
+                    float2 radius=8*_Opening.y/_ScreenParams.xy;
+                    colour*=.28;
+                    colour+=(ComposeDraft(uv+float2(radius.x,0))+ComposeDraft(uv-float2(radius.x,0))
+                        +ComposeDraft(uv+float2(0,radius.y))+ComposeDraft(uv-float2(0,radius.y)))*.12;
+                    colour+=(ComposeDraft(uv+radius)+ComposeDraft(uv-radius)
+                        +ComposeDraft(uv+float2(radius.x,-radius.y))+ComposeDraft(uv+float2(-radius.x,radius.y)))*.06;
+                }
+                return half4(colour*(1-saturate(_Opening.x)),1);
             }
             ENDHLSL
         }

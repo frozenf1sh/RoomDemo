@@ -32,7 +32,16 @@ namespace Game.Unity.ArtRebuild
         public bool IsPaused => paused;
         private string focus = "";
         private string lastObservation = "";
-        private bool transitioning, paused, brushSelected, captured, noteRead;
+        /// <summary>开场旁白播放完前，世界、笔记和画布控件共同关闭输入。</summary>
+        public bool IsOpening { get; private set; } = true;
+        /// <summary>UI只读的玩法输入许可；UI打开状态仍由各模块自行消费。</summary>
+        public bool GameplayInputEnabled => !IsOpening && Time.frameCount > blockedThroughFrame;
+        /// <summary>正式Workspace接管时停用默认盖章和旧画布按钮，其他世界交互继续工作。</summary>
+        public bool UsesExternalCanvasWorkspace { get; private set; }
+        /// <summary>UI优先收起笔记内的导读或详情，返回true表示已消费本次Esc。</summary>
+        public System.Func<bool> NotebookBackHandler { get; set; }
+        private bool transitioning, paused, brushSelected, captured;
+        private int blockedThroughFrame;
         private Vector3 home;
         private Quaternion homeTurn;
         private float homeFov;
@@ -48,6 +57,7 @@ namespace Game.Unity.ArtRebuild
             Session = new GameSession(AtelierFlowRules.CreateOpening());
             References.Notebook.EscapeClosesNotebook = false;
             References.Notebook.Bind(Session);
+            References.Notebook.ExternalInputBlocked = true;
             Wash.Bind(Session);
             CanvasPort.Bind(Session);
             Session.EventRaised += OnEvent;
@@ -62,24 +72,50 @@ namespace Game.Unity.ArtRebuild
             References.ContextAction.gameObject.SetActive(false);
             References.ReturnButton.gameObject.SetActive(false);
             References.Notebook.OpenChanged += OnNotebook;
-            Draft.RestoreStage(0,true);
+            Voice.LineCompleted += OnNarrationCompleted;
+            References.Reminder.gameObject.SetActive(false);
+            Draft.PlayOpening();
+            Voice.Play("N01");
+        }
+
+        private void OnNarrationCompleted(string key)
+        {
+            if (key != "N01" || !IsOpening) return;
+            // 不写阅读完成或任何物件事实；这里只交回输入，结束帧的按键不穿透。
+            IsOpening = false;
+            blockedThroughFrame = Time.frameCount + 1;
+            CancelPointer();
         }
         private void Update()
         {
             if (Session == null) return;
+            if (!GameplayInputEnabled)
+            {
+                References.Notebook.ExternalInputBlocked = true;
+                References.Reminder.gameObject.SetActive(false);
+                References.ReturnButton.gameObject.SetActive(false);
+                References.ContextPanel.SetActive(false);
+                CancelPointer();
+                ClearHover();
+                return;
+            }
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
             {
                 if (paused) Pause(false);
-                else if (References.Notebook.IsOpen) References.Notebook.SetOpen(false);
+                else if (References.Notebook.IsOpen)
+                {
+                    if (NotebookBackHandler == null || !NotebookBackHandler())
+                        References.Notebook.SetOpen(false);
+                }
                 else if (transitioning) Pause(!paused);
                 else if (focus != "") ReturnToRoom();
                 else Pause(!paused);
             }
             References.Notebook.ExternalInputBlocked = paused || transitioning || captured;
-            References.Reminder.gameObject.SetActive(References.Notebook.HasUnreadDiscoveries && !References.Notebook.IsOpen && !paused);
-            References.ReturnButton.gameObject.SetActive(focus != "" && !paused && !References.Notebook.IsOpen && !transitioning);
-            if (!paused && keyboard != null && keyboard.spaceKey.wasPressedThisFrame && focus == "") Draft.SkipOpening();
+            References.Reminder.gameObject.SetActive(!References.Notebook.IsOpen && !paused);
+            References.ReturnButton.gameObject.SetActive(focus != "" && !paused && !References.Notebook.IsOpen && !transitioning
+                && !(IsCanvasFocused && UsesExternalCanvasWorkspace));
             if (paused || transitioning || References.Notebook.IsOpen || !UnityEngine.Application.isFocused || Mouse.current == null)
             { CancelPointer(); ClearHover(); return; }
             var mouse = Mouse.current;
@@ -110,7 +146,7 @@ namespace Game.Unity.ArtRebuild
             bool allowed = crayon && Session.IsInspectable(AtelierFlowRules.Crayon) || target != null && Allowed(target);
             References.HoverText.text = allowed ? crayon ? "蜡笔画" : target.DisplayName : "";
             if (References.HoverGold != null) References.HoverGold.SetCurrent(allowed && target != null && !Wash.Moving ? target.HoverVisual : null);
-            if (IsCanvasFocused)
+            if (IsCanvasFocused && !UsesExternalCanvasWorkspace)
             {
                 bool canPaint = canvas && Session.State.Knows(AtelierFlowRules.Brush(CanvasPort.Document.Current.Id)) && CanvasPort.DefaultCost > 0;
                 CanvasPort.Preview(hit.textureCoord,canPaint);
@@ -125,14 +161,13 @@ namespace Game.Unity.ArtRebuild
                 }
             }
             if (!mouse.leftButton.wasPressedThisFrame || captured || !has) return;
-            if (!Session.State.HasFact(AtelierFlowRules.IntroRead) && !noteRead && (target == null || target.Kind != AtelierTargetKind.Manuscript))
-            { Show("桌边似乎留了张便条。");return; }
             if (crayon) { ObserveCrayon();return; }
             if (target != null && allowed) Observe(target);
         }
         /// <summary>玩家亲点小画的独立入口；只认识此来源，不代授杯、窗或屋面。</summary>
         public void ObserveCrayon()
         {
+            if (!GameplayInputEnabled || paused || transitioning || References.Notebook.IsOpen) return;
             if (!Session.IsInspectable(AtelierFlowRules.Crayon)) return;
             Session.Inspect(AtelierFlowRules.Crayon);
             Focus("crayon",CrayonFocus,46);
@@ -140,22 +175,23 @@ namespace Game.Unity.ArtRebuild
 
         private bool Allowed(AtelierInteractionTarget target)
         {
+            if (!GameplayInputEnabled) return false;
             if (target.Kind == AtelierTargetKind.Manuscript) return true;
             if (target.Kind == AtelierTargetKind.Brush || target.Kind == AtelierTargetKind.WashWater || target.Kind == AtelierTargetKind.Painting)
-                return Session.State.HasFact(AtelierFlowRules.IntroRead);
+                return Session.IsInspectable(new ObjectId(target.ObjectId));
             return false;
         }
         /// <summary>显式调查入口同时供现场点击和自动命令取证，不凭便条赠送实体来源。</summary>
         public void Observe(AtelierInteractionTarget target)
         {
-            if (!Allowed(target)) return;
+            if (!Allowed(target) || paused || transitioning || References.Notebook.IsOpen) return;
             lastObservation = "";
             if (target.Kind == AtelierTargetKind.Manuscript)
             {
                 Session.Inspect(AtelierRules.Manuscript);
-                noteRead = true;
                 focus = "note";
                 References.ManuscriptPanel.SetActive(true);
+                References.ContextPanel.SetActive(false);
             }
             else if (target.Kind == AtelierTargetKind.Brush)
             {
@@ -178,7 +214,7 @@ namespace Game.Unity.ArtRebuild
         }
         private void OnContextAction()
         {
-            if (!IsCanvasFocused || paused || transitioning || References.Notebook.IsOpen) return;
+            if (!GameplayInputEnabled || UsesExternalCanvasWorkspace || !IsCanvasFocused || paused || transitioning || References.Notebook.IsOpen) return;
             Result(CanvasPort.Finish());
         }
         private void Result(AtelierCanvasResult result)
@@ -188,7 +224,7 @@ namespace Game.Unity.ArtRebuild
         }
         private void RefreshCanvasControls()
         {
-            if (!IsCanvasFocused) return;
+            if (!IsCanvasFocused || UsesExternalCanvasWorkspace) return;
             var layer = CanvasPort.Document.Current;
             bool brush = Session.State.Knows(AtelierFlowRules.Brush(layer.Id));
             Show(!brush ? "先在笔记中形成这一层笔刷。" : layer.RemainingPaint == 0 ? "颜料用完了，这一层可以收笔了。"
@@ -228,29 +264,34 @@ namespace Game.Unity.ArtRebuild
         }
         private void OnNotebook(bool open)
         {
+            blockedThroughFrame = Time.frameCount + 1;
             CancelPointer();
             ClearHover();
             References.ContextPanel.SetActive(false);
             if (!open && IsCanvasFocused) RefreshCanvasControls();
         }
+
+        /// <summary>由场景接线或UI生命周期注册接管；只取消临时输入，不改变作品与颜料。</summary>
+        /// <param name="active">true使用UI同学的正式控件，false恢复当前功能占位。</param>
+        public void SetExternalCanvasWorkspaceActive(bool active)
+        {
+            UsesExternalCanvasWorkspace = active;
+            CancelPointer();
+            References.ContextPanel.SetActive(false);
+            References.ContextAction.gameObject.SetActive(false);
+            if (!active && IsCanvasFocused) RefreshCanvasControls();
+        }
         /// <summary>返回不清除账本；首次读完便条在这里提交明确的阅读完成。</summary>
         public void ReturnToRoom()
         {
-            if (transitioning) return;
+            if (!GameplayInputEnabled || transitioning) return;
             CancelPointer();
             Wash.CancelContact();
             References.ManuscriptPanel.SetActive(false);
             if (focus == "note")
             {
                 focus = "";
-                bool first = !Session.State.HasFact(AtelierFlowRules.IntroRead);
                 Session.PerformAction(AtelierRules.Manuscript,"read_note");
-                if (first)
-                {
-                    Draft.PlayOpening();
-                    Voice.Play("N01");
-                }
-                else Draft.RestoreStage(AtelierFlowRules.Stage(Session.State),true);
                 References.ContextPanel.SetActive(false);
                 return;
             }
@@ -322,6 +363,7 @@ namespace Game.Unity.ArtRebuild
         private void OnDestroy()
         {
             Time.timeScale=1;
+            if (Voice != null) Voice.LineCompleted -= OnNarrationCompleted;
             if(Session!=null) Session.EventRaised-=OnEvent;
             if(References!=null && References.Notebook!=null) References.Notebook.OpenChanged-=OnNotebook;
         }

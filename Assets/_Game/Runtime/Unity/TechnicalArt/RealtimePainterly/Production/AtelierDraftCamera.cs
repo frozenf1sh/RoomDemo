@@ -1,34 +1,56 @@
 // 文件：AtelierDraftCamera.cs
-// 职责：保存主画室局部底稿的纯视觉参数，与实验按钮和游戏事实解耦。
-// 边界：外部装配器传入阶段；本组件不查询领域、不提交命令、不切换质量管线。
+// 职责：提供局部底稿、第一阶段外围遮挡与黑场失焦开场的纯视觉参数。
+// 边界：不查询或写入领域事实；物件许可与开场输入锁由场景适配器管理。
 using UnityEngine;
 namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
 {
-    /// <summary>同一主机位和近景使用世界锚定的底稿；时间只影响插值。</summary>
+    /// <summary>通过世界表面的空间范围保留当前对象，近景移动不把遮罩钉在屏幕上。</summary>
     public sealed class AtelierDraftCamera : MonoBehaviour
     {
         [Range(0,1)] public float LeftDraft;
         [Range(0,1)] public float WindowDraft;
-        [Range(0,1)] public float Density = .98f;
+        [Range(0,1)] public float SurroundingsDraft;
+        [Range(0,1)] public float Density = 1;
         [Range(0,1)] public float Ghost;
-        private float leftTarget, windowTarget, openingAge = 100;
-        /// <summary>只接收已经成立的阶段，第三和第四阶段均恢复全景。</summary>
+        public Renderer[] ClearObjects = System.Array.Empty<Renderer>();
+        /// <summary>开场黑场量，仅影响世界颜色，Overlay旁白仍正常显示。</summary>
+        public float OpeningDarkness { get; private set; }
+        /// <summary>开场失焦量，归零后不继续执行多点采样。</summary>
+        public float OpeningBlur { get; private set; }
+        private float leftTarget, windowTarget, surroundingsTarget, openingAge = 100;
+
+        /// <summary>第一阶段只保留当前交互物件；第二阶段解除外围与左侧，窗景继续遮挡。</summary>
         public void RestoreStage(int stage, bool immediate)
         {
             leftTarget = stage == 1 ? 1 : 0;
             windowTarget = stage > 0 && stage <= 2 ? 1 : 0;
-            if (immediate) { LeftDraft = leftTarget; WindowDraft = windowTarget; }
+            surroundingsTarget = stage == 1 ? 1 : 0;
+            if (immediate)
+            {
+                LeftDraft = leftTarget;
+                WindowDraft = windowTarget;
+                SurroundingsDraft = surroundingsTarget;
+            }
         }
-        /// <summary>读完并合上便条后，才开始一次轻重影和稳定底稿过渡。</summary>
-        public void PlayOpening() { openingAge = 0; RestoreStage(1,false); }
-        /// <summary>跳过只结束视觉，不能补发或推进阶段事实。</summary>
-        public void SkipOpening() { openingAge = 100; Ghost = 0; LeftDraft = leftTarget; WindowDraft = windowTarget; }
+
+        /// <summary>进场立即建立底稿和黑场，不依赖便条点击，也不授予物件。</summary>
+        public void PlayOpening()
+        {
+            openingAge = 0;
+            OpeningDarkness = 1;
+            OpeningBlur = 1;
+            RestoreStage(1,true);
+        }
+
         private void Update()
         {
             openingAge += Time.deltaTime;
-            Ghost = openingAge < .32f ? Mathf.Sin(openingAge / .32f * Mathf.PI) * .42f : 0;
+            OpeningDarkness = 1 - Mathf.SmoothStep(0,1,Mathf.InverseLerp(.25f,2.4f,openingAge));
+            OpeningBlur = 1 - Mathf.SmoothStep(0,1,Mathf.InverseLerp(.4f,4.8f,openingAge));
+            Ghost = openingAge < 1.1f ? Mathf.Sin(openingAge / 1.1f * Mathf.PI) * .18f : 0;
             LeftDraft = Mathf.MoveTowards(LeftDraft,leftTarget,Time.deltaTime/.95f);
             WindowDraft = Mathf.MoveTowards(WindowDraft,windowTarget,Time.deltaTime/.95f);
+            SurroundingsDraft = Mathf.MoveTowards(SurroundingsDraft,surroundingsTarget,Time.deltaTime/.95f);
         }
     }
 }

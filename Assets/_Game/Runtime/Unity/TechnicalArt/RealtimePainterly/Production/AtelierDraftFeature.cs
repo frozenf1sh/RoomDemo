@@ -1,5 +1,5 @@
 // 文件：AtelierDraftFeature.cs
-// 职责：在现有画室管线中，对当前验证镜头进行局部炭稿合成。
+// 职责：在现有画室管线中，对主镜头进行阶段炭稿与开场失焦合成。
 // 边界：只消费视觉组件的视觉参数；保留原有Renderer通道、不写玩法事实。
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -57,7 +57,9 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             {
                 internal Material Material;
                 internal TextureHandle Source, Depth, Normals;
-                internal Vector4 Amounts;
+                internal Vector4 Amounts, Opening;
+                internal Vector4[] ClearCenters, ClearExtents;
+                internal int ClearCount;
                 internal float Density;
             }
 
@@ -69,16 +71,30 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                 if (!resources.cameraDepthTexture.IsValid() || !resources.cameraNormalsTexture.IsValid()) return;
                 var source = resources.activeColorTexture;
                 var descriptor = graph.GetTextureDesc(source);
-                descriptor.name = "TA验证_局部未完成炭稿";
+                descriptor.name = "主流程_阶段未完成炭稿";
                 descriptor.depthBufferBits = DepthBits.None;
                 descriptor.msaaSamples = MSAASamples.None;
                 var output = graph.CreateTexture(descriptor);
-                using var builder = graph.AddRasterRenderPass<Data>("TA验证：局部底稿与显色", out var data);
+                using var builder = graph.AddRasterRenderPass<Data>("主流程：阶段底稿与开场", out var data);
                 data.Material = material;
                 data.Source = source;
                 data.Depth = resources.cameraDepthTexture;
                 data.Normals = resources.cameraNormalsTexture;
-                data.Amounts = new Vector4(Probe.LeftDraft, Probe.WindowDraft, Probe.Ghost, 0);
+                data.Amounts = new Vector4(Probe.LeftDraft, Probe.WindowDraft, Probe.Ghost, Probe.SurroundingsDraft);
+                data.Opening = new Vector4(Probe.OpeningDarkness,Probe.OpeningBlur,0,0);
+                // 每次记录冻结世界包围体；杯沿画笔移动时使用同一帧实际边界。
+                data.ClearCenters = new Vector4[16];
+                data.ClearExtents = new Vector4[16];
+                // RenderGraph复用Data，计数须逐帧归零，不能沿用上一帧已占满的槽位。
+                data.ClearCount = 0;
+                foreach (var target in Probe.ClearObjects)
+                {
+                    if (target == null || !target.enabled || !target.gameObject.activeInHierarchy || data.ClearCount >= 16) continue;
+                    var bounds = target.bounds;
+                    int index = data.ClearCount++;
+                    data.ClearCenters[index] = bounds.center;
+                    data.ClearExtents[index] = bounds.extents + Vector3.one * .012f;
+                }
                 data.Density = Probe.Density;
                 builder.UseTexture(data.Source);
                 builder.UseTexture(data.Depth);
@@ -91,6 +107,10 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                     context.cmd.SetGlobalTexture("_ProbeNormals", d.Normals);
                     d.Material.SetVector("_DraftAmounts", d.Amounts);
                     d.Material.SetFloat("_DraftDensity", d.Density);
+                    d.Material.SetVector("_Opening",d.Opening);
+                    d.Material.SetInt("_ClearCount",d.ClearCount);
+                    d.Material.SetVectorArray("_ClearCenters",d.ClearCenters);
+                    d.Material.SetVectorArray("_ClearExtents",d.ClearExtents);
                     Blitter.BlitTexture(context.cmd, d.Source, new Vector4(1, 1, 0, 0), d.Material, 0);
                 });
                 resources.cameraColor = output;

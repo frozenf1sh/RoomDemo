@@ -17,7 +17,7 @@ namespace Game.Tests
         { game.Inspect(AtelierRules.Manuscript);game.PerformAction(AtelierRules.Manuscript,"read_note"); }
         private void Ready()
         {
-            Read();game.Inspect(StudioRules.Cup);game.Inspect(AtelierRules.Brush);
+            game.Inspect(StudioRules.Cup);game.Inspect(AtelierRules.Brush);
             game.PerformAction(StudioRules.Cup,"wash_release_pigment");game.Inspect(AtelierFlowRules.Crayon);
             game.Combine(new[]{AtelierFlowRules.C("transparent"),AtelierFlowRules.C("blue")});
             game.Combine(new[]{AtelierFlowRules.C("flow"),AtelierFlowRules.C("free")});
@@ -30,10 +30,19 @@ namespace Game.Tests
             return game.CommitAtelierStroke(game.SessionEpoch,revision??doc.Revision,
                 new AtelierStroke(id??Guid.NewGuid().ToString("N"),doc.Current.Id,5000,5000,0,cost));
         }
-        [Test] public void NoteNeverGivesCupAndOpeningBlocksOtherSources()
+        [Test] public void OptionalNoteNeverGivesCupAndOtherSourcesStillRequireTheirOwnClick()
         {
-            game.Inspect(StudioRules.Cup);Assert.IsFalse(game.State.Knows(StudioRules.Cup));
-            Read();Assert.IsFalse(game.State.Knows(StudioRules.Cup));Assert.IsFalse(game.State.Knows(AtelierRules.Brush));
+            Assert.IsTrue(game.IsInspectable(StudioRules.Cup));
+            Read();
+            Assert.IsFalse(game.State.Knows(StudioRules.Cup));
+            Assert.IsFalse(game.State.Knows(AtelierRules.Brush));
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.Crayon));
+        }
+        [Test] public void FirstBrushCanBeFormedWithoutReadingTheOptionalNote()
+        {
+            Ready();
+            Assert.IsFalse(game.State.HasFact(AtelierFlowRules.IntroRead));
+            Assert.IsFalse(game.State.Knows(AtelierRules.Manuscript));
         }
         [Test] public void WashRequiresBothSourcesAndCollectsResultsInSameBatch()
         {

@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "command": "command eval",
+  "data": {
+    "command": "eval",
+    "parameters": {
+      "code": "if(UnityEditor.EditorUtility.scriptCompilationFailed) throw new System.Exception(\"编译失败\"); Game.Editor.ArtRebuild.AtelierFlowOpeningBuilder.ReviseOpening(); UnityEditor.SceneManagement.EditorSceneManager.OpenScene(\"Assets/_Game/Content/Scenes/AtelierPlayable.unity\"); var f=UnityEngine.Object.FindAnyObjectByType<Game.Unity.ArtRebuild.AtelierFlowGameplay>(); return new{clearCount=f.Draft.ClearObjects.Length,note=f.References.ManuscriptPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).First(x=>x.name==\"便签正文\").text,dirty=f.gameObject.scene.isDirty};"
+    },
+    "result": {
+      "output": null,
+      "diagnostics": [],
+      "success": true,
+      "result": {
+        "clearCount": 7,
+        "note": "快交稿了，我还是一点灵感都没有。\n\n先在房间里找找想法吧。\n\n窗台上还放着我小时候的那幅涂鸦。",
+        "dirty": false
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

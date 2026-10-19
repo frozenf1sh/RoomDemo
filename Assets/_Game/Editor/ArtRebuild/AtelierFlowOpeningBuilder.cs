@@ -109,6 +109,7 @@ namespace Game.Editor.ArtRebuild
             pose.rotation=Quaternion.LookRotation(picture.position-pose.position);
             driver.CrayonFocus=pose;
             InstallFeature();
+            ApplyOpeningPresentation(driver);
             EditorSceneManager.MarkSceneDirty(scene);
             if(!EditorSceneManager.SaveScene(scene)) throw new IOException("主流程场景保存失败。");
             AssetDatabase.SaveAssets();
@@ -118,7 +119,7 @@ namespace Game.Editor.ArtRebuild
         [MenuItem("游戏/新四阶段流程/构建首批功能演示")]
         public static void BuildOpening()
         {
-            string folder="Builds/AtelierOpening20261019";
+            string folder="Builds/AtelierOpening20261020";
             Directory.CreateDirectory(folder);
             var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions {
                 scenes=new[]{Main}, locationPathName=folder+"/四阶段首批功能演示.app",
@@ -135,6 +136,81 @@ namespace Game.Editor.ArtRebuild
                 seconds = report.summary.totalTime.TotalSeconds
             },true));
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded) throw new InvalidOperationException("首批演示构建失败。");
+        }
+
+        /// <summary>增量更新已安装首批的开场、便签和当前可见物件，不重建房间。</summary>
+        [MenuItem("游戏/新四阶段流程/更新开场与第一阶段遮挡")]
+        public static void ReviseOpening()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("请先退出Play。");
+            for (int index = 0; index < UnityEngine.SceneManagement.SceneManager.sceneCount; index++)
+                if (UnityEngine.SceneManagement.SceneManager.GetSceneAt(index).isDirty)
+                    throw new InvalidOperationException("有未保存场景，停止开场更新。");
+            var scene = EditorSceneManager.OpenScene(Main);
+            var flow = Object.FindAnyObjectByType<AtelierFlowGameplay>();
+            if (flow == null) throw new InvalidOperationException("请先安装首批流程。");
+            ApplyOpeningPresentation(flow);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene)) throw new IOException("开场更新保存失败。");
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>场景实例临时布局与世界锚定清晰区；UI同学替换控件时无需改账本或Shader。</summary>
+        private static void ApplyOpeningPresentation(AtelierFlowGameplay flow)
+        {
+            var transforms = flow.gameObject.scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Transform>(true)).ToArray();
+            var note = transforms.First(target => target.name == "Visual_交稿便条");
+            var picture = transforms.First(target => target.name == "TA占位_窗台蜡笔画位置");
+            flow.Draft.ClearObjects = flow.Wash.Water.transform.parent.GetComponentsInChildren<Renderer>(true)
+                .Concat(new[] { flow.CanvasPort.Surface, note.GetComponent<Renderer>() })
+                // 小画线条的LineRenderer带有很大的保守包围盒，清晰区由纸面和画框覆盖即可。
+                .Concat(picture.GetComponentsInChildren<Renderer>(true).Where(target => !(target is LineRenderer)))
+                .Distinct().ToArray();
+            if (flow.Draft.ClearObjects.Length > 16)
+                throw new InvalidOperationException("第一阶段清晰物件超过Shader容量，请先分组合并。");
+            flow.Draft.Density = 1;
+            flow.Draft.RestoreStage(1,true);
+
+            // 只更新场景实例覆盖，不修改UI同学维护的母版或NotebookView源码。
+            var body = flow.References.ManuscriptPanel.GetComponentsInChildren<Text>(true)
+                .First(text => text.name == "便签正文" || text.name == "便条正文");
+            body.text = AtelierOpeningCopy.NoteBody;
+            body.rectTransform.sizeDelta = new Vector2(440,225);
+            body.fontSize = 22;
+            body.lineSpacing = 1.25f;
+            body.alignment = TextAnchor.UpperLeft;
+            foreach (var text in note.GetComponentsInChildren<Text>(true))
+            {
+                text.text = AtelierOpeningCopy.NoteBody;
+                text.fontSize = 22;
+                text.lineSpacing = 1.18f;
+                text.alignment = TextAnchor.UpperLeft;
+            }
+            var caption = flow.Voice.Opacity.GetComponent<RectTransform>();
+            caption.anchorMin = caption.anchorMax = new Vector2(0,1);
+            caption.pivot = new Vector2(0,1);
+            caption.anchoredPosition = new Vector2(36,-28);
+            caption.sizeDelta = new Vector2(760,110);
+            var label = flow.Voice.Label.rectTransform;
+            label.anchorMin = Vector2.zero;
+            label.anchorMax = Vector2.one;
+            label.offsetMin = label.offsetMax = Vector2.zero;
+            flow.Voice.Label.alignment = TextAnchor.UpperLeft;
+            flow.Voice.Label.fontSize = 26;
+            flow.Voice.Label.lineSpacing = 1.3f;
+            var context = flow.References.ContextPanel.GetComponent<RectTransform>();
+            context.anchoredPosition = new Vector2(35,-170);
+            // Prefab实例上的直接字段修改须显式记录覆盖，否则保存重开后会回到旧字句与布局。
+            var changed = new Object[] { flow.Draft, body, body.rectTransform,
+                caption, label, flow.Voice.Label, context };
+            foreach (var target in changed.Concat(note.GetComponentsInChildren<Text>(true)))
+            {
+                EditorUtility.SetDirty(target);
+                if (PrefabUtility.IsPartOfPrefabInstance(target))
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+            }
         }
 
         private static void InstallFeature()

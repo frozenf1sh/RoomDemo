@@ -38,21 +38,22 @@ namespace Game.Domain
             clues.Add(new ClueDefinition(ice, "冰蓝", ClueCategory.Concept));
             clues.Add(new ClueDefinition(swirl, "卷涡", ClueCategory.Concept));
             for (int n = 1; n <= 4; n++) clues.Add(new ClueDefinition(Brush(n), n == 1 ? "卷涡笔刷" : "第" + n + "阶段笔刷", ClueCategory.Concept));
-            void Object(ObjectId id, string label, string text, bool opening, params ClueId[] observations)
+            void Object(ObjectId id, string label, string text, params ClueId[] observations)
             {
                 var own = new ClueId(id.Value);
                 clues.Add(new ClueDefinition(own, label, ClueCategory.Object));
                 var grants = new List<ClueId> { own }; grants.AddRange(observations);
                 objects.Add(new DiscoveryRule("atelier.flow.inspect." + id.Value, id, label, text,
-                    opening ? empty : new[] { IntroRead }, grants, "桌边似乎留了张便条。"));
+                    empty, grants));
             }
-            Object(AtelierRules.Manuscript, "催稿便条", "便条上写着明早交稿的事。", true);
-            Object(StudioRules.Cup, "杯里的水", "一杯水而已。它可以映出你。", false, C("transparent"), C("mapping"));
-            Object(AtelierRules.Brush, "洗笔画笔", "把笔尖放进水里。", false);
-            Object(Crayon, "蜡笔画", "真怀念那时候奔放又杂乱的笔触。", false, C("free"), C("messy"));
-            Object(AtelierRules.Painting, "画布", "", false);
+            // 便条是可选动机说明；开场UI输入锁不伪装成“已读便条”的领域事实。
+            Object(AtelierRules.Manuscript, "催稿便条", "快交稿了，我还是一点想法都没有。");
+            Object(StudioRules.Cup, "杯里的水", "一杯水而已。它可以映出你。", C("transparent"), C("mapping"));
+            Object(AtelierRules.Brush, "洗笔画笔", "把笔尖放进水里。");
+            Object(Crayon, "蜡笔画", "真怀念那时候奔放又杂乱的笔触。", C("free"), C("messy"));
+            Object(AtelierRules.Painting, "画布", "");
             actions.Add(new SceneActionRule("read_note", AtelierRules.Manuscript, empty, new[] { IntroRead }, "", "先看看便条。"));
-            actions.Add(new SceneActionRule("wash_release_pigment", StudioRules.Cup, new[] { IntroRead }, new[] { Washed },
+            actions.Add(new SceneActionRule("wash_release_pigment", StudioRules.Cup, empty, new[] { Washed },
                 "到处都是蓝色。我刚刚在干什么来着……？", "先亲点杯水和洗笔画笔。",
                 observations: new[] { C("blue"), C("flow") }, additionalSources: new[] { AtelierRules.Brush }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.ice_blue", new[] { C("transparent"), C("blue") }, empty, new[] { ice }, empty));

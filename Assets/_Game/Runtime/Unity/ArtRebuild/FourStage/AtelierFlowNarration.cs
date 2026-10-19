@@ -1,6 +1,6 @@
 // 文件：AtelierFlowNarration.cs
 // 职责：按原稿采用文本播放首批旁白，在完整句边界处理更高优先级的新阶段。
-// 边界：只更新文字，不发放事实，不等待播放完成才开放输入；音频和回读由后续批次接入。
+// 边界：只更新文字与播放生命周期；不发放事实，开场输入锁由场景订阅完成事件管理。
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -26,6 +26,8 @@ namespace Game.Unity.ArtRebuild
 
         public Text Label;
         public CanvasGroup Opacity;
+        /// <summary>整组原稿台词实际显示完毕后通知；声音与正式字幕布局由UI后续替换。</summary>
+        public event System.Action<string> LineCompleted;
         private readonly Queue<Line> queue = new Queue<Line>();
         private readonly HashSet<string> spoken = new HashSet<string>();
         private Coroutine playback;
@@ -55,6 +57,7 @@ namespace Game.Unity.ArtRebuild
             {
                 var line = queue.Dequeue();
                 ActiveKey = line.Key;
+                bool completed = true;
                 foreach (string sentence in Regex.Split(line.Text, @"(?<=[。！？])"))
                 {
                     if (string.IsNullOrWhiteSpace(sentence)) continue;
@@ -66,8 +69,13 @@ namespace Game.Unity.ArtRebuild
                     }
                     yield return new WaitForSeconds(1.6f);
                     // 不在逗号、称呼或半句话中硬切，事实已经推进时也不继续播旧引导。
-                    if (queue.Count > 0 && queue.Peek().Priority > line.Priority) break;
+                    if (queue.Count > 0 && queue.Peek().Priority > line.Priority)
+                    {
+                        completed = false;
+                        break;
+                    }
                 }
+                if (completed) LineCompleted?.Invoke(line.Key);
             }
             Label.text = "";
             Opacity.alpha = 0;
