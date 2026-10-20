@@ -103,6 +103,17 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                         data.ClearExtents[index] = bounds.extents + Vector3.one * .006f;
                     }
                 }
+                // 窗外连续村落用一个离房间足够远的显色体积，避免数百个Renderer占满物件槽。
+                foreach (var volume in Probe.RevealVolumes)
+                {
+                    if (volume == null || volume.Anchor == null || volume.Stage<1 || volume.Stage>4 || data.ClearCount>=32) continue;
+                    float weight = Probe.WeightForStage(volume.Stage);
+                    if (weight<=0) continue;
+                    int index = data.ClearCount++;
+                    Vector3 position = volume.Anchor.position;
+                    data.ClearCenters[index] = new Vector4(position.x,position.y,position.z,weight);
+                    data.ClearExtents[index] = volume.Size*.5f;
+                }
                 // 接触区单独冻结，不扩大物件AABB，避免把附近未来物件和背景一起恢复。
                 data.ContactCenters = new Vector4[12];
                 data.ContactSizes = new Vector4[12];

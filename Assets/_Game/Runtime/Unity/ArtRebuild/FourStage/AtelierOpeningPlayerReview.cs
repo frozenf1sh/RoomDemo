@@ -14,31 +14,38 @@ using UnityEngine.InputSystem.LowLevel;
 namespace Game.Unity.ArtRebuild
 {
     /// <summary>前两阶段的实际运行回放；使用正常会话，禁止调试授予。</summary>
-    public sealed class AtelierOpeningPlayerReview : MonoBehaviour
+    public sealed partial class AtelierOpeningPlayerReview : MonoBehaviour
     {
         private string output;
+        private bool includeStageThree;
         private readonly List<string> errors=new List<string>();
         private void OnEnable() => UnityEngine.Application.logMessageReceivedThreaded += Collect;
         private void OnDestroy() => UnityEngine.Application.logMessageReceivedThreaded -= Collect;
         /// <summary>明确调用时在Editor复用正常命令回放；不更改开场、阶段或领域事实。</summary>
         /// <param name="directory">本机取证输出目录。</param>
-        public static void StartEditorReview(string directory)
+        public static void StartEditorReview(string directory,bool thirdStage=false)
         {
             if (!UnityEngine.Application.isEditor || !UnityEngine.Application.isPlaying)
                 throw new InvalidOperationException("请先在Editor进入Play再发起运行检查。");
             if (FindAnyObjectByType<AtelierOpeningPlayerReview>() != null)
                 throw new InvalidOperationException("已有运行检查正在执行。");
             var node = new GameObject("前两阶段Editor显式命令回放");
-            node.AddComponent<AtelierOpeningPlayerReview>().output = Path.GetFullPath(directory);
+            var review=node.AddComponent<AtelierOpeningPlayerReview>();
+            review.output=Path.GetFullPath(directory);
+            review.includeStageThree=thirdStage;
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Create()
         {
             if(UnityEngine.Application.isEditor) return;
-            string[] args=Environment.GetCommandLineArgs();int at=Array.IndexOf(args,"--atelier-opening-review-output");
+            string[] args=Environment.GetCommandLineArgs();int at=Array.IndexOf(args,"--atelier-stage-three-review-output");
+            bool third=at>=0;
+            if(at<0) at=Array.IndexOf(args,"--atelier-opening-review-output");
             if(at<0||at+1>=args.Length) return;
             var root=new GameObject("首批自动取证_仅显式参数启用");
-            root.AddComponent<AtelierOpeningPlayerReview>().output=Path.GetFullPath(args[at+1]);
+            var review=root.AddComponent<AtelierOpeningPlayerReview>();
+            review.output=Path.GetFullPath(args[at+1]);
+            review.includeStageThree=third;
         }
         private void Check(bool valid,string reason) { if(!valid) lock(errors) errors.Add(reason); }
         private IEnumerator Start()
@@ -312,12 +319,13 @@ namespace Game.Unity.ArtRebuild
             while (!flow.GameplayInputEnabled && Time.realtimeSinceStartup<deadline) yield return null;
             Check(flow.Session.State.HasFact(AtelierFlowRules.Finished(2)),"第二层完成按钮没有推进。");
             Check(flow.Draft.WeightForStage(0)==0 && flow.Draft.SurroundingsDraft>.99f,"第二层完成误揭屋顶或全部房间。");
+            if(includeStageThree) yield return ReviewThirdStage(flow,Compose);
             flow.Observe(Target(AtelierTargetKind.Manuscript));
             Check(refs.ManuscriptPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).Any(x=>x.text==AtelierOpeningCopy.NoteBody),"便签仍显示旧作画目标。");
             yield return Shot("15_便签回看");
             flow.ReturnToRoom();
             string[] collected;lock(errors) collected=errors.ToArray();
-            File.WriteAllText(Path.Combine(output,"运行结果.txt"),"前两阶段与旁白后逐物件显色自动构建回放完成。\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第三、四阶段玩法尚待下一批接入。");
+            File.WriteAllText(Path.Combine(output,"运行结果.txt"),(includeStageThree?"前三阶段、窗景比较、刀刃与刀面及N05交接自动回放完成。":"前两阶段与旁白后逐物件显色自动回放完成。")+"\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第四阶段点灯与结尾尚待后续接入。");
             UnityEngine.Application.logMessageReceivedThreaded-=Collect;
             if (UnityEngine.Application.isEditor) { Destroy(gameObject); yield break; }
             UnityEngine.Application.Quit(collected.Length==0?0:1);

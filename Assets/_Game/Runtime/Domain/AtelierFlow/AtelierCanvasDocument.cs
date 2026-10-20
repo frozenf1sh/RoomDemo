@@ -153,15 +153,23 @@ namespace Game.Domain
             state.AtelierCanvas.Changed();
             return new AtelierCanvasResult(true, "", new DomainEvent[] { new AtelierCanvasChanged("undo", state.AtelierCanvas.Revision) });
         }
-        /// <summary>至少三笔才主动收层，余量记作放弃；后续阶段额外条件不被旧服从计数替代。</summary>
-        public static AtelierCanvasResult Finish(GameState state, RuleSet rules, int revision)
+        /// <summary>只读返回收层被阻止的原因；包括笔数、工具经验与当前作品版本。</summary>
+        public static string FinishBlockedReason(GameState state, RuleSet rules, int revision)
         {
             string reason = Guard(state, rules, revision);
+            if (reason != null) return reason;
+            var layer = state.AtelierCanvas.Current;
+            if (layer.Sealed || layer.Count < 3) return "再落" + Math.Max(0,3-layer.Count) + "笔后可完成。";
+            if (layer.Id == 3 && (!state.HasFact(AtelierFlowRules.DryLearned) || !state.HasFact(AtelierFlowRules.WetLearned))) return "先在颜料板试试刀刃和刀面。";
+            if (layer.Id == 4 && state.AtelierCanvas.SpreadRevision != revision) return "先用刀面收一次颜色。";
+            return null;
+        }
+        /// <summary>与只读许可共用同一校验，再原子封存当前层；失败不丢弃余量。</summary>
+        public static AtelierCanvasResult Finish(GameState state, RuleSet rules, int revision)
+        {
+            string reason = FinishBlockedReason(state,rules,revision);
             if (reason != null) return new AtelierCanvasResult(false, reason);
             var layer = state.AtelierCanvas.Current;
-            if (layer.Sealed || layer.Count < 3) return new AtelierCanvasResult(false, "再落" + Math.Max(0,3-layer.Count) + "笔后可完成。");
-            if (layer.Id == 3 && (!state.HasFact(AtelierFlowRules.DryLearned) || !state.HasFact(AtelierFlowRules.WetLearned))) return new AtelierCanvasResult(false, "先在颜料板试试刀刃和刀面。");
-            if (layer.Id == 4 && state.AtelierCanvas.SpreadRevision != revision) return new AtelierCanvasResult(false, "先用刀面收一次颜色。");
             layer.DiscardedUnits = layer.RemainingPaint;
             layer.Sealed = true;
             state.AtelierCanvas.Changed();

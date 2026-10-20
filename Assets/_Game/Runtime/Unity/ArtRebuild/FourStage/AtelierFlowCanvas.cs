@@ -28,6 +28,11 @@ namespace Game.Unity.ArtRebuild
         public Texture CanvasTexture => artwork;
         /// <summary>UI读取相同领域账本，适配器不另存颜料和笔数。</summary>
         public AtelierCanvasDocument Document => session?.State.AtelierCanvas;
+        /// <summary>正式UI与当前按钮读取同一领域许可，不能只用笔数判断第三层可完成。</summary>
+        public string FinishBlockedReason => session==null ? "画布尚未准备好。"
+            : AtelierCanvasOperations.FinishBlockedReason(session.State,session.Rules,Document.Revision) ?? "";
+        /// <summary>包括三笔与刮刀两面等真实门槛。</summary>
+        public bool CanFinish => string.IsNullOrEmpty(FinishBlockedReason);
         /// <summary>绑定并从笔触命令列表恢复，不从旧静物显露进度生成图像。</summary>
         public void Bind(GameSession game)
         {

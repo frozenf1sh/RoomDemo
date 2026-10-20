@@ -1,5 +1,5 @@
 // 文件：AtelierFlowGameplay.cs
-// 职责：装配四阶段首批会话，处理真实调查、洗笔、单枚落笔、返回与暂停。
+// 职责：装配前三阶段会话，处理真实调查、洗笔、转镜、窗景、刮刀与有限落笔。
 // 边界：只通过GameSession改变世界；不加载旧静物规则，不拥有UI同学的Workspace实现。
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 namespace Game.Unity.ArtRebuild
 {
-    /// <summary>前两阶段P00至P12闭环；未来UI直接绑定CanvasPort，不复制颜料状态。</summary>
+    /// <summary>前三阶段P00至P17闭环；正式UI直接绑定CanvasPort，不复制颜料状态。</summary>
     [DefaultExecutionOrder(100)]
     public sealed class AtelierFlowGameplay : MonoBehaviour
     {
@@ -28,6 +28,11 @@ namespace Game.Unity.ArtRebuild
         public Transform CrayonFocus;
         public Transform PlasterFocus, MirrorFocus, DryBrushFocus, ShardsFocus;
         public AtelierFlowMirror Mirror;
+        public AtelierFlowStageThree StageThree;
+        /// <summary>第三阶段世界适配和可替换控件共用输入许可。</summary>
+        public bool CanUseStageThreeInput => GameplayInputEnabled && !paused && !transitioning && !References.Notebook.IsOpen;
+        public bool IsPaletteFocused => focus == "palette";
+        public bool IsWindowFocused => focus == "window";
         [Tooltip("洗笔杯与画笔的左上角世界说明；独立于旁白字幕")] public Text WaterObservation;
         /// <summary>阶段旁白和显色期间统一阻断世界及UI输入。</summary>
         public bool IsStageTransition { get; private set; }
@@ -70,6 +75,7 @@ namespace Game.Unity.ArtRebuild
             References.Notebook.ExternalInputBlocked = true;
             Wash.Bind(Session);
             CanvasPort.Bind(Session);
+            if (StageThree!=null) StageThree.Bind(Session);
             Session.EventRaised += OnEvent;
             References.ReturnButton.onClick.AddListener(ReturnToRoom);
             References.ContextAction.onClick.AddListener(OnContextAction);
@@ -153,6 +159,8 @@ namespace Game.Unity.ArtRebuild
                 return;
             }
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            if (IsPaletteFocused && StageThree!=null && StageThree.Palette.HandlePointer(overUI))
+            { ClearHover();return; }
             var ray = References.ViewCamera.ScreenPointToRay(mouse.position.ReadValue());
             var hits = Physics.RaycastAll(ray,40,References.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x => x.distance);
             bool has = false; RaycastHit hit = default;
@@ -207,6 +215,9 @@ namespace Game.Unity.ArtRebuild
         private bool Allowed(AtelierInteractionTarget target)
         {
             if (!GameplayInputEnabled) return false;
+            if (target.Kind==AtelierTargetKind.Window || target.Kind==AtelierTargetKind.WindowNear || target.Kind==AtelierTargetKind.WindowFar
+                || target.Kind==AtelierTargetKind.DryPalette || target.Kind==AtelierTargetKind.PaletteKnife)
+                return StageThree!=null && Draft.VisibleStage>=3 && Session.IsInspectable(new ObjectId(target.ObjectId));
             if (target.Kind == AtelierTargetKind.Plaster || target.Kind == AtelierTargetKind.HandMirror ||
                 target.Kind == AtelierTargetKind.DryBrush || target.Kind == AtelierTargetKind.MirrorShards)
                 return Draft.VisibleStage >= 2 && Session.IsInspectable(new ObjectId(target.ObjectId));
@@ -220,7 +231,25 @@ namespace Game.Unity.ArtRebuild
         {
             if (!Allowed(target) || paused || transitioning || References.Notebook.IsOpen) return;
             lastObservation = "";
-            if (target.Kind == AtelierTargetKind.Manuscript)
+            if (target.Kind==AtelierTargetKind.Window)
+            {
+                Session.Inspect(StudioRules.Window);
+                Focus("window",StageThree.WindowFocus,58);
+            }
+            else if (target.Kind==AtelierTargetKind.WindowNear || target.Kind==AtelierTargetKind.WindowFar)
+                StageThree.ObserveWindowDetail(target.Kind==AtelierTargetKind.WindowFar);
+            else if (target.Kind==AtelierTargetKind.DryPalette)
+            {
+                Session.Inspect(AtelierFlowRules.DryPalette);
+                if (!IsPaletteFocused) Focus("palette",StageThree.PaletteFocus,44);
+            }
+            else if (target.Kind==AtelierTargetKind.PaletteKnife)
+            {
+                Session.Inspect(AtelierFlowRules.PaletteKnife);
+                StageThree.Palette.Equip();
+                if (!IsPaletteFocused) Focus("palette",StageThree.PaletteFocus,44);
+            }
+            else if (target.Kind == AtelierTargetKind.Manuscript)
             {
                 Session.Inspect(AtelierRules.Manuscript);
                 focus = "note";
@@ -273,11 +302,12 @@ namespace Game.Unity.ArtRebuild
             if (!IsCanvasFocused || UsesExternalCanvasWorkspace) return;
             var layer = CanvasPort.Document.Current;
             bool brush = Session.State.Knows(AtelierFlowRules.Brush(layer.Id));
-            Show(!brush ? "先在笔记中形成这一层笔刷。" : layer.RemainingPaint == 0 ? "颜料用完了，这一层可以收笔了。"
+            Show(!brush ? "先在笔记中形成这一层笔刷。" : layer.Count>=3 && !CanvasPort.CanFinish ? CanvasPort.FinishBlockedReason
+                : layer.RemainingPaint == 0 ? "颜料用完了，这一层可以收笔了。"
                 : layer.Count < 3 ? "再落" + (3-layer.Count) + "笔后可完成。" : "还有颜料，可以继续。" );
             References.ContextAction.GetComponentInChildren<Text>().text = "完成绘画";
             References.ContextAction.gameObject.SetActive(brush);
-            References.ContextAction.interactable = layer.Count >= 3;
+            References.ContextAction.interactable = CanvasPort.CanFinish;
         }
         private void OnEvent(DomainEvent value)
         {
@@ -295,6 +325,7 @@ namespace Game.Unity.ArtRebuild
                     BeginStageTransition(2,"N03");
                 }
                 if (fact.Fact == AtelierFlowRules.Finished(2)) BeginStageTransition(3,"N04");
+                if (fact.Fact == AtelierFlowRules.Finished(3)) BeginStageTransition(4,"N05");
                 if (fact.Fact == AtelierFlowRules.Washed) brushSelected = false;
             }
             if (value is CombinationSucceeded combination)
@@ -303,7 +334,7 @@ namespace Game.Unity.ArtRebuild
                 if (Session.State.Knows(new ClueId("atelier.flow.ice_blue")) &&
                     Session.State.Knows(new ClueId("atelier.flow.swirl")))
                     Voice.Play("N02");
-                if (combination.RecipeId == "atelier.flow.recipe.brush.1" || combination.RecipeId == "atelier.flow.recipe.brush.2")
+                if (combination.RecipeId.StartsWith("atelier.flow.recipe.brush."))
                     Show("关掉笔记本，再点画布。");
             }
         }
@@ -334,6 +365,7 @@ namespace Game.Unity.ArtRebuild
             blockedThroughFrame = Time.frameCount + 1;
             CancelPointer();
             if (Mirror != null) Mirror.CancelDrag();
+            if (StageThree!=null) StageThree.Palette.CancelGesture();
             StopObservationPaging();
             ClearHover();
             References.ContextPanel.SetActive(false);
@@ -359,6 +391,7 @@ namespace Game.Unity.ArtRebuild
             CancelPointer();
             StopObservationPaging();
             Wash.CancelContact();
+            if (StageThree!=null) StageThree.Palette.CancelGesture();
             if (Mirror != null) Mirror.End();
             References.ManuscriptPanel.SetActive(false);
             if (focus == "note")
@@ -427,6 +460,20 @@ namespace Game.Unity.ArtRebuild
             // 新阶段长介绍按完整句翻页，沿用临时调查视图，不把整段挤成两行后截断。
             if (text.Length > 32) observationPaging = StartCoroutine(PageObservation(text));
         }
+        /// <summary>第三阶段功能提示复用世界说明节点，不覆盖旁白字幕。</summary>
+        public void ShowWorldObservation(string text)
+        {
+            lastObservation=text;
+            Show(text);
+        }
+        /// <summary>玩家点定位按钮只进入板面，不替玩家调查板或获得工具。</summary>
+        public void OpenPaletteForPractice()
+        {
+            if (!CanUseStageThreeInput || StageThree==null || !Session.State.HasFact(AtelierFlowRules.Finished(2))) return;
+            Focus("palette",StageThree.PaletteFocus,44);
+        }
+        /// <summary>窗景比较的预设后退镜头，不开放自由拖拽或滚轮。</summary>
+        public void CompareWindowView() => Focus("window",StageThree.WindowCompareFocus,51);
         private void HideWaterObservation()
         {
             if (WaterObservation != null) WaterObservation.gameObject.SetActive(false);
@@ -465,6 +512,7 @@ namespace Game.Unity.ArtRebuild
         private void CancelPointer()
         {
             captured=false;
+            if (StageThree!=null) StageThree.Palette.CancelGesture();
             if(CanvasPort.Document!=null) CanvasPort.Preview(Vector2.zero,false);
         }
         private void ClearHover()

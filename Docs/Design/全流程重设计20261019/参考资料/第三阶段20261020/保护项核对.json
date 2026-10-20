@@ -1,0 +1,66 @@
+{
+  "全部一致": true,
+  "说明": "开发副本为有意修改；QualitySettings保留本轮开始前的用户修改，不纳入本次提交。",
+  "保护项": [
+    {
+      "path": "Assets/_Game/Content/Scenes/AtelierNight.unity",
+      "before": "e968658b46ee2df862b0b7d1bb66c20ad3f30d8d368e000dba43b3c2f09628f7",
+      "after": "e968658b46ee2df862b0b7d1bb66c20ad3f30d8d368e000dba43b3c2f09628f7",
+      "unchanged": true
+    },
+    {
+      "path": "Assets/_Game/Content/Scenes/AtelierNight/LightingData.asset",
+      "before": "8196653ef3e9bbe13d3dd6dec3f863d352fcfd6cc5aa342a03496f849c51f76c",
+      "after": "8196653ef3e9bbe13d3dd6dec3f863d352fcfd6cc5aa342a03496f849c51f76c",
+      "unchanged": true
+    },
+    {
+      "path": "Assets/Settings/DefaultVolumeProfile.asset",
+      "before": "6698bfacfad479acfd9766d00aba81ab52527d3b15c8b133d03ed7a2401499d6",
+      "after": "6698bfacfad479acfd9766d00aba81ab52527d3b15c8b133d03ed7a2401499d6",
+      "unchanged": true
+    },
+    {
+      "path": "Assets/Settings/UniversalRenderPipelineGlobalSettings.asset",
+      "before": "b9c238c70d716264c562e8132b5d769048e1547c90adc4cc8fc7bedb8a0c4728",
+      "after": "b9c238c70d716264c562e8132b5d769048e1547c90adc4cc8fc7bedb8a0c4728",
+      "unchanged": true
+    },
+    {
+      "path": "Assets/_Game/Content/ArtRebuild/Rendering/画室专用管线.asset",
+      "before": "a5dcae5286381a8d6005c1801c63b49e57049454b3ad86db9df2492152d7e999",
+      "after": "a5dcae5286381a8d6005c1801c63b49e57049454b3ad86db9df2492152d7e999",
+      "unchanged": true
+    },
+    {
+      "path": "ProjectSettings/GraphicsSettings.asset",
+      "before": "15ff4127a0f261f15321f24c6a6b5c82e1f5a306ad32fd399eac3e3c46c723c9",
+      "after": "15ff4127a0f261f15321f24c6a6b5c82e1f5a306ad32fd399eac3e3c46c723c9",
+      "unchanged": true
+    },
+    {
+      "path": "ProjectSettings/ProjectSettings.asset",
+      "before": "15f52107ce8113c55e0964616ba507ec4a4edec2d1a068ec54be0a4f0806a388",
+      "after": "15f52107ce8113c55e0964616ba507ec4a4edec2d1a068ec54be0a4f0806a388",
+      "unchanged": true
+    },
+    {
+      "path": "ProjectSettings/URPProjectSettings.asset",
+      "before": "596d5c8bf4f957b03684c949bebc252ae1918f25415a1147a00684c4b086efda",
+      "after": "596d5c8bf4f957b03684c949bebc252ae1918f25415a1147a00684c4b086efda",
+      "unchanged": true
+    },
+    {
+      "path": "ProjectSettings/QualitySettings.asset",
+      "before": "f835d5142fd164cebbebd8d3896196be1e413fc2acf26826dc40e122db757d3c",
+      "after": "f835d5142fd164cebbebd8d3896196be1e413fc2acf26826dc40e122db757d3c",
+      "unchanged": true
+    },
+    {
+      "path": "ProjectSettings/EditorBuildSettings.asset",
+      "before": "aed2984944503bf5dff418d2a4e6a6a48bc3f994307d99d6a03fd2f40302f23b",
+      "after": "aed2984944503bf5dff418d2a4e6a6a48bc3f994307d99d6a03fd2f40302f23b",
+      "unchanged": true
+    }
+  ]
+}

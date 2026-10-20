@@ -1,0 +1,64 @@
+{
+  "状态": {
+    "stage": 4,
+    "facts": [
+      "atelier.flow.washed",
+      "atelier.flow.layer_finished.1",
+      "atelier.flow.mirror_compared",
+      "atelier.flow.layer_finished.2",
+      "atelier.flow.window_far_seen",
+      "atelier.flow.window_near_seen",
+      "atelier.flow.window_compared",
+      "atelier.flow.palette_studied",
+      "atelier.flow.knife_dry",
+      "atelier.flow.knife_wet",
+      "atelier.flow.layer_finished.3",
+      "atelier.flow.intro_read"
+    ],
+    "layers": [
+      {
+        "id": 1,
+        "count": 3,
+        "sealedLayer": true,
+        "committed": 51,
+        "discarded": 49
+      },
+      {
+        "id": 2,
+        "count": 5,
+        "sealedLayer": true,
+        "committed": 100,
+        "discarded": 0
+      },
+      {
+        "id": 3,
+        "count": 5,
+        "sealedLayer": true,
+        "committed": 100,
+        "discarded": 0
+      },
+      {
+        "id": 4,
+        "count": 0,
+        "sealedLayer": false,
+        "committed": 0,
+        "discarded": 0
+      }
+    ],
+    "palDry": 0.625,
+    "palWet": 0.8,
+    "roof": 0
+  },
+  "Console": {
+    "sampledUtc": "2026-10-20T05:25:05.175466Z",
+    "ageMs": 281,
+    "compilationFailed": false,
+    "compiling": false,
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "consoleLogs": 0,
+    "seeded": true
+  },
+  "回放结论": "前三阶段、窗景比较、刀刃与刀面及N05交接自动回放完成。\n错误数：0\n\n边界：自动命令及按钮回调，不是真人鼠标操作。第四阶段点灯与结尾尚待后续接入。",
+  "边界": "正常速度、自动命令与UI回调，刀痕使用有效UV路径；不是真人鼠标验收。最终独立Player另测InputSystem短点事件。"
+}

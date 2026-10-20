@@ -1,0 +1,15 @@
+{
+  "scene": "Assets/_Game/Content/Scenes/AtelierPlayable.unity",
+  "dirty": false,
+  "playing": false,
+  "compiling": false,
+  "failed": false,
+  "missingScripts": 0,
+  "thirdBound": true,
+  "pot": "(1.85, 1.05, -0.74)",
+  "boardGap": 0,
+  "boardSupported": true,
+  "knifeGap": 0.000500023365,
+  "knifeSupported": true,
+  "outdoorNearestZ": 6
+}

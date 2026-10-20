@@ -5,6 +5,14 @@ using System;
 using UnityEngine;
 namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
 {
+    /// <summary>明确的世界显色体积；仅用于窗外连续景物，不扩大房间内的物件包围体。</summary>
+    [Serializable]
+    public sealed class AtelierDraftRevealVolume
+    {
+        public Transform Anchor;
+        public Vector3 Size = Vector3.one;
+        [Range(1,4)] public int Stage = 3;
+    }
     /// <summary>物件脚边的水平承托面显色；锚点与阶段许可都由场景显式配置。</summary>
     [Serializable]
     public sealed class AtelierDraftContactRegion
@@ -30,6 +38,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         // 屋顶单列，任何RestoreStage调用都不能顺带开放屋顶。
         public Renderer[] RoofObjects = Array.Empty<Renderer>();
         public AtelierDraftContactRegion[] ContactRegions = Array.Empty<AtelierDraftContactRegion>();
+        public AtelierDraftRevealVolume[] RevealVolumes = Array.Empty<AtelierDraftRevealVolume>();
         private readonly float[] weights = new float[5];
         private int targetStage;
         private float roofWeight;
@@ -67,6 +76,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             StageFourObjects = source.StageFourObjects;
             RoofObjects = source.RoofObjects;
             ContactRegions = source.ContactRegions;
+            RevealVolumes = source.RevealVolumes;
             targetStage = source.targetStage;
             for (int index = 0; index < weights.Length; index++) weights[index] = source.weights[index];
             roofWeight = source.roofWeight;

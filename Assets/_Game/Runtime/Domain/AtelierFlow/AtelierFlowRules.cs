@@ -1,12 +1,12 @@
 // 文件：AtelierFlowRules.cs
-// 职责：定义四阶段新流程的稳定身份、前两阶段观察、动作与笔刷配方。
-// 边界：旧AtelierRules保持原样；当前开放P00至P12，不用旧静物计数推进新阶段。
+// 职责：定义四阶段新流程的稳定身份、前三阶段观察、动作与笔刷配方。
+// 边界：旧AtelierRules保持原样；当前开放P00至P17，不用旧静物计数推进新阶段。
 using System;
 using System.Collections.Generic;
 namespace Game.Domain
 {
     /// <summary>首批内容表与后续批次共用的稳定协议。</summary>
-    public static class AtelierFlowRules
+    public static partial class AtelierFlowRules
     {
         public static readonly ObjectId Plaster = new ObjectId("atelier.flow.plaster");
         public static readonly ObjectId HandMirror = new ObjectId("atelier.flow.hand_mirror");
@@ -27,7 +27,7 @@ namespace Game.Domain
         /// <summary>已完成第一层以后开放左侧；后续阶段由对应收层事实恢复。</summary>
         public static int Stage(GameState state) => state.HasFact(Finished(3)) ? 4 : state.HasFact(Finished(2)) ? 3 : state.HasFact(Finished(1)) ? 2 : 1;
 
-        /// <summary>建立第一批真实闭环；未接入的三至四层不会获得凭空笔刷。</summary>
+        /// <summary>建立前三阶段真实闭环；未接入的第四层不会获得凭空笔刷。</summary>
         public static RuleSet CreateOpening()
         {
             var clues = new List<ClueDefinition>();
@@ -49,7 +49,7 @@ namespace Game.Domain
             var swirl = new ClueId("atelier.flow.swirl");
             clues.Add(new ClueDefinition(ice, "冰蓝", ClueCategory.Concept));
             clues.Add(new ClueDefinition(swirl, "卷涡", ClueCategory.Concept));
-            for (int n = 1; n <= 4; n++) clues.Add(new ClueDefinition(Brush(n), n == 1 ? "卷涡笔刷" : n == 2 ? "柏影笔刷" : "第" + n + "阶段笔刷", ClueCategory.Concept));
+            for (int n = 1; n <= 4; n++) clues.Add(new ClueDefinition(Brush(n), n == 1 ? "卷涡笔刷" : n == 2 ? "柏影笔刷" : n == 3 ? "夜城笔刷" : "暖星笔刷", ClueCategory.Concept));
             void Object(ObjectId id, string label, string text, params ClueId[] observations)
             {
                 var own = new ClueId(id.Value);
@@ -80,9 +80,11 @@ namespace Game.Domain
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.twisted", new[] { C("fixed"), C("flip") }, new[] { Finished(1) }, new[] { twisted }, empty, consumedInputs: new[] { C("fixed"), C("flip") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.rough", new[] { C("black"), C("sharp") }, new[] { Finished(1) }, new[] { rough }, empty, consumedInputs: new[] { C("black"), C("sharp") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.2", new[] { twisted, rough }, new[] { Finished(1) }, new[] { Brush(2) }, empty));
+            AppendStageThree(clues,objects,actions,recipes);
             // 新线明确等待主动完成；配方次数不能触发旧的自动锁画布。
             return new RuleSet(clues.ToArray(), objects.ToArray(), recipes.ToArray(), Array.Empty<ReactionRule>(),
-                declaredFacts: new[] { Enabled, MirrorCompared, Finished(1), Finished(2), Finished(3), Finished(4), DryLearned, WetLearned, WorldCommitted },
+                declaredFacts: new[] { Enabled, MirrorCompared, Finished(1), Finished(2), Finished(3), Finished(4), DryLearned, WetLearned, WorldCommitted,
+                    WindowNearSeen, WindowFarSeen, WindowCompared, PaletteStudied },
                 sceneActions: actions.ToArray(), canvasLockFact: AtelierRules.CanvasDelivered, maximumCombinationInputs: 2);
         }
     }

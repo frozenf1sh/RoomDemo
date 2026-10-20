@@ -116,7 +116,7 @@ namespace Game.Tests
         [Test] public void EveryGrayWordHasARecipeAndPhysicalSourcesDoNotAwardItOnClick()
         {
             var gray = game.Rules.Clues.Where(x=>x.Category==ClueCategory.Observation).Select(x=>x.Id).ToArray();
-            Assert.AreEqual(8,gray.Length);
+            Assert.AreEqual(12,gray.Length);
             Assert.IsTrue(gray.All(id=>game.Rules.Recipes.Any(recipe=>recipe.Inputs.Contains(id))));
             foreach (var source in new[] { StudioRules.Cup,AtelierFlowRules.HandMirror })
                 Assert.IsFalse(game.Rules.Discoveries.Single(x=>x.Source==source).Grants.Any(gray.Contains));
