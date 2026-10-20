@@ -286,6 +286,8 @@ namespace Game.Unity.ArtRebuild
             {
                 Session.Inspect(AtelierFlowRules.PaletteKnife);
                 StageThree.Palette.Equip();
+                Voice.Play("G_KNIFE_HOLD");
+                ShowWorldObservation("可以轻点三下，或按住滑动使用刮刀。");
                 if(StageFour!=null&&Session.State.HasFact(AtelierFlowRules.Finished(3)))StageFour.Tool.SelectMode(AtelierFinaleToolMode.Edge);
                 if (!IsPaletteFocused) Focus("palette",StageThree.PaletteFocus,44);
             }

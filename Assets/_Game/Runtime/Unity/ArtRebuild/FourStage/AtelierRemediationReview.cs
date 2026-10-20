@@ -136,9 +136,9 @@ namespace Game.Unity.ArtRebuild
                 yield return CloseNotebook();flow.Observe(flow.StageFour.SkyTarget);yield return Ready();
                 foreach(var point in new[]{new Vector3(.05f,.95f,0),new Vector3(.5f,.9f,0),new Vector3(.95f,.95f,0),new Vector3(.5f,.3f,0)})
                     Check(flow.StageFour.SkyTarget.GetComponent<Collider>().Raycast(flow.References.ViewCamera.ViewportPointToRay(point),out _,40),"天空边缘不能被正常拾取："+point);
-                Check(flow.StageFour.PaintSky().Accepted,"天空云的一次点击失败。");yield return new WaitForSeconds(2);
-                Check(flow.References.Finale.Sky.Flow<.001f,"只有云时天空提前流动。");yield return Shot("15_单击画云_天空仍静止");
-                Check(flow.StageFour.PaintSky().Accepted,"天空星的一次点击失败。");
+                Check(flow.StageFour.PaintSky().Accepted,"天空星的一次点击失败。");yield return new WaitForSeconds(2);
+                Check(flow.References.Finale.Sky.Flow<.001f,"只有星时天空提前流动。");yield return Shot("15_单击画星_天空渐亮");
+                Check(flow.StageFour.PaintSky().Accepted,"天空云的一次点击失败。");
             }
             float limit=Time.realtimeSinceStartup+40;
             if(!ordinary)

@@ -100,8 +100,8 @@ namespace Game.Unity.ArtRebuild
             if(fact.Fact==AtelierFlowRules.RoofProbed)Flow.Voice.Play("G_ROOF_WARN");
             if(fact.Fact==AtelierRules.RoofErased&&roofReturn==null)
                 roofReturn=StartCoroutine(LeaveRoofAfterOpening());
-            if(fact.Fact==AtelierRules.RoomErased){Tool.Cancel();Flow.ReturnFromToolForWorld();}
-            if(fact.Fact==AtelierFlowRules.SkyCloudPainted)Flow.ShowWorldObservation(AtelierFlowNarration.TextFor("V_STAR"));
+            if(fact.Fact==AtelierRules.RoomErased){Tool.Cancel();Flow.ReturnFromToolForWorld();Flow.Voice.Play("G_ROOM_GONE");}
+            if(fact.Fact==AtelierFlowRules.SkyStarsPainted)Flow.ShowWorldObservation(AtelierFlowNarration.TextFor("V_CLOUD"));
             if(fact.Fact==AtelierRules.CanvasDelivered&&ending==null)ending=StartCoroutine(EndCanvas());
             if(fact.Fact==AtelierFlowRules.SkyFinished&&ending==null)ending=StartCoroutine(EndWorld());
         }
@@ -177,7 +177,7 @@ namespace Game.Unity.ArtRebuild
                     if(!Flow.IsSkyFocused)
                     {
                         Flow.FocusStageFour("sky",SkyFocus,65);
-                        Flow.ShowWorldObservation(AtelierFlowNarration.TextFor(session.State.HasFact(AtelierFlowRules.SkyCloudPainted)?"V_STAR":"V_CLOUD"));
+                        Flow.ShowWorldObservation(AtelierFlowNarration.TextFor(session.State.HasFact(AtelierFlowRules.SkyStarsPainted)?"V_CLOUD":"V_STAR"));
                     }
                     else PaintSky();
                     break;
@@ -188,7 +188,7 @@ namespace Game.Unity.ArtRebuild
         {
             if(!Flow.CanUseStageThreeInput||!Flow.IsSkyFocused||!Flow.References.Finale.InteriorSettled)
                 return new AtelierCanvasResult(false,"先看看天空。");
-            return session.ClickAtelierSky(session.SessionEpoch,session.State.HasFact(AtelierFlowRules.SkyCloudPainted));
+            return session.ClickAtelierSky(session.SessionEpoch,!session.State.HasFact(AtelierFlowRules.SkyStarsPainted));
         }
         private void Update()
         {

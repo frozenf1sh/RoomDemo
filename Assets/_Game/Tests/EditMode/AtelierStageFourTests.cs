@@ -65,16 +65,17 @@ namespace Game.Tests
             Assert.IsTrue(game.State.HasFact(AtelierFlowRules.SkyAsCanvas));Assert.IsFalse(game.State.HasFact(AtelierFlowRules.SkyCloudPainted));
             Assert.IsTrue(game.State.CanUseClue(new ClueId(StudioRules.Sky.Value)));
         }
-        [Test]public void SkyCloudAndStarEachTakeOneClickAndDoNotTouchTheOldPainting()
+        [Test]public void SkyStarsThenCloudEachTakeOneClickAndDoNotTouchTheOldPainting()
         {
             AtelierFlowTestPath.Light(game);Paint();Erase();game.Inspect(StudioRules.Sky);
             game.Combine(new[] {new ClueId(StudioRules.Sky.Value),new ClueId(AtelierRules.Painting.Value)});
             int revision=game.State.AtelierCanvas.Revision,count=game.State.AtelierCanvas.Current.Count,paint=game.State.AtelierCanvas.Current.RemainingPaint;
-            Assert.IsFalse(game.ClickAtelierSky("old-epoch",false).Accepted);Assert.IsFalse(game.ClickAtelierSky(game.SessionEpoch,true).Accepted);
-            Assert.IsTrue(game.ClickAtelierSky(game.SessionEpoch,false).Accepted);Assert.IsFalse(game.State.HasFact(AtelierFlowRules.SkyFinished));
-            Assert.IsFalse(game.ClickAtelierSky(game.SessionEpoch,false).Accepted);
-            Assert.IsTrue(game.ClickAtelierSky(game.SessionEpoch,true).Accepted);Assert.IsTrue(game.State.HasFact(AtelierFlowRules.SkyFinished));
+            // 云必须先有星；旧世代和跳步都不能写入天空事实。
+            Assert.IsFalse(game.ClickAtelierSky("old-epoch",false).Accepted);Assert.IsFalse(game.ClickAtelierSky(game.SessionEpoch,false).Accepted);
+            Assert.IsTrue(game.ClickAtelierSky(game.SessionEpoch,true).Accepted);Assert.IsFalse(game.State.HasFact(AtelierFlowRules.SkyFinished));
             Assert.IsFalse(game.ClickAtelierSky(game.SessionEpoch,true).Accepted);
+            Assert.IsTrue(game.ClickAtelierSky(game.SessionEpoch,false).Accepted);Assert.IsTrue(game.State.HasFact(AtelierFlowRules.SkyFinished));
+            Assert.IsFalse(game.ClickAtelierSky(game.SessionEpoch,false).Accepted);
             Assert.AreEqual(revision,game.State.AtelierCanvas.Revision);Assert.AreEqual(count,game.State.AtelierCanvas.Current.Count);Assert.AreEqual(paint,game.State.AtelierCanvas.Current.RemainingPaint);
         }
         [Test]public void SpreadIsVersionedAndUndoRechecksTheThreeStrokeGate()

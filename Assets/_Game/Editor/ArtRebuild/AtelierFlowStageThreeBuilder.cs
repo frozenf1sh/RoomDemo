@@ -77,6 +77,7 @@ namespace Game.Editor.ArtRebuild
                 return root;
             });
             knife.transform.SetPositionAndRotation(new Vector3(1.10f,.9445f,-.45f),Quaternion.Euler(0,-20,0));
+            knife.transform.localScale=Vector3.one*1.5f;
             palette.RestKnife=knife.transform;
             var pointer=Child(node.transform,"Visual_接触中的刮刀");
             if(pointer.transform.childCount==0)
@@ -86,6 +87,7 @@ namespace Game.Editor.ArtRebuild
                 copy.transform.localRotation=Quaternion.identity;
             }
             palette.PointerKnife=pointer.transform;
+            pointer.transform.localScale=Vector3.one*1.5f;
             pointer.SetActive(false);
             var window=Object.FindObjectsByType<AtelierInteractionTarget>().Single(t=>t.Kind==AtelierTargetKind.Window);
             int layer=window.gameObject.layer;

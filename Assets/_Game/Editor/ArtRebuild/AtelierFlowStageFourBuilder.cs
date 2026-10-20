@@ -77,7 +77,7 @@ namespace Game.Editor.ArtRebuild
             flow.Draft.RoofObjects=flow.References.Finale.RoofSurfaces.Concat(new Renderer[] {line}).ToArray();
             var pointer=Node(root,"Visual_末阶段接触刮刀");
             if(pointer.childCount==0)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Root+"/Prefabs/PF_调色刮刀.prefab"),pointer);
-            tool.PointerKnife=pointer;pointer.gameObject.SetActive(false);
+            tool.PointerKnife=pointer;pointer.localScale=Vector3.one*1.5f;pointer.gameObject.SetActive(false);
             var lamp=flow.References.Lamp;
             var lampRoot=lamp.Wick.parent;
             // 两个工作簇显色体积只覆盖左侧灯与火柴，不让右柜、桌布或整张桌面提前恢复。

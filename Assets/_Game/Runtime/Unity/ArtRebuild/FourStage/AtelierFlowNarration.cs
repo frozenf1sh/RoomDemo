@@ -35,6 +35,8 @@ namespace Game.Unity.ArtRebuild
         public string ActiveKey { get; private set; } = "";
         private static readonly Dictionary<string, Line> Lines = new Dictionary<string, Line> {
             { "G_KNIFE_DRY",new Line("G_KNIFE_DRY",4,"先刮开这块干颜料。") },
+            { "G_KNIFE_HOLD",new Line("G_KNIFE_HOLD",4,"文森特拿起了刮刀，他想干什么？") },
+            { "G_ROOM_GONE",new Line("G_ROOM_GONE",9,"……文森特，你在干什么？") },
             { "G_KNIFE_WET",new Line("G_KNIFE_WET",4,"底下还没干透。用刀把这块湿颜料推开试试。") },
             { "G_WINDOW_NEAR",new Line("G_WINDOW_NEAR",4,"看看近处那扇亮着灯的窗。") },
             { "G_WINDOW_FAR",new Line("G_WINDOW_FAR",4,"再看看远处的窗灯。") },
@@ -48,7 +50,7 @@ namespace Game.Unity.ArtRebuild
             { "V_WET",new Line("V_WET",0,"文森特：湿颜料掉在地上了，看起来可以用刀推开……") },
             { "V_REFUSE",new Line("V_REFUSE",0,"文森特：我不想再画那幅画了。") },
             { "V_CLOUD",new Line("V_CLOUD",0,"文森特：画点云吧。点一下天空，落一笔。") },
-            { "V_STAR",new Line("V_STAR",0,"文森特：再添一点星光。") },
+            { "V_STAR",new Line("V_STAR",0,"文森特：先添一点星光。") },
             { "N01", new Line("N01", 1, "你好，文森特，你还好吗？你已经很久没有呼唤我了。视线里空无一物，不是吗？好吧，我能来帮帮你。试着回想起一些物件——一些你从儿时就熟悉的东西。看到了吗？它们就在那里。不要熟视无睹。拿起它们。回想起它们。获得启发。") },
             { "N02", new Line("N02", 2, "有点想法了？太好了。 我建议你只是把它画下来，只是这样就好。") },
             { "N03", new Line("N03", 3, "感觉好些了，还是感觉不确定？那些都不重要了。放松一些了吧，思绪更自由了吧……也许凭借着这样的状态，你可以看见更多事物。但看见更多，就意味着更加自由吗？") },
