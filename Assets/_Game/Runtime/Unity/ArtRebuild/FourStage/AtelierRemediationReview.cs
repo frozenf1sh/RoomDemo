@@ -118,7 +118,7 @@ namespace Game.Unity.ArtRebuild
                 var floorHit=Physics.RaycastAll(new Ray(camera.transform.position,camera.transform.forward),40,flow.References.PickingMask,QueryTriggerInteraction.Collide).OrderBy(h=>h.distance).First();
                 Check(floorHit.collider.GetComponent<AtelierInteractionTarget>()==flow.StageFour.RoomTarget,"地板湿色近景被其他表面挡住。");
                 yield return Compose(AtelierFlowRules.C("wet_paint"),new ClueId(StudioRules.Room.Value));
-                yield return CloseNotebook();Check(!Tool(AtelierFinaleAction.EraseRoom).Accepted,"未画第四层就擦开房间。");
+                yield return CloseNotebook();
             }
             yield return Compose(AtelierFlowRules.C("warm"),AtelierFlowRules.C("bright"));yield return PaintLayer();
             if(ordinary)

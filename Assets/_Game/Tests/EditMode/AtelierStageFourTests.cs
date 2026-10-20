@@ -48,12 +48,11 @@ namespace Game.Tests
             Assert.IsTrue(Tool(AtelierFinaleAction.SpreadCanvas).Accepted);AtelierFlowTestPath.Finish(game);
             Assert.IsTrue(game.State.CanvasLocked);Assert.IsFalse(Tool(AtelierFinaleAction.EraseRoom).Accepted);
         }
-        [Test]public void RoomNeedsItsOwnClickInterpretationAndFourthLayerPaint()
+        [Test]public void RoomNeedsItsOwnClickInterpretationButNotTheFourthLayer()
         {
             AtelierFlowTestPath.Light(game);Roof();
             game.Combine(new[] {new ClueId(StudioRules.Room.Value),AtelierFlowRules.C("wet_paint")});Assert.IsFalse(game.State.HasFact(AtelierFlowRules.RoomAsPaint));
-            Explain(StudioRules.Room,"wet_paint");Assert.IsFalse(Tool(AtelierFinaleAction.EraseRoom).Accepted);
-            Paint();Assert.IsTrue(Tool(AtelierFinaleAction.EraseRoom).Accepted);
+            Explain(StudioRules.Room,"wet_paint");Assert.IsTrue(Tool(AtelierFinaleAction.EraseRoom).Accepted);
             Assert.IsTrue(game.State.HasFact(AtelierFlowRules.WorldCommitted));Assert.IsFalse(game.State.HasFact(AtelierFlowRules.SkyFinished));
             Assert.IsFalse(game.FinishAtelierLayer(game.SessionEpoch,game.State.AtelierCanvas.Revision).Accepted);
         }

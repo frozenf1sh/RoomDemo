@@ -21925,6 +21925,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1931027226168481379, guid: ef894048c335e47f7bc2017581a4d1c4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2289774768798785191, guid: ef894048c335e47f7bc2017581a4d1c4, type: 3}
       propertyPath: m_Size.x
       value: 75
@@ -21936,6 +21940,14 @@ PrefabInstance:
     - target: {fileID: 2289774768798785191, guid: ef894048c335e47f7bc2017581a4d1c4, type: 3}
       propertyPath: m_Size.z
       value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 2948081840746313888, guid: ef894048c335e47f7bc2017581a4d1c4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3131444122619916387, guid: ef894048c335e47f7bc2017581a4d1c4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3598288402064582490, guid: ef894048c335e47f7bc2017581a4d1c4, type: 3}
       propertyPath: Sky

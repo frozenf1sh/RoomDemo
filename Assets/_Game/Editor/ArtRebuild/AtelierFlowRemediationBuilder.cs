@@ -135,6 +135,16 @@ namespace Game.Editor.ArtRebuild
             foreach(var legacy in scene.GetRootGameObjects().SelectMany(o=>o.GetComponentsInChildren<AtelierInteractionTarget>(true))
                 .Where(t=>t.Kind==AtelierTargetKind.Trial||t.Kind==AtelierTargetKind.TrialCloth))
                 foreach(var collider in legacy.GetComponents<Collider>()){collider.enabled=false;PrefabUtility.RecordPrefabInstancePropertyModifications(collider);}
+            // 旧湿色木板、蓝颜料与擦笔布与桌面新湿色落点重叠，只保留隐藏对象供旧母版取材质，不参与画面。
+            var wetCluster=flow.References.transform.Find("湿色与整体擦除工作簇");
+            if(wetCluster!=null)
+                foreach(var legacyName in new[]{"沾湿色的旧木板","木纹上的蓝灰湿颜料","可以拿起的擦笔布"})
+                {
+                    var legacVisual=wetCluster.Find(legacyName);
+                    if(legacVisual==null)continue;
+                    legacVisual.gameObject.SetActive(false);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(legacVisual.gameObject);
+                }
             WhiteSubmitAndHelp();
             foreach(var text in flow.References.Notebook.GetComponentsInChildren<Text>(true))if(new[] {"合成","解释","试着联系","联想"}.Contains(text.text))text.color=Color.white;
             foreach(var component in new Component[] {flow,stage,third,flow.Draft,finale,near,far,stage.RoofTarget,stage.RoomTarget,stage.SkyTarget})

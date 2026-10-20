@@ -88,8 +88,8 @@ namespace Game.Unity.ArtRebuild
             if(held&&mouse.leftButton.isPressed)
             {
                 if(!hit) {Cancel();return true;}
-                if(Vector2.Distance(pressed,uv)>.012f)moved=true;
-                if(moved&&Vector2.Distance(previous,uv)>.002f) {Add(previous,uv);previous=uv;}
+                if(Vector2.Distance(pressed,uv)>.008f)moved=true;
+                if(moved&&Vector2.Distance(previous,uv)>.0015f) {Add(previous,uv);previous=uv;}
             }
             if(held&&mouse.leftButton.wasReleasedThisFrame)
             {

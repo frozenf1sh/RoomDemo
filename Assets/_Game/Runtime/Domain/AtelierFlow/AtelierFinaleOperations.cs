@@ -22,7 +22,7 @@ namespace Game.Domain
     /// <summary>供UI和世界输入共用的领域许可及原子命令。</summary>
     public static class AtelierFinaleOperations
     {
-        /// <summary>只读返回当前动作被阻止的原因；检查当前笔数，不能沿用曾经开放过的按钮。</summary>
+        /// <summary>只读返回当前动作被阻止的原因；房间擦开不再依赖第四层三笔，画布收色仍需。</summary>
         public static string BlockedReason(GameState state,RuleSet rules,int revision,AtelierFinaleAction action)
         {
             if(!Enum.IsDefined(typeof(AtelierFinaleAction),action))return "这里没有这个工具操作。";
@@ -30,7 +30,8 @@ namespace Game.Domain
             if(state.CanvasLocked||state.HasFact(AtelierRules.RoomErased)) return "已经确定了收束方式。";
             if(state.AtelierCanvas.Revision!=revision) return "画面已经更新，请重新操作。";
             if(!state.HasFact(AtelierFlowRules.Finished(3))||state.AtelierCanvas.Current.Id!=4) return "先完成前三层绘画。";
-            if((action==AtelierFinaleAction.SpreadCanvas||action==AtelierFinaleAction.EraseRoom)&&state.AtelierCanvas.Current.Count<3) return "画还没画完，先回去。";
+            // 房间解释成立后可直接推开房间；只有画布收色仍要求第四层先落下三笔。
+            if(action==AtelierFinaleAction.SpreadCanvas&&state.AtelierCanvas.Current.Count<3) return "画还没画完，先回去。";
             if(!state.Knows(AtelierFlowRules.PaletteKnife)) return "先拿起调色刮刀。";
             if(action==AtelierFinaleAction.SpreadCanvas)
             {
@@ -63,7 +64,7 @@ namespace Game.Domain
             var path=segments?.ToArray();
             if(path==null||path.Length==0||path.Length>64||path.Any(x=>!x.InBounds)||assistedTaps<0||assistedTaps>3)
                 return new AtelierCanvasResult(false,"请在目标表面留下一段有效接触。");
-            if(assistedTaps<3&&path.Sum(x=>x.Length)<1000) return new AtelierCanvasResult(false,"沿表面再推一小段。");
+            if(assistedTaps<3&&path.Sum(x=>x.Length)<650) return new AtelierCanvasResult(false,"沿表面再推一小段。");
             if(action==AtelierFinaleAction.SpreadCanvas)
             {
                 // 收色必须经过当前作品实际有笔印的附近，空白角落不能充当有效收色。
@@ -93,7 +94,7 @@ namespace Game.Domain
                     return Math.Sqrt(x*x+y*y);
                 });
                 // 新接触必须落在旧刀痕之外、仍靠近开口的边缘；重放第一次路径不能偷偷锁线。
-                if(distance<600||distance>2200) return new AtelierCanvasResult(false,"沿新露出的边缘继续刮开。");
+                if(distance<450||distance>2600) return new AtelierCanvasResult(false,"沿新露出的边缘继续刮开。");
                 state.ConsumeClue(AtelierFlowRules.C("roof_night"));
                 Fact(AtelierRules.RoofErased);
             }

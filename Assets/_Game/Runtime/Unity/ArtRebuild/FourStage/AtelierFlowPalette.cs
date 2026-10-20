@@ -87,9 +87,9 @@ namespace Game.Unity.ArtRebuild
             if (!CanContact || !Inside(from) || !Inside(to)) return false;
             if(face&&!session.State.HasFact(AtelierFlowRules.DryLearned))return false;
             FaceMode=face;
-            float low=face?.60f:.06f, high=face?.96f:.52f;
+            float low=face?.58f:.05f, high=face?.97f:.53f;
             if (from.x<low || from.x>high || to.x<low || to.x>high
-                || from.y<.12f || from.y>.88f || to.y<.12f || to.y>.88f) return false;
+                || from.y<.10f || from.y>.90f || to.y<.10f || to.y>.90f) return false;
             int side=face?1:0;
             if (assistTap)
             {
@@ -112,7 +112,7 @@ namespace Game.Unity.ArtRebuild
             }
             ApplySurface();
             var fact=face?AtelierFlowRules.WetLearned:AtelierFlowRules.DryLearned;
-            if (bins.Count(x=>x)>=16 && (!assistTap || tapCounts[side]>=3) && !session.State.HasFact(fact))
+            if (bins.Count(x=>x)>=12 && (!assistTap || tapCounts[side]>=3) && !session.State.HasFact(fact))
             {
                 session.PerformAction(AtelierFlowRules.DryPalette,face?"palette_spread":"palette_scrape");
                 if(!face)Flow.Voice.Play("G_KNIFE_WET");
@@ -130,14 +130,16 @@ namespace Game.Unity.ArtRebuild
             var hits=Physics.RaycastAll(ray,40,Flow.References.PickingMask,QueryTriggerInteraction.Collide).OrderBy(h=>h.distance).ToArray();
             if (hits.Length==0 || hits[0].collider!=SurfacePicking) { CancelGesture();return false; }
             Vector2 uv=WorldUV(hits[0].point);
-            if(!held)FaceMode=uv.x>.56f&&session.State.HasFact(AtelierFlowRules.DryLearned);
+            // 左干右湿跟随当前位置；按下后拖过中线也按新区域判断，不再沿用起手时的旧模式。
+            if((!held||mouse.leftButton.isPressed)&&session.State.HasFact(AtelierFlowRules.DryLearned))
+                FaceMode=uv.x>.56f;
             PointerKnife.gameObject.SetActive(true);
             RestKnife.gameObject.SetActive(false);
             PointerKnife.position=hits[0].point+Vector3.up*(FaceMode?.006f:.0265f);
             PointerKnife.rotation=Quaternion.Euler(0,-20,FaceMode?8:68);
             if (mouse.leftButton.wasPressedThisFrame)
             { previous=pressed=uv;held=true;moved=false; }
-            else if (held && mouse.leftButton.isPressed && Vector2.Distance(previous,uv)>.012f)
+            else if (held && mouse.leftButton.isPressed && Vector2.Distance(previous,uv)>.008f)
             {
                 moved=true;
                 Contact(previous,uv,FaceMode);
