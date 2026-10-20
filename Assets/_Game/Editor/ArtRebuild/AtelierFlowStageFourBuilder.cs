@@ -123,18 +123,65 @@ namespace Game.Editor.ArtRebuild
             panel.gameObject.SetActive(false);
             SaveOwnedControls(panel.gameObject,Root+"/Prefabs/PF_第四阶段功能占位.prefab");
             var fade=Node(parent,"四阶段结尾淡出",true);
-            var fr=(RectTransform)fade;fr.anchorMin=Vector2.zero;fr.anchorMax=Vector2.one;fr.offsetMin=fr.offsetMax=Vector2.zero;fade.SetAsLastSibling();
-            var background=fade.GetComponent<Image>();if(background==null)background=fade.gameObject.AddComponent<Image>();background.color=Color.black;
-            var group=fade.GetComponent<CanvasGroup>();if(group==null)group=fade.gameObject.AddComponent<CanvasGroup>();group.alpha=0;group.blocksRaycasts=false;stage.EndingFade=group;
-            var ending=Node(fade,"结束菜单",true);var er=(RectTransform)ending;er.anchorMin=er.anchorMax=new Vector2(.5f,.5f);er.pivot=new Vector2(.5f,.5f);er.sizeDelta=new Vector2(720,480);stage.EndingPanel=ending.gameObject;
-            stage.EndingTitle=Label(flow,ending,"结尾标题","",new Vector2(0,-32),new Vector2(720,90),46);
-            stage.EndingTitle.alignment=TextAnchor.MiddleCenter;
-            Label(flow,ending,"练习说明","回到点灯前，保留前三层作品",new Vector2(0,-170),new Vector2(720,52),23).alignment=TextAnchor.MiddleCenter;
-            stage.RetryButton=Button(flow,ending,"从第四阶段再试","从第四阶段再试",180,-238,360);
-            stage.AgainButton=Button(flow,ending,"重新开始","重新开始",180,-304,360);
-            stage.QuitButton=Button(flow,ending,"退出","退出",180,-370,360);
-            ending.gameObject.SetActive(false);
+            ApplyEndingLayout(flow,stage,fade);
             SaveOwnedControls(fade.gameObject,Root+"/Prefabs/PF_四阶段结尾占位.prefab");
+        }
+        /// <summary>结尾菜单的统一排版：终章标识、路线副题、主操作与低优先级的练习回看。</summary>
+        /// <remarks>场景和Prefab母版共用这一入口，避免只在运行时改文字而留下旧的“再试”界面。</remarks>
+        public static void ApplyEndingLayout(AtelierFlowGameplay flow,AtelierFlowStageFour stage,Transform fade)
+        {
+            if(flow==null||stage==null||fade==null)throw new InvalidOperationException("结尾菜单缺少绑定对象。");
+            var fr=(RectTransform)fade;
+            fr.anchorMin=Vector2.zero;fr.anchorMax=Vector2.one;fr.offsetMin=fr.offsetMax=Vector2.zero;fade.SetAsLastSibling();
+            var background=fade.GetComponent<Image>();if(background==null)background=fade.gameObject.AddComponent<Image>();
+            // 深靛蓝而不是纯黑：终局仍能透出一点最后的世界，不是失败后的黑屏。
+            background.color=new Color(.012f,.018f,.038f,.92f);background.raycastTarget=true;
+            var group=fade.GetComponent<CanvasGroup>();if(group==null)group=fade.gameObject.AddComponent<CanvasGroup>();
+            group.alpha=0;group.blocksRaycasts=false;group.interactable=true;stage.EndingFade=group;
+            var ending=Node(fade,"结束菜单",true);var er=(RectTransform)ending;
+            er.anchorMin=er.anchorMax=new Vector2(.5f,.5f);er.pivot=new Vector2(.5f,.5f);er.anchoredPosition=Vector2.zero;er.sizeDelta=new Vector2(720,480);
+            stage.EndingPanel=ending.gameObject;
+            // 旧版“从第四阶段再试”和第一次整改留下的按钮一并清掉；练习回看改成文字链接。
+            foreach(var staleName in new[]{"从第四阶段再试","回到点灯前","回到点灯前_点击区"})
+            {var stale=ending.Find(staleName);if(stale!=null)Object.DestroyImmediate(stale.gameObject);}
+            var oldNote=ending.Find("练习说明");if(oldNote!=null&&ending.Find("结尾副题")==null)oldNote.name="结尾副题";
+            var eyebrow=Label(flow,ending,"结尾眉题","星夜未干 · 终章",new Vector2(0,-16),new Vector2(720,26),15);
+            eyebrow.alignment=TextAnchor.MiddleCenter;eyebrow.color=new Color(.56f,.62f,.72f,1);
+            stage.EndingTitle=Label(flow,ending,"结尾标题","",new Vector2(0,-48),new Vector2(720,82),46);
+            stage.EndingTitle.alignment=TextAnchor.MiddleCenter;
+            stage.EndingSubtitle=Label(flow,ending,"结尾副题","画留下了。房间还亮着，夜色也还在。",new Vector2(0,-134),new Vector2(720,46),22);
+            stage.EndingSubtitle.alignment=TextAnchor.MiddleCenter;stage.EndingSubtitle.color=new Color(.72f,.78f,.88f,1);
+            var dividerNode=Node(ending,"结尾分隔线",true);var dr=(RectTransform)dividerNode;
+            dr.anchorMin=dr.anchorMax=new Vector2(.5f,1);dr.pivot=new Vector2(.5f,1);dr.anchoredPosition=new Vector2(0,-182);dr.sizeDelta=new Vector2(180,1);
+            var divider=dividerNode.GetComponent<Image>();if(divider==null)divider=dividerNode.gameObject.AddComponent<Image>();
+            divider.color=new Color(.72f,.64f,.46f,.32f);divider.raycastTarget=false;
+            stage.AgainButton=Button(flow,ending,"重新开始","重新开始",78,-238,270);
+            stage.QuitButton=Button(flow,ending,"退出","退出",372,-238,270);
+            LayoutEndingButton(stage.AgainButton,-147,-238,270,48,22,new Color(.52f,.47f,.35f,.14f),new Color(.94f,.89f,.78f,1));
+            LayoutEndingButton(stage.QuitButton,147,-238,270,48,22,new Color(.52f,.47f,.35f,.06f),new Color(.94f,.89f,.78f,1));
+            // 练习回看是低优先级文字链接：文字独立渲染，透明点击区只负责命中，避免按钮模板吞掉文字。
+            var retryHit=Node(ending,"回到点灯前_点击区",true);var rr=(RectTransform)retryHit;
+            rr.anchorMin=rr.anchorMax=new Vector2(.5f,1);rr.pivot=new Vector2(.5f,1);rr.anchoredPosition=new Vector2(0,-310);rr.sizeDelta=new Vector2(300,34);
+            var retryImage=retryHit.GetComponent<Image>();if(retryImage==null)retryImage=retryHit.gameObject.AddComponent<Image>();
+            retryImage.color=new Color(.52f,.47f,.35f,.04f);retryImage.raycastTarget=true;
+            var retryButton=retryHit.GetComponent<Button>();if(retryButton==null)retryButton=retryHit.gameObject.AddComponent<Button>();
+            retryButton.targetGraphic=retryImage;retryButton.onClick=new Button.ButtonClickedEvent();stage.RetryButton=retryButton;
+            var retryText=Label(flow,ending,"回到点灯前","回到点灯前",new Vector2(0,-310),new Vector2(720,34),18);
+            retryText.alignment=TextAnchor.MiddleCenter;retryText.color=new Color(.74f,.70f,.60f,1);retryText.raycastTarget=false;
+            var underlineNode=Node(ending,"回看下划线",true);var ur=(RectTransform)underlineNode;
+            ur.anchorMin=ur.anchorMax=new Vector2(.5f,1);ur.pivot=new Vector2(.5f,1);ur.anchoredPosition=new Vector2(0,-338);ur.sizeDelta=new Vector2(120,1);
+            var underline=underlineNode.GetComponent<Image>();if(underline==null)underline=underlineNode.gameObject.AddComponent<Image>();
+            underline.color=new Color(.72f,.64f,.46f,.30f);underline.raycastTarget=false;
+            var note=Label(flow,ending,"练习说明","回看会回到点灯前，前三层作品保留。",new Vector2(0,-350),new Vector2(720,22),14);
+            note.alignment=TextAnchor.MiddleCenter;note.color=new Color(.55f,.58f,.65f,1);note.raycastTarget=false;
+            ending.gameObject.SetActive(false);
+        }
+        private static void LayoutEndingButton(Button button,float x,float y,float width,float height,int fontSize,Color background,Color caption)
+        {
+            var rect=button.GetComponent<RectTransform>();rect.anchorMin=rect.anchorMax=new Vector2(.5f,1);rect.pivot=new Vector2(.5f,1);
+            rect.anchoredPosition=new Vector2(x,y);rect.sizeDelta=new Vector2(width,height);
+            var image=button.GetComponent<Image>();if(image!=null)image.color=background;
+            var text=button.GetComponentInChildren<Text>();text.fontSize=fontSize;text.color=caption;text.alignment=TextAnchor.MiddleCenter;
         }
         private static void SaveOwnedControls(GameObject root,string path)
         {

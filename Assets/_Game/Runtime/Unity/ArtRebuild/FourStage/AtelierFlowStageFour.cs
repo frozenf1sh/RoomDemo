@@ -29,6 +29,8 @@ namespace Game.Unity.ArtRebuild
         public GameObject Panel,EndingPanel;
         public CanvasGroup EndingFade;
         public Text Instruction,EndingTitle;
+        /// <summary>结尾副题由路线决定，标题仍沿用原稿的“重新点亮／星之河之外”。</summary>
+        public Text EndingSubtitle;
         public Button PaintButton,FaceButton,EdgeButton,TargetButton,UndoButton,AgainButton,RetryButton,QuitButton;
         private GameSession session;
         private Coroutine ending;
@@ -239,19 +241,23 @@ namespace Game.Unity.ArtRebuild
         {
             Flow.PrepareEnding();Tool.Cancel();Flow.Voice.Play("N07");
             while(!n07Completed)yield return null;
-            yield return new WaitForSeconds(2);yield return FadeAndMenu("重新点亮");
+            yield return new WaitForSeconds(2);
+            yield return FadeAndMenu("重新点亮","画留下了。房间还亮着，夜色也还在。");
         }
         private IEnumerator EndWorld()
         {
             Flow.PrepareEnding();Tool.Cancel();
             while(!Flow.References.Finale.Finished)yield return null;
-            yield return new WaitForSeconds(3);yield return FadeAndMenu("星之河之外");
+            yield return new WaitForSeconds(3);
+            yield return FadeAndMenu("星之河之外","房间退去了。星夜还在慢慢流动。");
         }
-        private IEnumerator FadeAndMenu(string title)
+        private IEnumerator FadeAndMenu(string title,string subtitle)
         {
             EndingFade.blocksRaycasts=true;
             for(float t=0;t<1;t+=Time.deltaTime/2){EndingFade.alpha=t;yield return null;}
-            EndingFade.alpha=1;EndingTitle.text=title;EndingPanel.SetActive(true);
+            EndingFade.alpha=1;EndingTitle.text=title;
+            if(EndingSubtitle!=null)EndingSubtitle.text=subtitle;
+            EndingPanel.SetActive(true);
         }
         private void OnDestroy()
         {
