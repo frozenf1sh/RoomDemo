@@ -41,7 +41,28 @@ namespace Game.Domain
                 "atelier.collection.brush",
                 "旧画笔",
                 "看起来有些年月头的画笔，但却是某人的至爱之物",
-                new ClueId(AtelierRules.Brush.Value))
+                new ClueId(AtelierRules.Brush.Value)),
+            // 四阶段笔刷只在对应配方成功后入藏；目录不能据此提前把笔刷授予玩家。
+            new AtelierCollectionDefinition(
+                "atelier.collection.flow-brush.1",
+                "卷涡笔刷",
+                "由已经记下的颜色和笔势凝成的第一支笔刷。",
+                AtelierFlowRules.Brush(1)),
+            new AtelierCollectionDefinition(
+                "atelier.collection.flow-brush.2",
+                "第二阶段笔刷",
+                "这一笔刷来自第二层已经完成的联系。",
+                AtelierFlowRules.Brush(2)),
+            new AtelierCollectionDefinition(
+                "atelier.collection.flow-brush.3",
+                "第三阶段笔刷",
+                "这一笔刷来自第三层已经完成的联系。",
+                AtelierFlowRules.Brush(3)),
+            new AtelierCollectionDefinition(
+                "atelier.collection.flow-brush.4",
+                "第四阶段笔刷",
+                "这一笔刷来自最后一层已经完成的联系。",
+                AtelierFlowRules.Brush(4))
         });
     }
 }

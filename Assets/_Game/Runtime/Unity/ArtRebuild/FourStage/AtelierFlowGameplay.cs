@@ -73,11 +73,21 @@ namespace Game.Unity.ArtRebuild
             Session = CreateFlowSession();
             References.Notebook.EscapeClosesNotebook = false;
             References.Notebook.Bind(Session);
+            // 藏品页与笔记本共用同一会话，只读世界碎片；入口便签由藏品页在 Bind 内注册，不开笔记本就无法点开。
+            if (References.Collection != null)
+            {
+                References.Collection.Bind(Session, References.Notebook);
+                // 四阶段笔刷原图由画布在场景中持有；藏品页按层读取，运行时直接注入，避免依赖编辑器内存赋值而丢图。
+                References.Collection.ConfigureFourStageBrushArtwork(CanvasPort != null ? CanvasPort.Brushes : null);
+            }
             References.Notebook.ExternalInputBlocked = true;
             if(StageFour!=null)StageFour.Bind(Session);
             Wash.Bind(Session);
             CanvasPort.Bind(Session);
             if (StageThree!=null) StageThree.Bind(Session);
+            // 笔刷图卡位于可手调的笔记 Prefab 内；场景入口在会话创建后只注入读取端口。
+            foreach (var display in References.Notebook.GetComponentsInChildren<Game.Unity.UI.FourStage.AtelierBrushAcquisitionDisplay>(true))
+                display.Gameplay = this;
             Session.EventRaised += OnEvent;
             References.ReturnButton.onClick.AddListener(ReturnToRoom);
             References.ContextAction.onClick.AddListener(OnContextAction);
