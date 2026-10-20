@@ -81,6 +81,15 @@ namespace Game.Application
         /// <summary>调试授予全部已定义碎片，不自动解谜。</summary>
         public IReadOnlyList<DomainEvent> DebugGrantAllClues() => Publish(engine.DebugGrantClues(State, Rules.Clues.Select(x => x.Id).ToArray()));
 
+        /// <summary>调试授予指定碎片；只供开发快进使用，不改变正常调查许可。</summary>
+        /// <param name="clues">必须是当前规则集中已定义的稳定碎片。</param>
+        /// <returns>本次实际新增的发现事件；重复碎片由领域去重。</returns>
+        public IReadOnlyList<DomainEvent> DebugGrantClues(IEnumerable<ClueId> clues)
+        {
+            if (clues == null) throw new ArgumentNullException(nameof(clues));
+            return Publish(engine.DebugGrantClues(State, clues.ToArray()));
+        }
+
         /// <summary>调试添加一个合法事实，同时计算后续自动反应。</summary>
         public IReadOnlyList<DomainEvent> DebugAddFact(FactId fact) => Publish(engine.DebugAddFacts(State, new[] { fact }));
 
