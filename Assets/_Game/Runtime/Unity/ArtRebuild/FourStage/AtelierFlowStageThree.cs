@@ -24,12 +24,6 @@ namespace Game.Unity.ArtRebuild
         {
             session=game;
             Palette.Bind(game);
-            CompareButton.onClick.AddListener(CompareWindow);
-            StudyButton.onClick.AddListener(StudyPalette);
-            TryBrushButton.onClick.AddListener(Palette.TryBrush);
-            EdgeButton.onClick.AddListener(()=>Palette.SelectMode(false));
-            FaceButton.onClick.AddListener(()=>Palette.SelectMode(true));
-            LocateButton.onClick.AddListener(()=>Flow.OpenPaletteForPractice());
             WindowNear.SetActive(false);
             WindowFar.SetActive(false);
             Panel.SetActive(false);
@@ -38,17 +32,21 @@ namespace Game.Unity.ArtRebuild
         public void ObserveWindowDetail(bool far)
         {
             if (!Flow.CanUseStageThreeInput || !Flow.IsWindowFocused) return;
-            session.PerformAction(StudioRules.Window,far?"window_far":"window_near");
+            var source=far?AtelierFlowRules.FarWindowLight:AtelierFlowRules.NearWindowLight;
+            session.Inspect(source);
+            session.PerformAction(source,far?"window_far":"window_near");
+            if(session.State.Knows(AtelierFlowRules.NearWindowLight)&&session.State.Knows(AtelierFlowRules.FarWindowLight))
+                Flow.Voice.Play("G_WINDOW_BOTH");
+            else Flow.Voice.Play(far?"G_WINDOW_NEAR":"G_WINDOW_FAR");
         }
-        /// <summary>亲看两处后明确退远比较；原稿O10与星辰在该命令当次出现。</summary>
+        /// <summary>兼容旧入口，只播放两处均已亲看的比较台词，不授予材料。</summary>
         public void CompareWindow()
         {
             if (!Flow.CanUseStageThreeInput || !Flow.IsWindowFocused) return;
-            if (!session.IsActionAvailable(StudioRules.Window,"window_compare")) return;
-            session.PerformAction(StudioRules.Window,"window_compare");
-            Flow.CompareWindowView();
+            if(session.State.Knows(AtelierFlowRules.NearWindowLight)&&session.State.Knows(AtelierFlowRules.FarWindowLight))
+                Flow.Voice.Play("G_WINDOW_BOTH");
         }
-        /// <summary>细看结壳才取得混乱，拿起板或工具本身不直接发灰词。</summary>
+        /// <summary>兼容旧细看入口；拿起板或工具本身不直接发干湿观察。</summary>
         public void StudyPalette()
         {
             if (!Flow.CanUseStageThreeInput || !Flow.IsPaletteFocused) return;
@@ -60,36 +58,10 @@ namespace Game.Unity.ArtRebuild
             bool world=Flow.CanUseStageThreeInput;
             bool window=world && Flow.IsWindowFocused;
             bool palette=world && Flow.IsPaletteFocused;
-            bool locate=world && Flow.IsCanvasFocused && Flow.CanvasPort.Document.Current.Id==3
-                && (!session.State.HasFact(AtelierFlowRules.DryLearned)||!session.State.HasFact(AtelierFlowRules.WetLearned));
-            WindowNear.SetActive(window);
-            WindowFar.SetActive(window);
-            // 窗外热点在窗平面上，避免被整扇窗的入口碰撞盒抢走点击；离开立即恢复入口。
+            WindowNear.SetActive(window);WindowFar.SetActive(window);
             WindowPicking.enabled=!Flow.IsWindowFocused;
-            Panel.SetActive(window || palette || locate);
-            CompareButton.gameObject.SetActive(window);
-            CompareButton.interactable=session.IsActionAvailable(StudioRules.Window,"window_compare");
-            StudyButton.gameObject.SetActive(palette);
-            StudyButton.interactable=session.IsActionAvailable(AtelierFlowRules.DryPalette,"palette_inspect");
-            TryBrushButton.gameObject.SetActive(palette);
-            EdgeButton.gameObject.SetActive(palette);
-            FaceButton.gameObject.SetActive(palette);
-            EdgeButton.interactable=FaceButton.interactable=Palette.Equipped;
-            LocateButton.gameObject.SetActive(locate);
-            if (window) Instruction.text=session.State.HasFact(AtelierFlowRules.WindowCompared)?"窗灯也可以是星星。"
-                : "点近处屋檐和远处灯火，再离远看看。";
-            else if (palette)
-            {
-                bool dry=session.State.HasFact(AtelierFlowRules.DryLearned),wet=session.State.HasFact(AtelierFlowRules.WetLearned);
-                Instruction.text=!session.State.Knows(AtelierFlowRules.DryPalette)?"先点颜料板，看看干掉的颜料。"
-                    : !session.State.HasFact(AtelierFlowRules.PaletteStudied)?"细看结壳的颜料，再试试板旁的刮刀。"
-                    : !Palette.Equipped?"拿起板旁的刮刀，试试刀刃和刀面。"
-                    : dry&&wet?"两面都试过了，可以回画布继续画。"
-                    : dry&&!wet&&!Palette.FaceMode?"干颜料刮开了。切到‘刀面推色’，试试右侧软色。"
-                    : wet&&!dry&&Palette.FaceMode?"软色推开了。切到‘刀刃揭底’，试试左侧干色。"
-                    : (Palette.FaceMode?"刀面：拖过右侧软色，把颜色推开。":"刀刃：拖过左侧干色，露出木底。")+"\n也可以在对应试区短点三次。";
-            }
-            else if (locate) Instruction.text="完成这一层前，先在颜料板试试刀刃和刀面。";
+            // 世界交互只保留实际物体与短旁白，旧功能面板不再进入玩家画面。
+            Panel.SetActive(false);
             if (!palette) Palette.CancelGesture();
         }
         private void OnDisable()

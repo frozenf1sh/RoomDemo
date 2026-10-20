@@ -76,17 +76,17 @@ namespace Game.Domain
                 observations: new[] { C("transparent"), C("blue"), C("flow") }, additionalSources: new[] { AtelierRules.Brush }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.ice_blue", new[] { C("transparent"), C("blue") }, empty, new[] { ice }, empty, consumedInputs: new[] { C("transparent"), C("blue") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.swirl", new[] { C("flow"), C("free") }, empty, new[] { swirl }, empty, consumedInputs: new[] { C("flow"), C("free") }));
-            recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.1", new[] { ice, swirl }, empty, new[] { Brush(1) }, empty));
+            recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.1", new[] { ice, swirl }, empty, new[] { Brush(1) }, empty, consumedInputs:new[] {ice,swirl}));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.twisted", new[] { C("fixed"), C("flip") }, new[] { Finished(1) }, new[] { twisted }, empty, consumedInputs: new[] { C("fixed"), C("flip") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.rough", new[] { C("black"), C("sharp") }, new[] { Finished(1) }, new[] { rough }, empty, consumedInputs: new[] { C("black"), C("sharp") }));
-            recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.2", new[] { twisted, rough }, new[] { Finished(1) }, new[] { Brush(2) }, empty));
+            recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.2", new[] { twisted, rough }, new[] { Finished(1) }, new[] { Brush(2) }, empty, consumedInputs:new[] {twisted,rough}));
             AppendStageThree(clues,objects,actions,recipes);
             AppendStageFour(clues,objects,actions,recipes);
             // 新线明确等待主动完成；配方次数不能触发旧的自动锁画布。
             return new RuleSet(clues.ToArray(), objects.ToArray(), recipes.ToArray(), Array.Empty<ReactionRule>(),
                 declaredFacts: new[] { Enabled, MirrorCompared, Finished(1), Finished(2), Finished(3), Finished(4), DryLearned, WetLearned, WorldCommitted,
                     WindowNearSeen, WindowFarSeen, WindowCompared, PaletteStudied, StudioRules.LampTurned, AtelierRules.MatchStruck,
-                    RoofProbed, AtelierRules.RoofErased, AtelierRules.SharedMarkSeen, AtelierRules.RoomErased, AtelierRules.CanvasDelivered },
+                    RoofAsPaint,RoomAsPaint,SkyAsCanvas,SkyCloudPainted,SkyStarsPainted,SkyFinished,RoofProbed, AtelierRules.RoofErased, AtelierRules.SharedMarkSeen, AtelierRules.RoomErased, AtelierRules.CanvasDelivered },
                 sceneActions: actions.ToArray(), canvasLockFact: AtelierRules.CanvasDelivered, maximumCombinationInputs: 2);
         }
     }

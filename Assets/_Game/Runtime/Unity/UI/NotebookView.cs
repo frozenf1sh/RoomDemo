@@ -12,7 +12,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 namespace Game.Unity
 {
-    /// <summary>显示已收集碎片、三个组合槽、组合结果与既有解释。</summary>
+    /// <summary>显示已收集碎片、有限组合区、组合结果与既有解释。</summary>
     public sealed class NotebookView : MonoBehaviour
     {
         [SerializeField] private bool quietStudio;
@@ -22,6 +22,14 @@ namespace Game.Unity
         public event System.Action<bool> OpenChanged;
         /// <summary>用户点击词语阅读说明。</summary>
         public event System.Action<ClueId> ClueRead;
+        /// <summary>帮助和详情覆盖时暂停结果预览的可见计时。</summary>
+        public System.Func<bool> PreviewCoverQuery;
+        public bool PreviewCovered => (GetComponent<AtelierNotebookHelp>()?.IsVisible ?? false)||(PreviewCoverQuery?.Invoke()??false);
+        public GameObject PanelObject => panel;
+        public Transform MaterialsRoot => unifiedWords != null ? unifiedWords.GetComponentInParent<ScrollRect>()?.transform ?? unifiedWords : objectList;
+        public Text DescriptionLabel => clueDescription;
+        public Font NotebookFont => rowTemplate.GetComponentInChildren<Text>().font;
+
         /// <summary>纸面拖动完成后的输入快照通知。</summary>
         public event System.Action CanvasChanged;
         /// <summary>仅在玩家提交之后接管需要世界手势确认的输入；返回 false 保留原提交路径。</summary>
@@ -133,6 +141,35 @@ namespace Game.Unity
         /// <summary>配置纸页过渡、连接墨线与轻反馈声音；仅为界面演出。</summary>
         public void ConfigurePresentation(RectTransform body, CanvasGroup group, Image line, AudioSource paper, AudioSource ink, AudioSource scratch)
         { paperBody = body; paperCanvas = group; relationLine = line; paperAudio = paper; inkAudio = ink; scratchAudio = scratch; }
+        /// <summary>四阶段沿用纸张与模板，将材料统一到左页并启用有限双词输入。</summary>
+        public void ConfigureFourStageLayout()
+        {
+            quietStudio = true;
+            if (semanticCanvas != null)
+            {
+                semanticCanvas.ConfigureQuietStudio(true);
+                semanticCanvas.ConfigureBlindComposition(true);
+            }
+            // 复用现有滚动区，不创建第二份材料，也不改动收藏和画布工作区。
+            if (unifiedWords == null && objectList != null)
+            {
+                var scroll = objectList.GetComponentInParent<ScrollRect>();
+                if (scroll != null)
+                {
+                    var rect = (RectTransform)scroll.transform;
+                    rect.anchorMin = new Vector2(.065f,.20f); rect.anchorMax = new Vector2(.47f,.80f);
+                    rect.offsetMin = rect.offsetMax = Vector2.zero;
+                    unifiedWords = objectList;
+                    foreach (var old in new[] { conceptList, observationList })
+                    {
+                        var other = old != null ? old.GetComponentInParent<ScrollRect>() : null;
+                        if (other != null && other != scroll) other.gameObject.SetActive(false);
+                    }
+                    var heading = panel.transform.Find("名词标题")?.GetComponent<Text>();
+                    if (heading != null) heading.text = "已发现的词条";
+                }
+            }
+        }
         /// <summary>重绑会话与按钮，清空临时选择并重新建立只读视图。</summary>
         /// <param name="game">新的应用层会话；可以是初始会话或已经恢复的调试会话。</param>
         /// <remarks>本组件拥有这些按钮的监听；重绑必须先移除旧监听与旧会话订阅。</remarks>
@@ -142,7 +179,9 @@ namespace Game.Unity
             if (clueDescription != null) clueDescription.text = "";
             // 重开或预设跳转时先解绑旧会话，避免旧事件修改新界面。
             if (session != null) session.EventRaised -= OnEvent;
-            session = game; if (semanticCanvas != null) semanticCanvas.Bind(game, this); session.EventRaised += OnEvent; closeAt = -1; formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); ClearSelection();
+            session = game;
+            if (game.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled)) ConfigureFourStageLayout();
+            if (semanticCanvas != null) semanticCanvas.Bind(game, this); session.EventRaised += OnEvent; closeAt = -1; formedWord = null; if (insightWord != null) insightWord.gameObject.SetActive(false); ClearSelection();
             // 重开与预设跳转不播放翻页声，也不能留下上一会话的声音。
             paperAudio.Stop(); inkAudio.Stop(); scratchAudio.Stop(); SetOpen(false, false);
             // 只缓存一次原始按钮样式；重开时不能把上一会话的闪烁颜色当作初始颜色。
@@ -170,6 +209,12 @@ namespace Game.Unity
             }
             for (int i = 0; i < slotButtons.Length; i++) { int index = i; slotButtons[i].onClick.RemoveAllListeners(); slotButtons[i].onClick.AddListener(() => { selected[index] = null; RenderSelection(); }); }
             feedbackText.text = quietStudio ? "" : "把细节放在一起。"; Render();
+            if(game.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled))
+            {
+                var help=GetComponent<AtelierNotebookHelp>();
+                if(help==null)help=gameObject.AddComponent<AtelierNotebookHelp>();
+                help.Bind(this,game);
+            }
         }
         /// <summary>只修改笔记本界面开关。</summary>
         public void SetOpen(bool open, bool playSound = true)
@@ -285,7 +330,9 @@ namespace Game.Unity
                     // 领域已完成消费和产出。立即隐藏旧卡，取消旧延迟清理，再显示真实结果。
                     PrepareCanvasInput();
                     ClearSelection();
-                    semanticCanvas.ShowResult(success.ProducedClues);
+                    semanticCanvas.ShowResult(success.ProducedClues,success.RecipeId.EndsWith("sky_canvas")?"可以在天空作画了。":
+                        success.RecipeId.EndsWith("roof_paint")?"屋顶的表层像干颜料。":
+                        success.RecipeId.EndsWith("room_paint")?"房间表层可以推开了。":"解释已经记下。");
                     feedbackText.text = "";
                     selectionText.text = "";
                     Render();
@@ -324,6 +371,8 @@ namespace Game.Unity
         /// <param name="clue">领域首次发现事件中的碎片；兼容事件和重复观察不调用此方法。</param>
         private void ShowDiscovery(ClueId clue)
         {
+            // 不在材料栏展示的旧来源也不冒出“获得词条”通知；知识仍由领域保存。
+            if (session.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled) && !session.AtelierNotebookMaterials.Contains(clue)) return;
             // 连续发现共享一张通知，避免盆栽与生长在同一命令中互相覆盖。
             if (Time.unscaledTime >= discoveryUntil) recentDiscoveries.Clear();
             // 房间第一次成为词条时仅留一声与小笔记记号，避免弹窗替玩家解释题眼。
@@ -371,11 +420,10 @@ namespace Game.Unity
         {
             var scroll = unifiedWords != null ? unifiedWords.GetComponentInParent<ScrollRect>() : null;
             float savedScroll = scroll != null ? scroll.verticalNormalizedPosition : 1;
-            ClearRows(objectList); ClearRows(conceptList); if (observationList != null) ClearRows(observationList);
-            if (logicList != null) ClearRows(logicList);
-            if (unifiedWords != null) ClearRows(unifiedWords);
+            // 统一列表复用原名词节点，同一行只能清理一次。
+            foreach (var list in new[] {objectList,conceptList,observationList,logicList,unifiedWords}.Where(x=>x!=null).Distinct())ClearRows(list);
             // 依获得顺序排列，不把思想材料重新分成物品栏和技能栏。
-            var definitions = unifiedWords != null ? session.State.AvailableClues.Select(id => session.Rules.Clues.Single(x=>x.Id==id))
+            var definitions = session.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled) ? session.AtelierNotebookMaterials.Select(id => session.Rules.Clues.Single(x=>x.Id==id))
                 : session.Rules.Clues.Where(x => session.State.CanUseClue(x.Id));
             foreach (var definition in definitions)
             {
@@ -383,7 +431,7 @@ namespace Game.Unity
                 var id = definition.Id;
                 var list = unifiedWords != null ? unifiedWords : definition.PartOfSpeech == CluePartOfSpeech.Noun ? objectList
                     : definition.PartOfSpeech == CluePartOfSpeech.Adjective ? observationList : conceptList;
-                AddRow(list, definition.PartOfSpeech + "_" + id.Value, definition.DisplayName, definition.Category, () => SelectClue(id));
+                AddRow(list, definition.PartOfSpeech + "_" + id.Value, definition.DisplayName, definition.Category, () => SelectClue(id),id);
             }
             if (logicList != null)
                 foreach (var logic in session.Rules.KnownLogics(session.State)) AddLogicRow(logic);
@@ -451,7 +499,7 @@ namespace Game.Unity
             }
         }
         /// <summary>从模板创建中文条目，并绑定本条碎片的选择回调。</summary>
-        private void AddRow(Transform list, string name, string label, ClueCategory category, UnityEngine.Events.UnityAction select)
+        private void AddRow(Transform list, string name, string label, ClueCategory category, UnityEngine.Events.UnityAction select,ClueId id)
         {
             var row = Instantiate(rowTemplate, list);
             row.name = name;
@@ -462,7 +510,7 @@ namespace Game.Unity
             bool concept = category == ClueCategory.Concept;
             bool observation = category == ClueCategory.Observation;
             text.fontSize = quietStudio ? 22 : concept ? 26 : observation ? 17 : 21;
-            text.color = quietStudio ? (concept ? new Color(.25f,.39f,.63f) : observation ? new Color(.40f,.42f,.44f) : new Color(.20f,.30f,.26f)) : observation ? new Color(.40f, .38f, .32f) : new Color(.25f, .25f, .21f);
+            text.color = quietStudio ? AtelierNotebookInk.For(id,category) : observation ? new Color(.40f, .38f, .32f) : new Color(.25f, .25f, .21f);
             row.GetComponent<LayoutElement>().preferredHeight = quietStudio ? 40 : concept ? 44 : observation ? 32 : 36;
             row.targetGraphic = text;
             if (quietStudio) row.transition = Selectable.Transition.None;
@@ -482,8 +530,8 @@ namespace Game.Unity
             }
             interpretButton.interactable = SelectedClues.Count >= 2;
             var submit = interpretButton.GetComponentInChildren<Text>();
-            // 深色纸签上的禁用态仍须保留可读的“解释”，只降低透明度而不改成同色深墨。
-            submit.color = new Color(.96f, .89f, .70f, interpretButton.interactable ? 1 : .72f);
+            // 合成字样始终为纯白；是否可提交由按钮状态表达。
+            submit.color = Color.white;
         }
         /// <summary>纸页轻展开并呈现成功墨迹；正式纸面不自动合页，也不判断配方。</summary>
         private void UpdatePaperRitual()

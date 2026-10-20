@@ -34,6 +34,13 @@ namespace Game.Unity
         private GameSession session;
         private NotebookView notebook;
         private ClueId[] candidateInputs = new ClueId[0];
+        private readonly List<GameObject> resultPreviews=new List<GameObject>();
+        private float resultAge=-1;
+        /// <summary>帮助标注使用真实组合区域和提交按钮。</summary>
+        public RectTransform Workspace => workspace;
+        public Button SubmitButton => action;
+        /// <summary>仅用于视觉检查，不计入两个参与词。</summary>
+        public bool HasResultPreview => resultPreviews.Count>0;
         private float successUntil;
         private float failureUntil;
         /// <summary>失败只在纸面上短暂回应，不预告正确配方，也不混入旁白。</summary>
@@ -60,6 +67,7 @@ namespace Game.Unity
         public void Bind(GameSession game, NotebookView view)
         {
             session = game; notebook = view;
+            if(game.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled))clickPlacement=true;
             if (clickPlacement)
             {
                 workspace.GetComponent<Image>().raycastTarget = true;
@@ -90,6 +98,7 @@ namespace Game.Unity
         public RectTransform Add(ClueId clue, Vector2 localPosition)
         {
             if (!session.State.CanUseClue(clue)) return null;
+            ClearResultPreview();
             notebook.PrepareCanvasInput();
             if (cards.TryGetValue(clue, out var existing)) return existing;
             if (cards.Count >= Capacity) return null;
@@ -103,12 +112,11 @@ namespace Game.Unity
             rect.anchoredPosition = localPosition;
             var label = button.GetComponentInChildren<Text>(); label.text = definition.DisplayName;
             label.fontSize = quietStudio ? 22 : definition.Category == ClueCategory.Concept ? 28 : definition.Category == ClueCategory.Observation ? 20 : 23;
-            if (quietStudio) label.color = definition.Category == ClueCategory.Concept ? new Color(.25f,.39f,.63f) : definition.Category == ClueCategory.Observation ? new Color(.40f,.42f,.44f) : new Color(.20f,.30f,.26f);
+            if (quietStudio) label.color = AtelierNotebookInk.For(clue,definition.Category);
             var image = button.GetComponent<Image>(); image.color = new Color(.87f,.82f,.66f,.12f);
             button.onClick.RemoveAllListeners(); button.onClick.AddListener(() =>
             {
-                if (quietStudio && !clickPlacement) notebook.SelectClue(clue);
-                else { Remove(clue); notebook.NotifyCanvasChanged(); }
+                Remove(clue); notebook.NotifyCanvasChanged();
             });
             button.gameObject.AddComponent<NotebookClueDrag>().Configure(this, clue, true);
             cards.Add(clue, rect); Refresh(); return rect;
@@ -123,6 +131,7 @@ namespace Game.Unity
         public void Pick(ClueId clue)
         {
             if (!clickPlacement || !session.State.CanUseClue(clue)) return;
+            ClearResultPreview();
             picked = clue;
         }
         /// <summary>点击纸面空处放下所选词；不提交、不预判配方。</summary>
@@ -158,6 +167,7 @@ namespace Game.Unity
         /// <summary>清空纸面、淡线和临时提示；用于重开、形成概念或解释后收起。</summary>
         public void Clear()
         {
+            ClearResultPreview();
             foreach (var card in cards.Values) { card.gameObject.SetActive(false); Destroy(card.gameObject); }
             if (inkMotes != null) foreach(var mote in inkMotes) mote.gameObject.SetActive(false);
             cards.Clear(); picked = null; candidateInputs = new ClueId[0]; successUntil = 0; failureUntil = 0;
@@ -166,14 +176,37 @@ namespace Game.Unity
         }
         /// <summary>同一次成功回调里撤去全部旧卡，再放入领域实际产出的蓝色词条。</summary>
         /// <param name="produced">命令已确认的结果；不从UI猜测配方。</param>
-        public void ShowResult(IReadOnlyList<ClueId> produced)
+        public void ShowResult(IReadOnlyList<ClueId> produced,string worldResult="解释已经记下。")
         {
             Clear();
-            for (int index = 0; index < produced.Count; index++)
-                Add(produced[index],new Vector2((index-(produced.Count-1)*.5f)*150,20));
+            int count=Mathf.Max(1,produced.Count);
+            for(int index=0;index<count;index++)
+            {
+                var card=Instantiate(cardTemplate,workspace);
+                card.name="结果预览";card.gameObject.SetActive(true);card.interactable=false;
+                foreach(var graphic in card.GetComponentsInChildren<Graphic>())graphic.raycastTarget=false;
+                var rect=(RectTransform)card.transform;
+                rect.anchorMin=rect.anchorMax=new Vector2(.5f,.5f);
+                rect.anchoredPosition=new Vector2((index-(count-1)*.5f)*150,20);
+                var label=card.GetComponentInChildren<Text>();
+                if(produced.Count>0)
+                {
+                    var definition=session.Rules.Clues.Single(x=>x.Id==produced[index]);
+                    label.text=definition.DisplayName;label.color=AtelierNotebookInk.For(definition.Id,definition.Category);
+                }
+                else {label.text=worldResult;label.color=new Color(.25f,.30f,.26f);}
+                resultPreviews.Add(card.gameObject);
+            }
+            resultAge=0;
             notebook.NotifyCanvasChanged();
         }
-        private void OnDisable() { picked = null; }
+        /// <summary>只撤本次结果图形，不清除玩家下一轮的活动词。</summary>
+        public void ClearResultPreview()
+        {
+            foreach(var preview in resultPreviews)if(preview!=null){preview.SetActive(false);Destroy(preview);}
+            resultPreviews.Clear();resultAge=-1;
+        }
+        private void OnDisable() { picked = null; ClearResultPreview(); }
         /// <summary>成功时淡线短暂变亮；不把闪光当作配方完成的第二份状态。</summary>
         public void ShowSuccess()
         {
@@ -217,7 +250,7 @@ namespace Game.Unity
             // 按输入的语义重量提供动词，不查询这组词是否存在答案。
             bool containsObject = candidateInputs.Any(c => session.Rules.Clues.Single(x => x.Id == c).Category == ClueCategory.Object);
             var actionLabel = action.GetComponentInChildren<Text>();
-            actionLabel.color = new Color(.40f, .29f, .12f, 1);
+            actionLabel.color = Color.white;
             actionLabel.text = Capacity == 2 ? "合成" : quietStudio ? "解释" : blindComposition ? (containsObject ? "解释" : "联想")
                 : recipe.ProducesClues.Count > 0 ? "联想" : "解释";
             for(int i=0;i<candidateInputs.Length-1;i++)
@@ -233,6 +266,15 @@ namespace Game.Unity
         }
         private void Update()
         {
+            if(resultAge>=0 && notebook.IsOpen && !notebook.PreviewCovered && Time.timeScale>0)
+            {
+                resultAge+=Time.unscaledDeltaTime;
+                float alpha=1-Mathf.Clamp01((resultAge-1.5f)/.2f);
+                foreach(var preview in resultPreviews)
+                    foreach(var graphic in preview.GetComponentsInChildren<Graphic>())
+                    {var color=graphic.color;color.a=alpha;graphic.color=color;}
+                if(resultAge>=1.7f)ClearResultPreview();
+            }
             if (failureUntil > 0 && Time.unscaledTime >= failureUntil) { failureUntil = 0; Refresh(); }
             if (successUntil <= 0) return;
             float remaining=Mathf.Clamp01((successUntil-Time.unscaledTime)/.85f);

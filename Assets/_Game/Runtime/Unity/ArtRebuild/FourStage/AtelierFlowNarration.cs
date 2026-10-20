@@ -34,6 +34,21 @@ namespace Game.Unity.ArtRebuild
         /// <summary>正在播放的稳定键，供运行取证和后续字幕接入读取。</summary>
         public string ActiveKey { get; private set; } = "";
         private static readonly Dictionary<string, Line> Lines = new Dictionary<string, Line> {
+            { "G_KNIFE_DRY",new Line("G_KNIFE_DRY",4,"先刮开这块干颜料。") },
+            { "G_KNIFE_WET",new Line("G_KNIFE_WET",4,"底下还没干透。用刀把这块湿颜料推开试试。") },
+            { "G_WINDOW_NEAR",new Line("G_WINDOW_NEAR",4,"看看近处那扇亮着灯的窗。") },
+            { "G_WINDOW_FAR",new Line("G_WINDOW_FAR",4,"再看看远处的窗灯。") },
+            { "G_WINDOW_BOTH",new Line("G_WINDOW_BOTH",4,"对了，这一带一直不大热闹，离城市很远，也没有星星。但有时候夜里亮起的窗灯也可以是星星吧？") },
+            { "G_LAMP",new Line("G_LAMP",5,"夜深了。看看左边的灯，把它点亮吧。") },
+            { "G_MATCH",new Line("G_MATCH",5,"右下角有一盒火柴，先拿一根。") },
+            { "G_REST",new Line("G_REST",6,"你真的该休息了，快画完吧。") },
+            { "G_ROOF_WARN",new Line("G_ROOF_WARN",7,"别再刮了。回去把画画完。") },
+            { "G_ROOM_ANGRY",new Line("G_ROOM_ANGRY",8,"够了！别再碰这个房间。回到画布前，把画画完！") },
+            { "V_ROOF",new Line("V_ROOF",0,"文森特：天花板看起来有点像干颜料……") },
+            { "V_WET",new Line("V_WET",0,"文森特：湿颜料掉在地上了，看起来可以用刀推开……") },
+            { "V_REFUSE",new Line("V_REFUSE",0,"文森特：我不想再画那幅画了。") },
+            { "V_CLOUD",new Line("V_CLOUD",0,"文森特：画点云吧。点一下天空，落一笔。") },
+            { "V_STAR",new Line("V_STAR",0,"文森特：再添一点星光。") },
             { "N01", new Line("N01", 1, "你好，文森特，你还好吗？你已经很久没有呼唤我了。视线里空无一物，不是吗？好吧，我能来帮帮你。试着回想起一些物件——一些你从儿时就熟悉的东西。看到了吗？它们就在那里。不要熟视无睹。拿起它们。回想起它们。获得启发。") },
             { "N02", new Line("N02", 2, "有点想法了？太好了。 我建议你只是把它画下来，只是这样就好。") },
             { "N03", new Line("N03", 3, "感觉好些了，还是感觉不确定？那些都不重要了。放松一些了吧，思绪更自由了吧……也许凭借着这样的状态，你可以看见更多事物。但看见更多，就意味着更加自由吗？") },
@@ -43,6 +58,8 @@ namespace Game.Unity.ArtRebuild
             { "N07", new Line("N07",7,"也只有你自己能够让自己不再困顿与迷茫。 将这片启示涂满世界的每个角落。") }
         };
 
+        /// <summary>主角想法与功能文字同表维护，显示在独立世界字幕节点。</summary>
+        public static string TextFor(string key)=>Lines.TryGetValue(key,out var line)?line.Text:"";
         /// <summary>只接受已定义台词；新进度替换过时的等待项，当前句播完后再切换。</summary>
         /// <param name="key">09号文档中的稳定台词键。</param>
         public void Play(string key)

@@ -20,6 +20,12 @@ namespace Game.Unity.ArtRebuild
         public Vector3 FlowRoofOrigin;
         public Vector2 FlowRoofSize = new Vector2(1.35f,1.35f);
         public Renderer[] RoofSurfaces, FrameSurfaces;
+        /// <summary>第一次擦除暂留的外景、画架与真实作品。</summary>
+        public Renderer[] FinalSurfaces=System.Array.Empty<Renderer>();
+        /// <summary>贴在实物上的便签文字等世界UI随室内退去，屏幕笔记和字幕不受影响。</summary>
+        public GameObject[] InteriorOverlays=System.Array.Empty<GameObject>();
+        private float finalErase;
+        private bool cloudShown;
         /// <summary>新流程独立视觉Prefab的明确表面；不依赖它们刚好挂在历史美术根下。</summary>
         public Renderer[] AdditionalSurfaces=System.Array.Empty<Renderer>();
         public Shader ErasureUnlit;
@@ -37,7 +43,8 @@ namespace Game.Unity.ArtRebuild
         /// <summary>仅用于输入屏蔽尚未落稳的表面；不是事实门槛。</summary>
         public bool RoofSettled => roof > .998f;
         /// <summary>完整演出完成后仍保留自由看天空与暂停菜单。</summary>
-        public bool Finished => room > .999f;
+        public bool InteriorSettled => room>.999f;
+        public bool Finished => FourStageFlow?finalErase>.999f&&Sky.Flow>.99f:room>.999f;
         /// <summary>当前统一笔刷进度，供明确的开发取证采样。</summary>
         public float Erasure => room;
 
@@ -45,7 +52,8 @@ namespace Game.Unity.ArtRebuild
         public void Bind(GameSession game)
         {
             session = game;
-            roof = room = frame = mark = 0;
+            roof = room = frame = mark = finalErase = 0;
+            cloudShown=false;
             lit = flowing = roofStarted = wholeStarted = false;
             intensities = new float[LocalLights.Length];
             for (int i = 0; i < LocalLights.Length; i++)
@@ -63,6 +71,7 @@ namespace Game.Unity.ArtRebuild
             InstallMaterials(GameplayRoot);
             InstallMaterials(AdditionalSurfaces);
             Sky.SeparateLightAndFlow = true;
+            Sky.IndependentCloudPaint=FourStageFlow;
             // 新会话取消上一轮颜料历史；只恢复表现，不改变任何世界事实。
             Sky.ResetEffect();
             Sky.SetCoverage(0);
@@ -79,7 +88,7 @@ namespace Game.Unity.ArtRebuild
                 var source = renderer.sharedMaterials;
                 var output = new Material[source.Length];
                 originals.Add(renderer, source);
-                float group = System.Array.IndexOf(RoofSurfaces, renderer) >= 0    ? 1
+                float group = FourStageFlow&&System.Array.IndexOf(FinalSurfaces,renderer)>=0 ? 3 : System.Array.IndexOf(RoofSurfaces, renderer) >= 0    ? 1
                               : System.Array.IndexOf(FrameSurfaces, renderer) >= 0 ? 2
                                                                                    : 0;
                 for (int i = 0; i < source.Length; i++)
@@ -152,19 +161,19 @@ namespace Game.Unity.ArtRebuild
                 roof = Mathf.MoveTowards(roof, 1, dt / 7.5f);
             if (state.HasFact(AtelierRules.FrameErased))
                 frame = Mathf.MoveTowards(frame, 1, dt / 5.5f);
-            if ((state.HasFact(StudioRules.SkyLit) || FourStageFlow && state.HasFact(AtelierRules.RoofErased)) && !lit)
+            if ((state.HasFact(StudioRules.SkyLit) || FourStageFlow && state.HasFact(AtelierFlowRules.SkyStarsPainted)) && !lit)
             {
                 lit = true;
                 Sky.RevealTo(1, 6);
                 Sky.LightTo(1, 6);
             }
-            if ((state.HasFact(StudioRules.SkyFlow) || FourStageFlow && state.HasFact(AtelierRules.RoofErased)) && !flowing)
+            if ((state.HasFact(StudioRules.SkyFlow) || FourStageFlow && state.HasFact(AtelierFlowRules.SkyFinished)&&finalErase>.999f) && !flowing)
             {
                 flowing = true;
                 Sky.RevealTo(1, 6);
                 Sky.FlowTo(1, 6);
             }
-            if (state.HasFact(StudioRules.FullSky) || FourStageFlow && state.HasFact(AtelierRules.RoofErased))
+            if (!FourStageFlow&&state.HasFact(StudioRules.FullSky))
                 mark = Mathf.MoveTowards(mark, 1, dt / 5);
             if (state.HasFact(AtelierRules.RoomErased) && !wholeStarted)
             {
@@ -172,8 +181,14 @@ namespace Game.Unity.ArtRebuild
                 for (int i = 0; i < LocalLights.Length; i++)
                     intensities[i] = LocalLights[i].intensity;
             }
-            if (wholeStarted)
-                room = Mathf.MoveTowards(room, 1, dt / (FourStageFlow ? 12 : 16));
+            if (wholeStarted)room = Mathf.MoveTowards(room,1,dt/(FourStageFlow?6:16));
+            if(FourStageFlow&&state.HasFact(AtelierFlowRules.SkyCloudPainted)&&!cloudShown)
+            {
+                cloudShown=true;Sky.RevealTo(1,1.4f);Sky.CloudTo(1,1.4f);
+            }
+            if(FourStageFlow&&state.HasFact(AtelierFlowRules.SkyFinished))
+                finalErase=Mathf.MoveTowards(finalErase,1,dt/3.5f);
+            Shader.SetGlobalFloat("_AtelierFinal",finalErase);
             if(FourStageFlow && state.HasFact(AtelierFlowRules.RoofProbed) && state.AtelierCanvas.RoofProbe.Count>0)
             {
                 var path=state.AtelierCanvas.RoofProbe;
@@ -191,6 +206,17 @@ namespace Game.Unity.ArtRebuild
         }
         private void LateUpdate()
         {
+            if(FourStageFlow&&room>.999f)
+            {
+                // 特殊工具和描线可能不用裁剪Shader；全退完后统一停止残留的实体绘制。
+                foreach(var pair in originals)
+                {
+                    if(pair.Key==null)continue;
+                    bool retained=System.Array.IndexOf(FinalSurfaces,pair.Key)>=0;
+                    if(!retained||finalErase>.999f)pair.Key.enabled=false;
+                }
+                foreach(var overlay in InteriorOverlays)if(overlay!=null)overlay.SetActive(false);
+            }
             if (!wholeStarted)
                 return;
             for (int i = 0; i < LocalLights.Length; i++)
@@ -225,6 +251,7 @@ namespace Game.Unity.ArtRebuild
         }
         private static void ResetGlobals()
         {
+            Shader.SetGlobalFloat("_AtelierFinal",0);
             Shader.SetGlobalFloat("_AtelierRoof", 0);
             Shader.SetGlobalFloat("_AtelierRoom", 0);
             Shader.SetGlobalFloat("_AtelierFrame", 0);

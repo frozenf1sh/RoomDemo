@@ -1,6 +1,6 @@
 // 文件：AtelierStageThreeTests.cs
-// 职责：验证第三阶段的来源、近远比较、灰词消费、工具经验与主动收层。
-// 边界：只验证领域命令因果，不把自动命令当作真人鼠标或视觉验收。
+// 职责：验证两处窗灯的亲点、灯火与夜城配方、干湿观察和材料用途。
+// 边界：只验证领域因果，不代表视觉质量或真人鼠标试玩。
 using System;
 using System.Linq;
 using Game.Application;
@@ -8,103 +8,97 @@ using Game.Domain;
 using NUnit.Framework;
 namespace Game.Tests
 {
-    /// <summary>每项通过真实前三阶段配方推进，不用调试事实制造可完成状态。</summary>
+    /// <summary>通过正常命令建立阶段前置，供本轮相关规则测试复用。</summary>
+    internal static class AtelierFlowTestPath
+    {
+        public static void Pair(GameSession g,string a,string b)=>g.Combine(new[] {AtelierFlowRules.C(a),AtelierFlowRules.C(b)});
+        public static void Form(GameSession g,string a,string b)=>g.Combine(new[] {new ClueId("atelier.flow."+a),new ClueId("atelier.flow."+b)});
+        public static void Paint(GameSession g)
+        {
+            g.Inspect(AtelierRules.Painting);
+            for(int i=0;i<3;i++)
+                Assert.IsTrue(g.CommitAtelierStroke(g.SessionEpoch,g.State.AtelierCanvas.Revision,
+                    new AtelierStroke(Guid.NewGuid().ToString(),g.State.AtelierCanvas.Current.Id,5000,5000,0,20)).Accepted);
+        }
+        public static void Finish(GameSession g)=>Assert.IsTrue(g.FinishAtelierLayer(g.SessionEpoch,g.State.AtelierCanvas.Revision).Accepted);
+        public static void Third(GameSession g)
+        {
+            g.Inspect(StudioRules.Cup);g.Inspect(AtelierRules.Brush);g.PerformAction(StudioRules.Cup,"wash_release_pigment");
+            g.Inspect(AtelierFlowRules.Crayon);Pair(g,"transparent","blue");Pair(g,"flow","free");Form(g,"ice_blue","swirl");Paint(g);Finish(g);
+            foreach(var source in new[] {AtelierFlowRules.Plaster,AtelierFlowRules.HandMirror,AtelierFlowRules.DryBrush,AtelierFlowRules.MirrorShards})g.Inspect(source);
+            g.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");Pair(g,"fixed","flip");Pair(g,"black","sharp");Form(g,"twisted","rough");Paint(g);Finish(g);
+        }
+        public static void City(GameSession g,bool farFirst=false)
+        {
+            g.Inspect(StudioRules.Window);
+            g.Inspect(farFirst?AtelierFlowRules.FarWindowLight:AtelierFlowRules.NearWindowLight);
+            g.Inspect(farFirst?AtelierFlowRules.NearWindowLight:AtelierFlowRules.FarWindowLight);
+            g.Combine(new[] {new ClueId(AtelierFlowRules.NearWindowLight.Value),new ClueId(AtelierFlowRules.FarWindowLight.Value)});
+            g.Combine(new[] {AtelierFlowRules.C("window_lights"),new ClueId(StudioRules.Window.Value)});
+        }
+        public static void Knife(GameSession g)
+        {
+            g.Inspect(AtelierFlowRules.DryPalette);g.Inspect(AtelierFlowRules.PaletteKnife);
+            g.PerformAction(AtelierFlowRules.DryPalette,"palette_scrape");g.PerformAction(AtelierFlowRules.DryPalette,"palette_spread");
+        }
+        public static void Fourth(GameSession g){Third(g);City(g);Knife(g);Paint(g);Finish(g);}
+        public static void Light(GameSession g)
+        {
+            g.Inspect(StudioRules.LampBody);g.Inspect(AtelierRules.Matches);
+            g.PerformAction(AtelierRules.Matches,"strike_match");g.PerformAction(StudioRules.LampBody,"light_wick");
+        }
+    }
+    /// <summary>新内容不再依赖旧的比较按钮、肉身与当下。</summary>
     public sealed class AtelierStageThreeTests
     {
         private GameSession game;
-        private static ClueId C(string id)=>AtelierFlowRules.C(id);
-        [SetUp] public void Setup() => game=new GameSession(AtelierFlowRules.CreateOpening());
-        private void Pair(string first,string second)=>game.Combine(new[] {C(first),C(second)});
-        private void Form(string first,string second)=>game.Combine(new[] {new ClueId("atelier.flow."+first),new ClueId("atelier.flow."+second)});
-        private void PaintThree()
+        [SetUp]public void Setup()=>game=new GameSession(AtelierFlowRules.CreateOpening());
+        [Test]public void SourcesRemainClosedBeforeSecondLayer()
         {
-            for(int n=0;n<3;n++)
-            {
-                var doc=game.State.AtelierCanvas;
-                Assert.IsTrue(game.CommitAtelierStroke(game.SessionEpoch,doc.Revision,new AtelierStroke(Guid.NewGuid().ToString(),doc.Current.Id,5000,5000,0,20)).Accepted);
-            }
+            foreach(var id in new[] {StudioRules.Window,AtelierFlowRules.NearWindowLight,AtelierFlowRules.FarWindowLight,AtelierFlowRules.DryPalette})
+            {game.Inspect(id);Assert.IsFalse(game.State.Knows(id));}
         }
-        private void Finish()=>Assert.IsTrue(game.FinishAtelierLayer(game.SessionEpoch,game.State.AtelierCanvas.Revision).Accepted);
-        private void ThirdStage()
+        [TestCase(false)][TestCase(true)]public void BothPersonalLightsFormCityInEitherObservationOrder(bool farFirst)
         {
-            game.Inspect(StudioRules.Cup);game.Inspect(AtelierRules.Brush);game.PerformAction(StudioRules.Cup,"wash_release_pigment");
-            game.Inspect(AtelierFlowRules.Crayon);Pair("transparent","blue");Pair("flow","free");Form("ice_blue","swirl");PaintThree();Finish();
-            foreach(var source in new[] {AtelierFlowRules.Plaster,AtelierFlowRules.HandMirror,AtelierFlowRules.DryBrush,AtelierFlowRules.MirrorShards}) game.Inspect(source);
-            game.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");Pair("fixed","flip");Pair("black","sharp");Form("twisted","rough");PaintThree();Finish();
+            AtelierFlowTestPath.Third(game);AtelierFlowTestPath.City(game,farFirst);
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.Brush(3)));
+            Assert.IsFalse(game.State.CanUseClue(AtelierFlowRules.C("window_lights")));
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.NearWindowLight));
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.FarWindowLight));
+            Assert.IsFalse(game.Rules.Clues.Any(x=>x.DisplayName=="肉身"||x.DisplayName=="当下"));
         }
-        private void Window()
+        [Test]public void WindowAndOneLightDoNotAwardTheOtherSource()
         {
-            game.Inspect(StudioRules.Window);game.PerformAction(StudioRules.Window,"window_far");
-            game.PerformAction(StudioRules.Window,"window_near");game.PerformAction(StudioRules.Window,"window_compare");
+            AtelierFlowTestPath.Third(game);game.Inspect(StudioRules.Window);game.Inspect(AtelierFlowRules.NearWindowLight);
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.FarWindowLight));
+            game.Combine(new[] {new ClueId(AtelierFlowRules.NearWindowLight.Value),new ClueId(AtelierFlowRules.FarWindowLight.Value)});
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("window_lights")));
         }
-        private void ReadyBrush()
+        [Test]public void ContactAwardsDryThenWetWithoutAStudyButton()
         {
-            Window();game.Inspect(AtelierFlowRules.DryPalette);game.PerformAction(AtelierFlowRules.DryPalette,"palette_inspect");
-            Pair("chaos","night");Pair("reality","stars");Form("body","present");
-        }
-        [Test] public void ThirdSourcesAndActionsStayClosedUntilSecondLayerFinishes()
-        {
-            foreach(var source in new[] {StudioRules.Window,AtelierFlowRules.DryPalette,AtelierFlowRules.PaletteKnife})
-            { Assert.IsFalse(game.IsInspectable(source));game.Inspect(source);Assert.IsFalse(game.State.Knows(source)); }
-            game.PerformAction(StudioRules.Window,"window_near");Assert.IsFalse(game.State.HasFact(AtelierFlowRules.WindowNearSeen));
-            Assert.IsFalse(game.State.Knows(C("reality")));
-        }
-        [Test] public void WindowClickDoesNotAwardNearFarOrComparison()
-        {
-            ThirdStage();game.Inspect(StudioRules.Window);
-            foreach(var word in new[] {"reality","night","stars"}) Assert.IsFalse(game.State.Knows(C(word)));
-            game.PerformAction(StudioRules.Window,"window_compare");Assert.IsFalse(game.State.HasFact(AtelierFlowRules.WindowCompared));
-            game.PerformAction(StudioRules.Window,"window_far");Assert.IsTrue(game.State.Knows(C("night")));
-            game.PerformAction(StudioRules.Window,"window_compare");Assert.IsFalse(game.State.Knows(C("stars")));
-            game.PerformAction(StudioRules.Window,"window_near");game.PerformAction(StudioRules.Window,"window_compare");
-            Assert.IsTrue(game.State.Knows(C("reality")));Assert.IsTrue(game.State.Knows(C("stars")));
-            Assert.IsFalse(game.State.Knows(AtelierFlowRules.DryPalette));Assert.IsFalse(game.State.Knows(StudioRules.Ceiling));
-            Assert.IsEmpty(game.PerformAction(StudioRules.Window,"window_compare"));
-        }
-        [Test] public void StudyingCrustOnlyAwardsOneUsefulGrayWordAndNeverKnife()
-        {
-            ThirdStage();game.Inspect(AtelierFlowRules.DryPalette);
-            Assert.IsFalse(game.State.Knows(C("chaos")));Assert.IsFalse(game.State.Knows(AtelierFlowRules.PaletteKnife));
-            game.PerformAction(AtelierFlowRules.DryPalette,"palette_inspect");
-            Assert.IsTrue(game.State.Knows(C("chaos")));Assert.IsFalse(game.State.HasFact(AtelierFlowRules.DryLearned));
-            Assert.IsFalse(game.State.HasFact(AtelierFlowRules.WetLearned));
-        }
-        [Test] public void BothKnifeActionsRequirePersonallyKnownBoardToolAndStudy()
-        {
-            ThirdStage();game.Inspect(AtelierFlowRules.DryPalette);
-            game.PerformAction(AtelierFlowRules.DryPalette,"palette_scrape");Assert.IsFalse(game.State.HasFact(AtelierFlowRules.DryLearned));
-            game.Inspect(AtelierFlowRules.PaletteKnife);
+            AtelierFlowTestPath.Third(game);game.Inspect(AtelierFlowRules.DryPalette);game.Inspect(AtelierFlowRules.PaletteKnife);
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("dry_paint")));
             game.PerformAction(AtelierFlowRules.DryPalette,"palette_spread");Assert.IsFalse(game.State.HasFact(AtelierFlowRules.WetLearned));
-            game.PerformAction(AtelierFlowRules.DryPalette,"palette_inspect");
             game.PerformAction(AtelierFlowRules.DryPalette,"palette_scrape");game.PerformAction(AtelierFlowRules.DryPalette,"palette_spread");
-            Assert.IsTrue(game.State.HasFact(AtelierFlowRules.DryLearned));Assert.IsTrue(game.State.HasFact(AtelierFlowRules.WetLearned));
-            Assert.IsEmpty(game.PerformAction(AtelierFlowRules.DryPalette,"palette_scrape"));
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("dry_paint")));Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("wet_paint")));
             Assert.IsFalse(game.State.Knows(StudioRules.Room));Assert.IsFalse(game.State.Knows(StudioRules.Ceiling));
         }
-        [Test] public void NightCityConsumesFourGrayWordsWhileConceptsAndSourceHistoryRemain()
+        [Test]public void FinishChecksBothExperiencesAndThreeStrokes()
         {
-            ThirdStage();ReadyBrush();
-            Assert.IsTrue(game.State.Knows(AtelierFlowRules.Brush(3)));
-            foreach(var word in new[] {"chaos","night","reality","stars"})
-            { Assert.IsTrue(game.State.Knows(C(word)));Assert.IsFalse(game.State.CanUseClue(C(word))); }
-            Assert.IsTrue(game.State.CanUseClue(new ClueId("atelier.flow.body")));
-            Assert.IsTrue(game.State.CanUseClue(new ClueId("atelier.flow.present")));
-            game.PerformAction(StudioRules.Window,"window_near");Assert.IsFalse(game.State.CanUseClue(C("reality")));
+            AtelierFlowTestPath.Third(game);AtelierFlowTestPath.City(game);AtelierFlowTestPath.Paint(game);
+            Assert.IsFalse(game.FinishAtelierLayer(game.SessionEpoch,game.State.AtelierCanvas.Revision).Accepted);
+            AtelierFlowTestPath.Knife(game);AtelierFlowTestPath.Finish(game);
+            Assert.IsTrue(game.State.HasFact(AtelierFlowRules.Finished(3)));
         }
-        [Test] public void ThirdLayerCanBePaintedBeforeKnifeButCannotFinishUntilBothContacts()
+        [Test]public void MainMaterialProjectionHidesUnusedSourcesButRetainsFutureCanvas()
         {
-            ThirdStage();ReadyBrush();PaintThree();var doc=game.State.AtelierCanvas;int version=doc.Revision;
-            Assert.IsFalse(game.FinishAtelierLayer(game.SessionEpoch,version).Accepted);
-            Assert.IsNotNull(AtelierCanvasOperations.FinishBlockedReason(game.State,game.Rules,version));
-            Assert.AreEqual(version,doc.Revision);Assert.AreEqual(40,doc.Current.RemainingPaint);
-            game.Inspect(AtelierFlowRules.PaletteKnife);game.PerformAction(AtelierFlowRules.DryPalette,"palette_spread");
-            Assert.IsFalse(game.FinishAtelierLayer(game.SessionEpoch,version).Accepted);
-            game.PerformAction(AtelierFlowRules.DryPalette,"palette_scrape");
-            Assert.IsNull(AtelierCanvasOperations.FinishBlockedReason(game.State,game.Rules,version));Finish();
-            Assert.IsTrue(game.State.HasFact(AtelierFlowRules.Finished(3)));Assert.AreEqual(4,AtelierFlowRules.Stage(game.State));
-            Assert.AreEqual(3,doc.Layers[0].Count);Assert.AreEqual(3,doc.Layers[1].Count);Assert.AreEqual(3,doc.Layers[2].Count);
-            Assert.AreEqual(100,doc.Layers[2].CommittedUnits+doc.Layers[2].DiscardedUnits);
-            Assert.IsFalse(game.State.CanvasLocked);Assert.IsFalse(game.State.Knows(AtelierFlowRules.Brush(4)));
+            AtelierFlowTestPath.Third(game);
+            Assert.IsFalse(game.AtelierNotebookMaterials.Contains(new ClueId(StudioRules.Cup.Value)));
+            Assert.IsTrue(game.AtelierNotebookMaterials.Contains(new ClueId(AtelierRules.Painting.Value)));
+            Assert.IsTrue(game.AtelierNotebookMaterials.Contains(AtelierFlowRules.Brush(1)));
+            AtelierFlowTestPath.City(game);
+            Assert.IsFalse(game.AtelierNotebookMaterials.Contains(new ClueId(AtelierFlowRules.NearWindowLight.Value)));
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.NearWindowLight));
         }
     }
 }

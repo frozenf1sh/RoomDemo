@@ -76,17 +76,18 @@ namespace Game.Tests
             Assert.IsTrue(received);
         }
 
-        [Test] public void BlueConceptsRemainAvailableAfterFormingBrush()
+        [Test] public void UsedBlueConceptsRetireButBrushAndKnowledgeRemain()
         {
             var ice = new ClueId("atelier.flow.ice_blue");
             var swirl = new ClueId("atelier.flow.swirl");
             game.Combine(new[] { C("transparent"),C("blue") });
             game.Combine(new[] { C("flow"),C("free") });
             game.Combine(new[] { ice,swirl });
-            Assert.IsTrue(game.State.CanUseClue(ice));
-            Assert.IsTrue(game.State.CanUseClue(swirl));
+            Assert.IsFalse(game.State.CanUseClue(ice));
+            Assert.IsTrue(game.State.Knows(ice));
+            Assert.IsFalse(game.State.CanUseClue(swirl));
             Assert.IsTrue(game.State.CanUseClue(AtelierFlowRules.Brush(1)));
-            Assert.AreEqual(4,game.State.ConsumedClues.Count);
+            Assert.AreEqual(6,game.State.ConsumedClues.Count);
         }
 
         [Test] public void ConsumedDefinitionsAreCopiedAndCannotReferToAnotherInput()
@@ -116,7 +117,7 @@ namespace Game.Tests
         [Test] public void EveryGrayWordHasRecipeOrRoofContactPurposeAndPhysicalSourcesDoNotAwardItOnClick()
         {
             var gray = game.Rules.Clues.Where(x=>x.Category==ClueCategory.Observation).Select(x=>x.Id).ToArray();
-            Assert.AreEqual(15,gray.Length);
+            Assert.AreEqual(14,gray.Length);
             Assert.IsTrue(gray.Where(id=>id!=C("roof_night")).All(id=>game.Rules.Recipes.Any(recipe=>recipe.Inputs.Contains(id))));
             // 屋孔的当场观察用于第二次继续揭底，接受后消费，不是新增穷举配方。
             foreach (var source in new[] { StudioRules.Cup,AtelierFlowRules.HandMirror })

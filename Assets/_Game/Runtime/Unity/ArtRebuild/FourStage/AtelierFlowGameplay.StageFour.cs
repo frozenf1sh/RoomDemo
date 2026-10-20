@@ -12,6 +12,8 @@ namespace Game.Unity.ArtRebuild
     {
         private static AtelierPracticeSnapshot practice,pendingPractice;
         private bool restoringPractice;
+        public bool IsSkyFocused => focus=="sky";
+        public bool CameraMoving => transitioning;
         public bool IsLampFocused => focus=="lamp";
         public bool IsRoofFocused => focus=="roof";
         public bool IsRoomSurfaceFocused => focus=="room_surface";

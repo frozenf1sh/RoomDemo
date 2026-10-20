@@ -35,6 +35,8 @@ namespace Game.Unity.UI.FourStage
         private void OnEvent(DomainEvent raised)
         {
             if (!(raised is CombinationSucceeded formed)) return;
+            // 四阶段结果在右页短暂呈现，完整笔刷详情由收藏入口主动打开。
+            if (session.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled)) return;
             // 只认稳定笔刷身份，不能把所有Concept或中文名字当笔刷。
             for (int layer = 1; layer <= 4; layer++)
             {
@@ -55,6 +57,7 @@ namespace Game.Unity.UI.FourStage
             string sources = recipe == null ? "来源已记录在笔记中。" : "构成来源：" + string.Join("、",
                 recipe.Inputs.Where(session.State.Knows).Select(input => session.Rules.Clues.First(x => x.Id == input).DisplayName));
             View.Show(definition.DisplayName, Gameplay.CanvasPort.Brushes[layer - 1], sources);
+            View.Title.color = AtelierNotebookInk.For(id, definition.Category);
         }
     }
 }

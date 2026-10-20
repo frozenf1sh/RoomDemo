@@ -73,6 +73,8 @@ namespace Game.Unity.ArtRebuild
             Session = CreateFlowSession();
             References.Notebook.EscapeClosesNotebook = false;
             References.Notebook.Bind(Session);
+            NotebookBackHandler=()=>References.Notebook.GetComponent<AtelierNotebookHelp>()?.CloseFromBack()??false;
+            References.Notebook.PreviewCoverQuery=()=>References.Collection!=null&&References.Collection.IsOpen;
             // 藏品页与笔记本共用同一会话，只读世界碎片；入口便签由藏品页在 Bind 内注册，不开笔记本就无法点开。
             if (References.Collection != null)
             {
@@ -158,7 +160,7 @@ namespace Game.Unity.ArtRebuild
             if (WaterObservation != null)
             {
                 // 笔记关闭还有两帧输入隔离，之后由当前近景恢复说明，避免被隔离帧永久藏掉。
-                bool visible = focus == "water" && !paused && !transitioning && !References.Notebook.IsOpen
+                bool visible = (focus == "water"||Time.unscaledTime<worldObservationUntil) && !paused && !transitioning && !References.Notebook.IsOpen
                     && !string.IsNullOrEmpty(lastObservation);
                 if (WaterObservation.gameObject.activeSelf != visible) WaterObservation.gameObject.SetActive(visible);
                 if (visible) WaterObservation.rectTransform.anchoredPosition = new Vector2(36,Voice.ActiveKey == "" ? -28 : -150);
@@ -271,6 +273,7 @@ namespace Game.Unity.ArtRebuild
             {
                 Session.Inspect(StudioRules.Window);
                 Focus("window",StageThree.WindowFocus,58);
+                Voice.Play("G_WINDOW_NEAR");
             }
             else if (target.Kind==AtelierTargetKind.WindowNear || target.Kind==AtelierTargetKind.WindowFar)
                 StageThree.ObserveWindowDetail(target.Kind==AtelierTargetKind.WindowFar);
@@ -283,6 +286,7 @@ namespace Game.Unity.ArtRebuild
             {
                 Session.Inspect(AtelierFlowRules.PaletteKnife);
                 StageThree.Palette.Equip();
+                if(StageFour!=null&&Session.State.HasFact(AtelierFlowRules.Finished(3)))StageFour.Tool.SelectMode(AtelierFinaleToolMode.Edge);
                 if (!IsPaletteFocused) Focus("palette",StageThree.PaletteFocus,44);
             }
             else if (target.Kind == AtelierTargetKind.Manuscript)
@@ -319,6 +323,8 @@ namespace Game.Unity.ArtRebuild
             else if (target.Kind == AtelierTargetKind.Painting)
             {
                 Session.Inspect(AtelierRules.Painting);
+                if(Session.State.HasFact(AtelierFlowRules.WorldCommitted))
+                {ShowWorldObservation(AtelierFlowNarration.TextFor("V_REFUSE"));return;}
                 if(StageFour!=null&&!IsCanvasFocused)StageFour.Tool.SelectMode(AtelierFinaleToolMode.Paint);
                 if (!IsCanvasFocused) Focus("canvas",References.FocusPose,47);
                 RefreshCanvasControls();
@@ -486,14 +492,16 @@ namespace Game.Unity.ArtRebuild
             // 回到主视角不重新弹出上一个物件说明，只有当前近景可恢复自己的文字。
             else if(focus != "" && !string.IsNullOrEmpty(lastObservation)) Show(lastObservation);
         }
+        private float worldObservationUntil;
         private void Show(string text)
         {
             StopObservationPaging();
             HideWaterObservation();
-            if (focus == "water" && WaterObservation != null)
+            if (WaterObservation != null && (!IsCanvasFocused||UsesExternalCanvasWorkspace))
             {
                 // 物件说明独占自己的节点；N02播放时下移，避免与旁白重叠。
                 References.ContextPanel.SetActive(false);
+                worldObservationUntil=Time.unscaledTime+Mathf.Max(5,text.Length*.10f);
                 WaterObservation.text = text;
                 WaterObservation.gameObject.SetActive(true);
                 return;

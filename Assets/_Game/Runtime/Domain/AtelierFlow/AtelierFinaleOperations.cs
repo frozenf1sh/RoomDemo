@@ -30,22 +30,25 @@ namespace Game.Domain
             if(state.CanvasLocked||state.HasFact(AtelierRules.RoomErased)) return "已经确定了收束方式。";
             if(state.AtelierCanvas.Revision!=revision) return "画面已经更新，请重新操作。";
             if(!state.HasFact(AtelierFlowRules.Finished(3))||state.AtelierCanvas.Current.Id!=4) return "先完成前三层绘画。";
-            if(state.AtelierCanvas.Current.Count<3) return "先完成本阶段至少三笔绘画。";
+            if((action==AtelierFinaleAction.SpreadCanvas||action==AtelierFinaleAction.EraseRoom)&&state.AtelierCanvas.Current.Count<3) return "画还没画完，先回去。";
             if(!state.Knows(AtelierFlowRules.PaletteKnife)) return "先拿起调色刮刀。";
             if(action==AtelierFinaleAction.SpreadCanvas)
             {
-                if(state.HasFact(AtelierFlowRules.WorldCommitted)) return "已经继续刮开了屋面。";
+                if(state.HasFact(AtelierFlowRules.WorldCommitted)) return "我不想再画那幅画了。";
                 if(!state.Knows(AtelierRules.Painting)||!state.HasFact(AtelierFlowRules.WetLearned)) return "先试过刀面，再回到画布。";
+            }
+            else if(action==AtelierFinaleAction.EraseRoom)
+            {
+                if(!state.HasFact(AtelierRules.RoofErased)||!state.Knows(StudioRules.Room)||!state.HasFact(AtelierFlowRules.RoomAsPaint))
+                    return "先在笔记里把房间和湿颜料联系起来。";
             }
             else
             {
-                if(!state.Knows(StudioRules.Ceiling)||!state.HasFact(AtelierFlowRules.DryLearned)) return "先调查屋面，再选择刀刃。";
-                if(action==AtelierFinaleAction.ProbeRoof&&state.HasFact(AtelierFlowRules.RoofProbed)) return "这一小片已经刮开了。";
-                if(action==AtelierFinaleAction.ContinueRoof&&(!state.HasFact(AtelierFlowRules.RoofProbed)||!state.Knows(AtelierFlowRules.C("roof_night")))) return "先在细痕上试刮一小段。";
-                if(action==AtelierFinaleAction.ContinueRoof&&state.HasFact(AtelierFlowRules.WorldCommitted)) return "屋面已经刮开了。";
-                if(action==AtelierFinaleAction.EraseRoom&&(!state.HasFact(AtelierFlowRules.WorldCommitted)
-                    ||!state.Knows(StudioRules.Sky)||!state.HasFact(AtelierRules.SharedMarkSeen)||!state.Knows(StudioRules.Room)))
-                    return "先亲眼看过天空、接连的笔迹和房间。";
+                if(!state.Knows(StudioRules.Ceiling)||!state.HasFact(AtelierFlowRules.RoofAsPaint))
+                    return "先在笔记里把屋顶和干颜料联系起来。";
+                if(action==AtelierFinaleAction.ProbeRoof&&state.HasFact(AtelierFlowRules.RoofProbed))return "沿新露出的边缘继续刮开。";
+                if(action==AtelierFinaleAction.ContinueRoof&&!state.HasFact(AtelierFlowRules.RoofProbed))return "先刮开表面的干壳。";
+                if(state.HasFact(AtelierRules.RoofErased))return "屋顶已经刮开了。";
             }
             return null;
         }
@@ -92,10 +95,14 @@ namespace Game.Domain
                 // 新接触必须落在旧刀痕之外、仍靠近开口的边缘；重放第一次路径不能偷偷锁线。
                 if(distance<600||distance>2200) return new AtelierCanvasResult(false,"沿新露出的边缘继续刮开。");
                 state.ConsumeClue(AtelierFlowRules.C("roof_night"));
-                Fact(AtelierFlowRules.WorldCommitted);
                 Fact(AtelierRules.RoofErased);
             }
-            if(action==AtelierFinaleAction.EraseRoom) Fact(AtelierRules.RoomErased);
+            if(action==AtelierFinaleAction.EraseRoom)
+            {
+                // 只有真正推开房间才放弃旧画，屋顶探索期间仍能回去定稿。
+                Fact(AtelierFlowRules.WorldCommitted);
+                Fact(AtelierRules.RoomErased);
+            }
             return new AtelierCanvasResult(true,"",events.ToArray());
         }
     }

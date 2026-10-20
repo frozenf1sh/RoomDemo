@@ -65,6 +65,7 @@ namespace Game.Unity.UI.FourStage
                 feedback = "";
             }
             Refresh();
+            if(current.ToolMode==AtelierToolMode.Knife){CancelGesture();return;}
             var mouse = Mouse.current;
             if (mouse == null || current.IsSubmitting) { CancelGesture(); return; }
             var keys = Keyboard.current;
@@ -116,6 +117,7 @@ namespace Game.Unity.UI.FourStage
             References.Finish.interactable = editable && current.CanFinish;
             References.Return.interactable = editable && current.CanReturn;
             References.Knife.gameObject.SetActive(current.CanUseKnife);
+            References.Knife.GetComponentInChildren<UnityEngine.UI.Text>().text=current.ToolMode==AtelierToolMode.Knife?"继续画画":"用刮刀推色";
             References.Paint.SetValueWithoutNotify(current.RemainingPaint);
             References.SizeLabel.text = "笔印大小 · " + cost;
             References.AngleLabel.text = "旋转 · " + angle + "°";
@@ -127,7 +129,7 @@ namespace Game.Unity.UI.FourStage
         private void Undo() { CancelGesture(); if (current != null && current.CanUndo) feedback = port.RequestUndo(current); }
         private void Finish() { CancelGesture(); if (current != null && current.CanFinish) feedback = port.RequestFinishLayer(current); }
         private void Return() { CancelGesture(); if (current != null && current.CanReturn) port.RequestReturn(); }
-        private void Knife() { CancelGesture(); feedback = port.RequestToolMode(AtelierToolMode.Knife); }
+        private void Knife() { CancelGesture(); feedback = port.RequestToolMode(current.ToolMode==AtelierToolMode.Knife?AtelierToolMode.Brush:AtelierToolMode.Knife); }
         /// <summary>终止本地捕获并取消预览，不撤销已提交笔触。</summary>
         public void CancelGesture()
         {

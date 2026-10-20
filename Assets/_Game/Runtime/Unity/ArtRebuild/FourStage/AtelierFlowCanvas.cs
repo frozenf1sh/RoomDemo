@@ -2,6 +2,7 @@
 // 职责：以领域笔触列表重建真实世界画布，并提供UI可绑定的提交、撤销与收层接口。
 // 边界：作品RT归本组件所有；UI只读句柄。预览和作品分开，未提交不会改变画作。
 using System;
+using System.Linq;
 using Game.Application;
 using Game.Domain;
 using UnityEngine;
@@ -47,6 +48,8 @@ namespace Game.Unity.ArtRebuild
             Surface.sharedMaterial = owned;
             Surface.SetPropertyBlock(null);
             owned.SetTexture("_BaseMap",artwork);
+            // 作品材质在终局适配之后创建，显式沿用暂留组，不能落回室内擦除组。
+            owned.SetFloat("_AtelierEraseGroup",game.Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled)?3:0);
             session.EventRaised += OnEvent;
             Rebuild();
         }

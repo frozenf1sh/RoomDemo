@@ -34,16 +34,13 @@ namespace Game.Unity.UI.FourStage
             var layer = canvas.Document.Current;
             bool known = session.State.Knows(AtelierFlowRules.Brush(layer.Id));
             bool locked = session.State.CanvasLocked || session.State.HasFact(AtelierFlowRules.WorldCommitted);
-            string reason = !known ? "先在笔记中形成这一层笔刷。" : locked ? "已经确定了收束方式。" :
-                layer.Sealed ? "这一层已经完成。" : layer.Count < 3 ? "再落" + (3 - layer.Count) + "笔后可完成。" :
-                layer.Id == 3 && (!session.State.HasFact(AtelierFlowRules.DryLearned) || !session.State.HasFact(AtelierFlowRules.WetLearned)) ?
-                "先在颜料板试过刮刀的两面。" : layer.Id == 4 && canvas.Document.SpreadRevision != canvas.Document.Revision ?
-                "先用刀面收一次颜色。" : "";
+            string reason=!known?"先在笔记中形成这一层笔刷。":AtelierCanvasOperations.FinishBlockedReason(session.State,session.Rules,canvas.Document.Revision)??"";
+            bool knife=Gameplay.StageFour!=null&&Gameplay.StageFour.Tool.Mode==AtelierFinaleToolMode.Face;
             bool visible = Gameplay.GameplayInputEnabled && !Gameplay.IsPaused && Gameplay.IsCanvasFocused && !Gameplay.References.Notebook.IsOpen;
             return new AtelierPaintingSnapshot(session.SessionEpoch, canvas.Document.Revision, layer.Id,
                 AtelierFlowRules.Brush(layer.Id).Value, known ? canvas.Brushes[layer.Id - 1] : null, canvas.CanvasTexture,
                 layer.RemainingPaint, layer.Count, layer.PlannedStrokes, layer.MinCost, layer.MaxCost, canvas.DefaultCost, 0,
-                !locked && !layer.Sealed && layer.Count > 0, reason == "", reason, visible);
+                !locked && !layer.Sealed && layer.Count > 0, reason == "", reason, visible,true,knife?AtelierToolMode.Knife:AtelierToolMode.Brush,layer.Id==4&&layer.Count>=3&&!locked);
         }
         /// <summary>沿用真实世界最近射线命中，不能拿UI矩形冒充世界UV。</summary>
         public bool TryMap(Vector2 screen, out Vector2 uv)
@@ -88,6 +85,11 @@ namespace Game.Unity.UI.FourStage
         /// <summary>归还机位，不清除作品。</summary>
         public void RequestReturn() { if (Allowed()) Gameplay.ReturnToRoom(); }
         /// <summary>后续刀面动作尚未提供，第一批不假装可用。</summary>
-        public string RequestToolMode(AtelierToolMode mode) => "刀面工具将在后续阶段接入。";
+        public string RequestToolMode(AtelierToolMode mode)
+        {
+            if(!Allowed()||Gameplay.StageFour==null)return "当前不能使用刮刀。";
+            Gameplay.StageFour.Tool.SelectMode(mode==AtelierToolMode.Knife?AtelierFinaleToolMode.Face:AtelierFinaleToolMode.Paint);
+            return "";
+        }
     }
 }

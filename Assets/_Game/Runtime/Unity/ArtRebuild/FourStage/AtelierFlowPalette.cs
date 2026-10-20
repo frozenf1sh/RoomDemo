@@ -35,7 +35,7 @@ namespace Game.Unity.ArtRebuild
         public float WetCoverage => wetBins.Count(x=>x)/40f;
         private bool CanContact => Flow.CanUseStageThreeInput && Flow.IsPaletteFocused && Equipped
             && session.State.Knows(AtelierFlowRules.DryPalette) && session.State.Knows(AtelierFlowRules.PaletteKnife)
-            && session.State.HasFact(AtelierFlowRules.PaletteStudied);
+           ;
 
         /// <summary>克隆自有材质，重开不污染素材；已成立事实恢复为同一典型刀痕。</summary>
         public void Bind(GameSession game)
@@ -59,6 +59,7 @@ namespace Game.Unity.ArtRebuild
             if (!Equipped) FaceMode=false;
             Equipped=true;
             CancelGesture();
+            Flow.Voice.Play("G_KNIFE_DRY");
         }
         /// <summary>切换刀面只取消旧手势，不把按住的拖动转成另一种完成动作。</summary>
         public void SelectMode(bool face)
@@ -83,7 +84,9 @@ namespace Game.Unity.ArtRebuild
         /// <returns>是否在当前模式的实际试区留下刀痕。</returns>
         public bool Contact(Vector2 from,Vector2 to,bool face,bool assistTap=false)
         {
-            if (!CanContact || face!=FaceMode || !Inside(from) || !Inside(to)) return false;
+            if (!CanContact || !Inside(from) || !Inside(to)) return false;
+            if(face&&!session.State.HasFact(AtelierFlowRules.DryLearned))return false;
+            FaceMode=face;
             float low=face?.60f:.06f, high=face?.96f:.52f;
             if (from.x<low || from.x>high || to.x<low || to.x>high
                 || from.y<.12f || from.y>.88f || to.y<.12f || to.y>.88f) return false;
@@ -110,7 +113,11 @@ namespace Game.Unity.ArtRebuild
             ApplySurface();
             var fact=face?AtelierFlowRules.WetLearned:AtelierFlowRules.DryLearned;
             if (bins.Count(x=>x)>=16 && (!assistTap || tapCounts[side]>=3) && !session.State.HasFact(fact))
+            {
                 session.PerformAction(AtelierFlowRules.DryPalette,face?"palette_spread":"palette_scrape");
+                if(!face)Flow.Voice.Play("G_KNIFE_WET");
+                ApplySurface();
+            }
             return true;
         }
         private static bool Inside(Vector2 point) => point.x>=0 && point.x<=1 && point.y>=0 && point.y<=1;
@@ -123,6 +130,7 @@ namespace Game.Unity.ArtRebuild
             var hits=Physics.RaycastAll(ray,40,Flow.References.PickingMask,QueryTriggerInteraction.Collide).OrderBy(h=>h.distance).ToArray();
             if (hits.Length==0 || hits[0].collider!=SurfacePicking) { CancelGesture();return false; }
             Vector2 uv=WorldUV(hits[0].point);
+            if(!held)FaceMode=uv.x>.56f&&session.State.HasFact(AtelierFlowRules.DryLearned);
             PointerKnife.gameObject.SetActive(true);
             RestKnife.gameObject.SetActive(false);
             PointerKnife.position=hits[0].point+Vector3.up*(FaceMode?.006f:.0265f);
@@ -168,6 +176,7 @@ namespace Game.Unity.ArtRebuild
             block.SetVectorArray("_ProbeErase",erase);
             block.SetVectorArray("_ProbeSpread",spread);
             block.SetFloat("_DryBrushTried",brushTried?1:0);
+            block.SetFloat("_WetExposed",session.State.HasFact(AtelierFlowRules.DryLearned)?1:0);
             Surface.SetPropertyBlock(block);
         }
         private void OnDisable() => CancelGesture();

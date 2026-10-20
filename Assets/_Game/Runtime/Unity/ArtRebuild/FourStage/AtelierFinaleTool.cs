@@ -27,16 +27,15 @@ namespace Game.Unity.ArtRebuild
         public AtelierFinaleToolMode Mode { get; private set; }
         /// <summary>当前工具与近景表面匹配，尚需独立的输入和领域许可。</summary>
         public bool Active => Stage.Flow.IsCanvasFocused&&Mode==AtelierFinaleToolMode.Face
-            ||Stage.Flow.IsRoofFocused&&Mode==AtelierFinaleToolMode.Edge
-            ||Stage.Flow.IsRoomSurfaceFocused&&Mode==AtelierFinaleToolMode.Edge;
+            ||Stage.Flow.IsRoofFocused&&session!=null&&session.State.HasFact(AtelierFlowRules.RoofAsPaint)
+            ||Stage.Flow.IsRoomSurfaceFocused&&session!=null&&session.State.HasFact(AtelierFlowRules.RoomAsPaint);
         /// <summary>接入本轮会话，默认画笔模式并清除旧的未提交手势。</summary>
         public void Bind(GameSession game) {session=game;Mode=AtelierFinaleToolMode.Paint;Cancel();}
         /// <summary>正式Workspace和临时按钮共用，不因选择工具写入完成事实。</summary>
         public void SelectMode(AtelierFinaleToolMode mode)
         {
             if(!Stage.Flow.CanUseStageThreeInput||Stage.Ending)return;
-            if(mode!=AtelierFinaleToolMode.Paint&&session.State.AtelierCanvas.Layers[3].Count<3)return;
-            if(mode==AtelierFinaleToolMode.Edge&&Stage.Flow.IsRoofFocused&&!Stage.RoofTargetSelected)return;
+            if(mode==AtelierFinaleToolMode.Face&&session.State.AtelierCanvas.Layers[3].Count<3)return;
             Cancel();Mode=mode;
             Stage.Flow.CanvasPort.Preview(Vector2.zero,false);
         }
@@ -57,11 +56,11 @@ namespace Game.Unity.ArtRebuild
                 else if(Stage.Flow.IsRoomSurfaceFocused&&target==Stage.RoomTarget)
                 {
                     var b=hit.collider.bounds;
-                    uv=new Vector2(Mathf.InverseLerp(b.min.x,b.max.x,hit.point.x),Mathf.InverseLerp(b.min.y,b.max.y,hit.point.y));
+                    uv=new Vector2(Mathf.InverseLerp(b.min.x,b.max.x,hit.point.x),Mathf.InverseLerp(b.min.z,b.max.z,hit.point.z));
                 }
                 else return false;
                 world=hit.point;contactNormal=hit.normal;
-                if(Stage.Flow.IsRoomSurfaceFocused&&Mathf.Abs(world.x-(.52f+.05f*Mathf.Sin(world.y*4)))>.13f)return false;
+
                 return Inside(uv);
             }
             return false;
@@ -79,7 +78,7 @@ namespace Game.Unity.ArtRebuild
             if(hit)
             {
                 PointerKnife.position=world+contactNormal*.014f;
-                PointerKnife.rotation=Quaternion.FromToRotation(Vector3.up,contactNormal)*Quaternion.Euler(0,-20,Mode==AtelierFinaleToolMode.Face?8:68);
+                PointerKnife.rotation=Quaternion.FromToRotation(Vector3.up,contactNormal)*Quaternion.Euler(0,-20,(Mode==AtelierFinaleToolMode.Face||Stage.Flow.IsRoomSurfaceFocused)?8:68);
             }
             if(mouse.leftButton.wasPressedThisFrame&&hit)
             {
@@ -122,7 +121,7 @@ namespace Game.Unity.ArtRebuild
         {
             var flow=Stage.Flow;
             if(!flow.CanUseStageThreeInput||Stage.Ending||!Active) return new AtelierCanvasResult(false,"当前不能使用刮刀。");
-            if(flow.IsRoofFocused&&!Stage.RoofTargetSelected)return new AtelierCanvasResult(false,"先在笔记中选择屋面。");
+
             var action=flow.IsCanvasFocused?AtelierFinaleAction.SpreadCanvas:flow.IsRoomSurfaceFocused?AtelierFinaleAction.EraseRoom
                 :session.State.HasFact(AtelierFlowRules.RoofProbed)?AtelierFinaleAction.ContinueRoof:AtelierFinaleAction.ProbeRoof;
             return session.ApplyAtelierFinale(session.SessionEpoch,session.State.AtelierCanvas.Revision,action,contacts,assistedTaps);

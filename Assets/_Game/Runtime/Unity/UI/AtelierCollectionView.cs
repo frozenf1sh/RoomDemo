@@ -176,7 +176,11 @@ namespace Game.Unity
                 var image = card.transform.Find("藏品图")?.GetComponent<Image>();
                 if (image != null) image.sprite = ArtworkFor(definition);
                 var label = card.GetComponentInChildren<Text>();
-                if (label != null) label.text = definition.DisplayName;
+                if (label != null)
+                {
+                    label.text = definition.DisplayName;
+                    if(definition.Id.StartsWith("atelier.collection.flow-brush."))label.color=AtelierNotebookInk.For(definition.RequiredClue,ClueCategory.Concept);
+                }
                 card.onClick.RemoveAllListeners();
                 card.onClick.AddListener(() => OpenDetail(definition));
                 spawnedCards.Add(card);
@@ -191,6 +195,7 @@ namespace Game.Unity
         {
             detailImage.sprite = ArtworkFor(definition);
             detailName.text = definition.DisplayName;
+            if(definition.Id.StartsWith("atelier.collection.flow-brush."))detailName.color=AtelierNotebookInk.For(definition.RequiredClue,ClueCategory.Concept);
             detailDescription.text = definition.Description;
             dimLayer.gameObject.SetActive(true);
             detailPanel.SetActive(true);

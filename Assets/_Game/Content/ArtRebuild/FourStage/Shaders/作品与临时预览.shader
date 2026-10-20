@@ -2,7 +2,9 @@
 // 边界：不改变原始图样，不参与颜料或阶段判定。
 Shader "RoomDemo/Atelier/CanvasWorkspace"
 {
-    Properties { _BaseMap("真实作品",2D)="black"{} _Brush("预览图样",2D)="black"{} }
+    Properties {
+        _AtelierEraseGroup("擦除组",Float)=0
+ _BaseMap("真实作品",2D)="black"{} _Brush("预览图样",2D)="black"{} }
     SubShader
     {
         Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" }

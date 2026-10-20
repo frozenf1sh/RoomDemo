@@ -2,7 +2,9 @@
 // 边界：有限程序化色带原型，不声称完成GPU流体；不影响陶杯外壁。
 Shader "RoomDemo/Atelier/FourStageWash"
 {
-    Properties { _ProbeProgress("散色进度",Range(0,1))=0 _ProbeTime("视觉时间",Float)=0 _ProbeStrength("颜料可读性",Range(0,2))=1 }
+    Properties {
+        _AtelierEraseGroup("擦除组",Float)=0
+ _ProbeProgress("散色进度",Range(0,1))=0 _ProbeTime("视觉时间",Float)=0 _ProbeStrength("颜料可读性",Range(0,2))=1 }
     SubShader
     {
         Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" }

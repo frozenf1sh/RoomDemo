@@ -5,6 +5,8 @@ Shader "RoomDemo/Atelier/RestingMirror"
 {
     Properties
     {
+        _AtelierEraseGroup("擦除组",Float)=0
+
         [HideInInspector] _BaseMap("深度通道白底",2D)="white"{}
         [HideInInspector] _BaseColor("深度通道颜色",Color)=(1,1,1,1)
         [HideInInspector] _Cutoff("裁切阈值",Float)=.5

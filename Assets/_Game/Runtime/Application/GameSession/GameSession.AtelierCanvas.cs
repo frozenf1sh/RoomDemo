@@ -2,6 +2,7 @@
 // 职责：为UI和世界输入提供同一组画布用例与会话世代保护。
 // 边界：不持有第二份画作；只调用领域账本并在整个命令完成后发布事件。
 using System;
+using System.Linq;
 using Game.Domain;
 namespace Game.Application
 {
@@ -31,6 +32,17 @@ namespace Game.Application
         public AtelierCanvasResult ApplyAtelierFinale(string epoch,int revision,AtelierFinaleAction action,
             System.Collections.Generic.IReadOnlyList<AtelierContactSegment> path,int assistedTaps=0)
             => CompleteCanvas(epoch,()=>AtelierFinaleOperations.Apply(State,Rules,revision,action,path,assistedTaps));
+        /// <summary>天空点击独立于旧作账本，仍使用当前会话世代拒绝迟到请求。</summary>
+        /// <param name="epoch">发起点击时捕获的会话世代。</param>
+        /// <param name="stars">当前点击是否为第二步星光。</param>
+        /// <returns>当前步骤结果；成功后发布事实事件，不改写原作笔触。</returns>
+        public AtelierCanvasResult ClickAtelierSky(string epoch,bool stars)
+            =>CompleteCanvas(epoch,()=>AtelierSkyOperations.Click(State,Rules,stars));
+        /// <summary>已知且仍有设计用途的材料；笔刷保留收藏，不按当前是否认识另一输入猜用途。</summary>
+        public System.Collections.Generic.IReadOnlyList<ClueId> AtelierNotebookMaterials
+            => State.AvailableClues.Where(id=> !Rules.DeclaredFacts.Contains(AtelierFlowRules.Enabled)
+                ||Enumerable.Range(1,4).Any(n=>AtelierFlowRules.Brush(n)==id)
+                ||Rules.Recipes.Any(recipe=>recipe.Inputs.Contains(id)&&!State.HasCompleted(recipe.Id))) .ToArray();
         /// <summary>捕获点灯前的真实入口，不补发任何材料或玩家操作。</summary>
         public AtelierPracticeSnapshot CaptureAtelierPractice() => AtelierPracticeSnapshot.Capture(State,Rules);
         private GameSession(AtelierPracticeSnapshot snapshot)

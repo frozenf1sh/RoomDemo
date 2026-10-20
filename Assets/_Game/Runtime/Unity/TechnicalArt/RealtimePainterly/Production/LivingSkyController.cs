@@ -34,6 +34,12 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         [Range(0,1)] public float InitialLight = 1;
         /// <summary>正式画室分开呈现星光与云层笔势；独立 TA 预设仍保留完整笔触。</summary>
         public bool SeparateLightAndFlow;
+        /// <summary>四阶段天空把云的显色与实际流动解耦，旧预设仍沿用原协议。</summary>
+        public bool IndependentCloudPaint;
+        private readonly VisualTransition cloud=new VisualTransition();
+        public float CloudPaint => cloud.Value;
+        /// <summary>只改变云的绘画化，不推进GPU颜料的时间。</summary>
+        public void CloudTo(float value,float seconds){cloud.To(value,seconds);Apply();}
         private readonly VisualTransition light = new VisualTransition();
         /// <summary>独立控制暖星与颜料色彩，保留点亮解释。</summary>
         public void LightTo(float value, float seconds) { light.To(value, seconds); Apply(); }
@@ -63,6 +69,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             coverage.Reset(InitialCoverage);
             flow.Reset(InitialFlow);
             light.Reset(InitialLight);
+            cloud.Reset(IndependentCloudPaint?0:1);
             history?.Dispose();
             history = Application.isPlaying && Pigment != null ? new SkyPigmentHistory(Pigment) : null;
             if (Pigment != null)
@@ -123,6 +130,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             coverage.Reset(InitialCoverage);
             flow.Reset(InitialFlow);
             light.Reset(InitialLight);
+            cloud.Reset(IndependentCloudPaint?0:1);
             if (history != null) history.Reset();
             else if (Pigment != null)
             {
@@ -139,6 +147,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
             coverage.Tick(seconds);
             flow.Tick(seconds);
             light.Tick(seconds);
+            cloud.Tick(seconds);
             if (flow.Value > .0001f && coverage.Value > .0001f)
             {
                 history?.Advance(Mathf.Min(.1333f, Mathf.Max(0, seconds)) * flow.Value,
@@ -161,7 +170,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                 properties.SetFloat("_VisualTime", history.SampleTime);
             }
             properties.SetFloat("_StarGain", light.Value);
-            properties.SetFloat("_CloudPaint", SeparateLightAndFlow?Mathf.Clamp01(flow.Value/.6f):1);
+            properties.SetFloat("_CloudPaint", IndependentCloudPaint?cloud.Value:SeparateLightAndFlow?Mathf.Clamp01(flow.Value/.6f):1);
             properties.SetFloat("_Coverage", coverage.Value);
             properties.SetFloat("_Opacity", Mathf.Clamp01(Opacity));
             properties.SetFloat("_Feather", Feather);

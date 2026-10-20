@@ -22,7 +22,13 @@ namespace Game.Unity.UI.FourStage
 
         private void Update()
         {
-            if (session != null || Gameplay == null || Gameplay.Session == null) return;
+            if (session != null)
+            {
+                // 图样与右页结果共享可见期；新输入或预览结束不能留下一张旧笔刷图。
+                if(!Gameplay.References.Notebook.CombinationCanvas.HasResultPreview)SetVisible(false);
+                return;
+            }
+            if (Gameplay == null || Gameplay.Session == null) return;
             session = Gameplay.Session;
             session.EventRaised += OnEvent;
             Gameplay.References.Notebook.OpenChanged += OnNotebookChanged;
@@ -54,7 +60,8 @@ namespace Game.Unity.UI.FourStage
                 Preview.texture = texture;
                 Preview.enabled = texture != null;
                 if (texture != null) Aspect.aspectRatio = texture.width / (float)texture.height;
-                Title.text = "形成了" + definition.DisplayName;
+                Title.text = "已收入笔刷收藏";
+                Title.color=AtelierNotebookInk.For(brush,definition.Category);
                 SetVisible(true);
                 break;
             }

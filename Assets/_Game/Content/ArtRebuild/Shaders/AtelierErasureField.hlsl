@@ -1,7 +1,7 @@
 // 文件：AtelierErasureField.hlsl。职责：所有实体共用的世界笔刷场；无逐物件缩放或屏幕噪声。
 #ifndef ATELIER_ERASURE_FIELD
 #define ATELIER_ERASURE_FIELD
-float _AtelierRoof, _AtelierRoom, _AtelierFrame, _AtelierMark;
+float _AtelierRoof, _AtelierRoom, _AtelierFrame, _AtelierMark, _AtelierFinal;
 // 新线第一次试刮保留有限小孔；旧线保持原来的中央擦开顺序。
 float _AtelierFlowProbeEnabled,_AtelierProbeRadius;
 float3 _AtelierProbeFrom,_AtelierProbeTo;
@@ -35,7 +35,8 @@ float AtelierRoofRadius(float3 p)
 float AtelierLift(float3 p)
 {
     float distance=2;
-    if(_AtelierRoom>.001)distance=AtelierRoomOrder(p)-_AtelierRoom*1.2+.025;
+    float activeErase=_AtelierEraseGroup>2.5?_AtelierFinal:_AtelierRoom;
+    if(activeErase>.001)distance=AtelierRoomOrder(p)-activeErase*1.2+.025;
     if(_AtelierEraseGroup>.5&&_AtelierEraseGroup<1.5&&_AtelierRoof>.001)
         distance=min(distance,(AtelierRoofRadius(p)-_AtelierRoof)*.32);
     // 薄层先失去厚重颜料，再露出细纤维缺口；不是给边沿加 Bloom 或发光。
@@ -43,9 +44,10 @@ float AtelierLift(float3 p)
 }
 void AtelierClip(float3 p)
 {
-    if(_AtelierRoom>.0001)
+    float activeErase=_AtelierEraseGroup>2.5?_AtelierFinal:_AtelierRoom;
+    if(activeErase>.0001)
     {
-        float remaining=AtelierRoomOrder(p)-_AtelierRoom*1.2+.025;
+        float remaining=AtelierRoomOrder(p)-activeErase*1.2+.025;
         // 细刷毛只留下毫米级缺口，不沿高度反复折返形成一整排锯齿。
         float bristle=sin(p.x*47+sin(p.z*17)*1.8)*.00065+sin(p.z*79+p.x*31)*.00035;
         clip(remaining+bristle*(1-smoothstep(.0,.04,remaining)));
@@ -54,7 +56,7 @@ void AtelierClip(float3 p)
         clip(AtelierProbeDistance(p)+AtelierGrain(p)*.018);
     if(_AtelierEraseGroup>.5 && _AtelierEraseGroup<1.5 && _AtelierRoof>.0001)
         clip(AtelierRoofRadius(p)-_AtelierRoof);
-    if(_AtelierEraseGroup>1.5 && _AtelierFrame>.0001)
+    if(_AtelierEraseGroup>1.5 && _AtelierEraseGroup<2.5 && _AtelierFrame>.0001)
     {
         // 只擦掉有漆的窗框，灰泥和帘布不跟着消失。
         float order=saturate((p.y-.8)/3.2+sin(p.x*17)*.04+AtelierGrain(p)*.10);
