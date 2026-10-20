@@ -9,6 +9,8 @@ using System.Linq;
 using Game.Domain;
 using Game.Unity;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 namespace Game.Unity.ArtRebuild
 {
@@ -171,9 +173,30 @@ namespace Game.Unity.ArtRebuild
         private IEnumerator CloseNotebook(){flow.References.Notebook.SetOpen(false);yield return Ready();}
         private IEnumerator PaintLayer()
         {
-            yield return CloseNotebook();flow.ReturnToRoom();yield return Ready();flow.Observe(Target(AtelierTargetKind.Painting));yield return Ready();
+            yield return CloseNotebook();flow.ReturnToRoom();yield return Ready();
+            var before=flow.CanvasPort.Document.Revision;
+            yield return FocusPaintingWithPressedMouse();
+            Check(flow.IsCanvasFocused,"点击画布未进入近景。");
+            Check(flow.CanvasPort.Document.Revision==before,"进入画布近景的点击同时落了一笔。");
+            yield return Ready();
             foreach(var point in new[] {new Vector2(.30f,.58f),new Vector2(.64f,.48f),new Vector2(.48f,.73f)})
                 Check(flow.CanvasPort.Commit(point,flow.CanvasPort.DefaultCost,0).Accepted,"真实画布落笔失败。");
+        }
+        /// <summary>保持真实鼠标按下并同帧进入画布近景，专门检查这次按下不会顺手落笔。</summary>
+        private IEnumerator FocusPaintingWithPressedMouse()
+        {
+            var target=Target(AtelierTargetKind.Painting);
+            var screen=flow.References.ViewCamera.WorldToScreenPoint(target.transform.position);
+            var mouse=Mouse.current;
+            if(mouse==null) yield break;
+            InputSystem.QueueStateEvent(mouse,new MouseState{position=screen,buttons=1});
+            InputSystem.Update();
+            // 直接触发与真实点击同帧的近景进入；工作区第一次显示会读到仍未松开的按下。
+            flow.Observe(target);
+            yield return null;yield return null;
+            InputSystem.QueueStateEvent(mouse,new MouseState{position=screen,buttons=0});
+            InputSystem.Update();
+            yield return null;yield return null;
         }
         private AtelierCanvasResult Tool(AtelierFinaleAction action,int a=4200,int b=5500)
             =>flow.Session.ApplyAtelierFinale(flow.Session.SessionEpoch,flow.CanvasPort.Document.Revision,action,new[] {new AtelierContactSegment(a,5000,b,5000)});

@@ -15,10 +15,15 @@ namespace Game.Unity.UI.FourStage
         private AtelierStrokeIntent gesture;
         private int cost, angle, revision = -1;
         private string epoch, feedback = "";
+        private bool workspaceVisible;
+        // 打开工作区的那一次按下只用于进入近景；松开前不接受落笔。
+        private bool ignoreOpeningPress;
         /// <summary>取消旧捕获后替换端口；不销毁外部纹理。</summary>
         public void Bind(IAtelierPaintingPort source)
         {
             CancelGesture();
+            workspaceVisible = false;
+            ignoreOpeningPress = false;
             port = source;
             epoch = null;
             revision = -1;
@@ -35,6 +40,8 @@ namespace Game.Unity.UI.FourStage
         private void OnDisable()
         {
             CancelGesture();
+            workspaceVisible = false;
+            ignoreOpeningPress = false;
             References.Size.onValueChanged.RemoveListener(OnSize);
             References.Angle.onValueChanged.RemoveListener(OnAngle);
             References.Undo.onClick.RemoveListener(Undo);
@@ -52,7 +59,21 @@ namespace Game.Unity.UI.FourStage
             References.Group.alpha = visible ? 1 : 0;
             References.Group.interactable = visible;
             References.Group.blocksRaycasts = visible;
-            if (!visible || !UnityEngine.Application.isFocused) { CancelGesture(); return; }
+            if (!visible)
+            {
+                workspaceVisible = false;
+                ignoreOpeningPress = false;
+                CancelGesture();
+                return;
+            }
+            if (!UnityEngine.Application.isFocused) { CancelGesture(); return; }
+            if (!workspaceVisible)
+            {
+                // 点击画布进入近景时工作区恰好第一次显示，该次按下不能同时成为第一笔。
+                workspaceVisible = true;
+                ignoreOpeningPress = true;
+                CancelGesture();
+            }
             if (epoch != current.SessionEpoch || revision != current.CanvasRevision)
             {
                 // 版本改变终止旧按下，不把旧手势替换成新画面上的命令。
@@ -72,6 +93,14 @@ namespace Game.Unity.UI.FourStage
             if ((keys != null && (keys.escapeKey.wasPressedThisFrame || keys.nKey.wasPressedThisFrame ||
                 keys.tabKey.wasPressedThisFrame)) || mouse.rightButton.wasPressedThisFrame)
             { CancelGesture(); return; }
+            if (ignoreOpeningPress)
+            {
+                port?.Preview(Vector2.zero, false, 0, 0);
+                // 必须等这次按下完全松开；之后的新按下才是真正的笔触。
+                if (!mouse.leftButton.isPressed && !mouse.leftButton.wasReleasedThisFrame)
+                    ignoreOpeningPress = false;
+                return;
+            }
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             Vector2 uv = default;
             bool mapped = !overUI && port.TryMap(mouse.position.ReadValue(), out uv);
