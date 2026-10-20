@@ -17,13 +17,13 @@ namespace Game.Unity.ArtRebuild
     public sealed partial class AtelierOpeningPlayerReview : MonoBehaviour
     {
         private string output;
-        private bool includeStageThree;
+        private bool includeStageThree,includeStageFour;
         private readonly List<string> errors=new List<string>();
         private void OnEnable() => UnityEngine.Application.logMessageReceivedThreaded += Collect;
         private void OnDestroy() => UnityEngine.Application.logMessageReceivedThreaded -= Collect;
         /// <summary>明确调用时在Editor复用正常命令回放；不更改开场、阶段或领域事实。</summary>
         /// <param name="directory">本机取证输出目录。</param>
-        public static void StartEditorReview(string directory,bool thirdStage=false)
+        public static void StartEditorReview(string directory,bool thirdStage=false,bool fourthStage=false)
         {
             if (!UnityEngine.Application.isEditor || !UnityEngine.Application.isPlaying)
                 throw new InvalidOperationException("请先在Editor进入Play再发起运行检查。");
@@ -32,13 +32,16 @@ namespace Game.Unity.ArtRebuild
             var node = new GameObject("前两阶段Editor显式命令回放");
             var review=node.AddComponent<AtelierOpeningPlayerReview>();
             review.output=Path.GetFullPath(directory);
-            review.includeStageThree=thirdStage;
+            review.includeStageThree=thirdStage||fourthStage;
+            review.includeStageFour=fourthStage;
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Create()
         {
-            if(UnityEngine.Application.isEditor) return;
-            string[] args=Environment.GetCommandLineArgs();int at=Array.IndexOf(args,"--atelier-stage-three-review-output");
+            if(UnityEngine.Application.isEditor||FindAnyObjectByType<AtelierOpeningPlayerReview>()!=null) return;
+            string[] args=Environment.GetCommandLineArgs();int at=Array.IndexOf(args,"--atelier-stage-four-review-output");
+            bool fourth=at>=0;
+            if(at<0)at=Array.IndexOf(args,"--atelier-stage-three-review-output");
             bool third=at>=0;
             if(at<0) at=Array.IndexOf(args,"--atelier-opening-review-output");
             if(at<0||at+1>=args.Length) return;
@@ -46,11 +49,13 @@ namespace Game.Unity.ArtRebuild
             var review=root.AddComponent<AtelierOpeningPlayerReview>();
             review.output=Path.GetFullPath(args[at+1]);
             review.includeStageThree=third;
+            review.includeStageFour=fourth;
         }
         private void Check(bool valid,string reason) { if(!valid) lock(errors) errors.Add(reason); }
         private IEnumerator Start()
         {
             Directory.CreateDirectory(output);UnityEngine.Application.runInBackground=true;
+            if(includeStageFour)DontDestroyOnLoad(gameObject);
             string[] arguments = Environment.GetCommandLineArgs();
             int speedAt = Array.IndexOf(arguments,"--atelier-review-speed");
             if (speedAt >= 0 && speedAt+1 < arguments.Length && float.TryParse(arguments[speedAt+1],out var speed))
@@ -211,7 +216,7 @@ namespace Game.Unity.ArtRebuild
             Check(artwork==Hash(canvas.CanvasTexture as RenderTexture),"返回再进入改变或丢失了作品。");
             Check(refs.ContextAction.interactable,"三笔后完成按钮没有开放。");
             refs.ContextAction.onClick.Invoke();yield return new WaitForSeconds(4.5f);
-            Check(flow.Voice.ActiveKey == "N03", "新阶段旁白被过时开场队列拖延。 ");
+            Check(flow.Voice.ActiveKey == "N03" || flow.IsStageTransition && flow.Draft.RevealAnimating, "新阶段旁白被过时开场队列拖延。 ");
             Check(!refs.ContextPanel.activeSelf, "回到主视角重新弹出了旧物件说明。");
             Check(flow.Session.State.HasFact(AtelierFlowRules.Finished(1)),"真实完成按钮没有推进首层。");
             Check(canvas.Document.Layers[0].CommittedUnits+canvas.Document.Layers[0].DiscardedUnits==100,"首层颜料账本不守恒。");
@@ -320,12 +325,16 @@ namespace Game.Unity.ArtRebuild
             Check(flow.Session.State.HasFact(AtelierFlowRules.Finished(2)),"第二层完成按钮没有推进。");
             Check(flow.Draft.WeightForStage(0)==0 && flow.Draft.SurroundingsDraft>.99f,"第二层完成误揭屋顶或全部房间。");
             if(includeStageThree) yield return ReviewThirdStage(flow,Compose);
+            if(includeStageFour)yield return ReviewFourthStage(flow);
+            else
+            {
             flow.Observe(Target(AtelierTargetKind.Manuscript));
             Check(refs.ManuscriptPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).Any(x=>x.text==AtelierOpeningCopy.NoteBody),"便签仍显示旧作画目标。");
             yield return Shot("15_便签回看");
             flow.ReturnToRoom();
+            }
             string[] collected;lock(errors) collected=errors.ToArray();
-            File.WriteAllText(Path.Combine(output,"运行结果.txt"),(includeStageThree?"前三阶段、窗景比较、刀刃与刀面及N05交接自动回放完成。":"前两阶段与旁白后逐物件显色自动回放完成。")+"\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令及按钮回调，不是真人鼠标操作。第四阶段点灯与结尾尚待后续接入。");
+            File.WriteAllText(Path.Combine(output,"运行结果.txt"),(includeStageFour?"四阶段与普通、现实两条结尾及第四阶段练习恢复自动回放完成。":includeStageThree?"前三阶段、窗景比较、刀刃与刀面及N05交接自动回放完成。":"前两阶段与旁白后逐物件显色自动回放完成。")+"\n错误数："+collected.Length+"\n"+string.Join("\n",collected)+"\n边界：自动命令、按钮回调及显式InputSystem鼠标事件，不是真人鼠标验收。");
             UnityEngine.Application.logMessageReceivedThreaded-=Collect;
             if (UnityEngine.Application.isEditor) { Destroy(gameObject); yield break; }
             UnityEngine.Application.Quit(collected.Length==0?0:1);

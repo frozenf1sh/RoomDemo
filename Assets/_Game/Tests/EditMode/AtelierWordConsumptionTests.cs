@@ -113,11 +113,12 @@ namespace Game.Tests
             Assert.IsEmpty(fresh.State.ConsumedClues);
         }
 
-        [Test] public void EveryGrayWordHasARecipeAndPhysicalSourcesDoNotAwardItOnClick()
+        [Test] public void EveryGrayWordHasRecipeOrRoofContactPurposeAndPhysicalSourcesDoNotAwardItOnClick()
         {
             var gray = game.Rules.Clues.Where(x=>x.Category==ClueCategory.Observation).Select(x=>x.Id).ToArray();
-            Assert.AreEqual(12,gray.Length);
-            Assert.IsTrue(gray.All(id=>game.Rules.Recipes.Any(recipe=>recipe.Inputs.Contains(id))));
+            Assert.AreEqual(15,gray.Length);
+            Assert.IsTrue(gray.Where(id=>id!=C("roof_night")).All(id=>game.Rules.Recipes.Any(recipe=>recipe.Inputs.Contains(id))));
+            // 屋孔的当场观察用于第二次继续揭底，接受后消费，不是新增穷举配方。
             foreach (var source in new[] { StudioRules.Cup,AtelierFlowRules.HandMirror })
                 Assert.IsFalse(game.Rules.Discoveries.Single(x=>x.Source==source).Grants.Any(gray.Contains));
         }

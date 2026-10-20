@@ -1,5 +1,5 @@
 // 文件：AtelierFlowGameplay.cs
-// 职责：装配前三阶段会话，处理真实调查、洗笔、转镜、窗景、刮刀与有限落笔。
+// 职责：装配四阶段会话，处理真实调查、洗笔、转镜、窗景、刮刀与有限落笔。
 // 边界：只通过GameSession改变世界；不加载旧静物规则，不拥有UI同学的Workspace实现。
 using System.Collections;
 using System.Collections.Generic;
@@ -15,9 +15,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 namespace Game.Unity.ArtRebuild
 {
-    /// <summary>前三阶段P00至P17闭环；正式UI直接绑定CanvasPort，不复制颜料状态。</summary>
+    /// <summary>四阶段P00至P26闭环；正式UI直接绑定CanvasPort，不复制颜料状态。</summary>
     [DefaultExecutionOrder(100)]
-    public sealed class AtelierFlowGameplay : MonoBehaviour
+    public sealed partial class AtelierFlowGameplay : MonoBehaviour
     {
         public AtelierGameplay References;
         public AtelierDraftCamera Draft;
@@ -29,6 +29,7 @@ namespace Game.Unity.ArtRebuild
         public Transform PlasterFocus, MirrorFocus, DryBrushFocus, ShardsFocus;
         public AtelierFlowMirror Mirror;
         public AtelierFlowStageThree StageThree;
+        public AtelierFlowStageFour StageFour;
         /// <summary>第三阶段世界适配和可替换控件共用输入许可。</summary>
         public bool CanUseStageThreeInput => GameplayInputEnabled && !paused && !transitioning && !References.Notebook.IsOpen;
         public bool IsPaletteFocused => focus == "palette";
@@ -50,7 +51,7 @@ namespace Game.Unity.ArtRebuild
         /// <summary>开场旁白播放完前，世界、笔记和画布控件共同关闭输入。</summary>
         public bool IsOpening { get; private set; } = true;
         /// <summary>UI只读的玩法输入许可；UI打开状态仍由各模块自行消费。</summary>
-        public bool GameplayInputEnabled => !IsOpening && !IsStageTransition && Time.frameCount > blockedThroughFrame;
+        public bool GameplayInputEnabled => !IsOpening && !IsStageTransition && !IsEnding && Time.frameCount > blockedThroughFrame;
         /// <summary>正式Workspace接管时停用默认盖章和旧画布按钮，其他世界交互继续工作。</summary>
         public bool UsesExternalCanvasWorkspace { get; private set; }
         /// <summary>UI优先收起笔记内的导读或详情，返回true表示已消费本次Esc。</summary>
@@ -69,10 +70,11 @@ namespace Game.Unity.ArtRebuild
             home = References.ViewCamera.transform.position;
             homeTurn = References.ViewCamera.transform.rotation;
             homeFov = References.ViewCamera.fieldOfView;
-            Session = new GameSession(AtelierFlowRules.CreateOpening());
+            Session = CreateFlowSession();
             References.Notebook.EscapeClosesNotebook = false;
             References.Notebook.Bind(Session);
             References.Notebook.ExternalInputBlocked = true;
+            if(StageFour!=null)StageFour.Bind(Session);
             Wash.Bind(Session);
             CanvasPort.Bind(Session);
             if (StageThree!=null) StageThree.Bind(Session);
@@ -80,7 +82,7 @@ namespace Game.Unity.ArtRebuild
             References.ReturnButton.onClick.AddListener(ReturnToRoom);
             References.ContextAction.onClick.AddListener(OnContextAction);
             References.ResumeButton.onClick.AddListener(() => Pause(false));
-            References.RestartButton.onClick.AddListener(Restart);
+            References.RestartButton.onClick.AddListener(RestartGame);
             References.QuitButton.onClick.AddListener(() => UnityEngine.Application.Quit());
             References.PausePanel.SetActive(false);
             References.ContextPanel.SetActive(false);
@@ -91,8 +93,18 @@ namespace Game.Unity.ArtRebuild
             References.Notebook.OpenChanged += OnNotebook;
             Voice.LineCompleted += OnNarrationCompleted;
             References.Reminder.gameObject.SetActive(false);
-            Draft.PlayOpening();
-            Voice.Play("N01");
+            if(restoringPractice)
+            {
+                IsOpening=IsStageTransition=false;
+                pendingNarration="";
+                References.Notebook.ExternalInputBlocked=false;
+                Draft.RestoreStage(4,true);
+            }
+            else
+            {
+                Draft.PlayOpening();
+                Voice.Play("N01");
+            }
         }
 
         private void OnNarrationCompleted(string key)
@@ -111,6 +123,16 @@ namespace Game.Unity.ArtRebuild
                 waitingForReveal = false;
                 IsOpening = IsStageTransition = false;
                 blockedThroughFrame = Time.frameCount + 1;
+            }
+            if(IsEnding)
+            {
+                if(Keyboard.current!=null&&Keyboard.current.escapeKey.wasPressedThisFrame&&!StageFour.MenuVisible)Pause(!paused);
+                CancelPointer();ClearHover();
+                References.Notebook.ExternalInputBlocked=true;
+                References.Reminder.gameObject.SetActive(false);
+                References.ReturnButton.gameObject.SetActive(false);
+                References.ContextPanel.SetActive(false);
+                return;
             }
             if (!GameplayInputEnabled)
             {
@@ -161,10 +183,12 @@ namespace Game.Unity.ArtRebuild
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             if (IsPaletteFocused && StageThree!=null && StageThree.Palette.HandlePointer(overUI))
             { ClearHover();return; }
+            if(StageFour!=null&&StageFour.Tool.HandlePointer(overUI)) {ClearHover();return;}
             var ray = References.ViewCamera.ScreenPointToRay(mouse.position.ReadValue());
+            if(StageFour!=null&&IsLampFocused)References.Lamp.SetPointer(ray,true);
             var hits = Physics.RaycastAll(ray,40,References.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x => x.distance);
             bool has = false; RaycastHit hit = default;
-            foreach (var candidate in hits) { hit = candidate; has = true; break; }
+            foreach (var candidate in hits) { if(StageFour!=null&&StageFour.SkipPicking(candidate))continue;hit = candidate; has = true; break; }
             var target = has ? hit.collider.GetComponent<AtelierInteractionTarget>() : null;
             bool crayon = has && hit.collider == CrayonPicking;
             bool canvas = target != null && target.Kind == AtelierTargetKind.Painting;
@@ -221,6 +245,7 @@ namespace Game.Unity.ArtRebuild
             if (target.Kind == AtelierTargetKind.Plaster || target.Kind == AtelierTargetKind.HandMirror ||
                 target.Kind == AtelierTargetKind.DryBrush || target.Kind == AtelierTargetKind.MirrorShards)
                 return Draft.VisibleStage >= 2 && Session.IsInspectable(new ObjectId(target.ObjectId));
+            if(StageFour!=null && StageFour.Allowed(target))return true;
             if (target.Kind == AtelierTargetKind.Manuscript) return true;
             if (target.Kind == AtelierTargetKind.Brush || target.Kind == AtelierTargetKind.WashWater || target.Kind == AtelierTargetKind.Painting)
                 return Session.IsInspectable(new ObjectId(target.ObjectId));
@@ -231,6 +256,7 @@ namespace Game.Unity.ArtRebuild
         {
             if (!Allowed(target) || paused || transitioning || References.Notebook.IsOpen) return;
             lastObservation = "";
+            if(StageFour!=null&&StageFour.Allowed(target)) {StageFour.Observe(target);return;}
             if (target.Kind==AtelierTargetKind.Window)
             {
                 Session.Inspect(StudioRules.Window);
@@ -283,6 +309,7 @@ namespace Game.Unity.ArtRebuild
             else if (target.Kind == AtelierTargetKind.Painting)
             {
                 Session.Inspect(AtelierRules.Painting);
+                if(StageFour!=null&&!IsCanvasFocused)StageFour.Tool.SelectMode(AtelierFinaleToolMode.Paint);
                 if (!IsCanvasFocused) Focus("canvas",References.FocusPose,47);
                 RefreshCanvasControls();
             }
@@ -325,13 +352,19 @@ namespace Game.Unity.ArtRebuild
                     BeginStageTransition(2,"N03");
                 }
                 if (fact.Fact == AtelierFlowRules.Finished(2)) BeginStageTransition(3,"N04");
-                if (fact.Fact == AtelierFlowRules.Finished(3)) BeginStageTransition(4,"N05");
+                if (fact.Fact == AtelierFlowRules.Finished(3))
+                {
+                    practice=Session.CaptureAtelierPractice();
+                    BeginStageTransition(4,"N05");
+                }
                 if (fact.Fact == AtelierFlowRules.Washed) brushSelected = false;
             }
             if (value is CombinationSucceeded combination)
             {
                 // 两个中间概念都由正常配方形成后才播放原稿N02，字幕不成为输入门槛。
-                if (Session.State.Knows(new ClueId("atelier.flow.ice_blue")) &&
+                if (combination.RecipeId.StartsWith("atelier.flow.recipe.") &&
+                    (combination.RecipeId.EndsWith("ice_blue")||combination.RecipeId.EndsWith("swirl")||combination.RecipeId.EndsWith("brush.1")) &&
+                    Session.State.Knows(new ClueId("atelier.flow.ice_blue")) &&
                     Session.State.Knows(new ClueId("atelier.flow.swirl")))
                     Voice.Play("N02");
                 if (combination.RecipeId.StartsWith("atelier.flow.recipe.brush."))
@@ -391,6 +424,7 @@ namespace Game.Unity.ArtRebuild
             CancelPointer();
             StopObservationPaging();
             Wash.CancelContact();
+            if(StageFour!=null)References.Lamp.PutMatchDown();
             if (StageThree!=null) StageThree.Palette.CancelGesture();
             if (Mirror != null) Mirror.End();
             References.ManuscriptPanel.SetActive(false);
@@ -512,6 +546,7 @@ namespace Game.Unity.ArtRebuild
         private void CancelPointer()
         {
             captured=false;
+            if(StageFour!=null)StageFour.Tool.Cancel();
             if (StageThree!=null) StageThree.Palette.CancelGesture();
             if(CanvasPort.Document!=null) CanvasPort.Preview(Vector2.zero,false);
         }
@@ -532,7 +567,7 @@ namespace Game.Unity.ArtRebuild
             Time.timeScale=value?0:1;
         }
         private void OnApplicationFocus(bool active) { if(!active) { CancelPointer();if(Wash!=null) Wash.CancelContact();if(Mirror!=null) Mirror.CancelDrag(); } }
-        private void Restart() { Time.timeScale=1;SceneManager.LoadScene(SceneManager.GetActiveScene().path); }
+
         private void OnDestroy()
         {
             StopObservationPaging();

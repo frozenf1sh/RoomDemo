@@ -10,6 +10,7 @@ Shader "RoomDemo/Atelier/KnifePalette"
     }
     HLSLINCLUDE
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+    #include "../../Shaders/AtelierErasureField.hlsl"
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
     TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
     CBUFFER_START(UnityPerMaterial)
@@ -54,6 +55,7 @@ Shader "RoomDemo/Atelier/KnifePalette"
     }
     void Cut(float3 world)
     {
+        AtelierClip(world);
         if(_ProbeRoof>.5)
         {
             float2 uv=SurfaceUV(world);

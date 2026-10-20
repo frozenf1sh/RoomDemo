@@ -14,6 +14,7 @@ Shader "RoomDemo/Atelier/FourStageWash"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../../Shaders/AtelierErasureField.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             float _ProbeProgress,_ProbeTime,_ProbeStrength;
             struct A { float3 positionOS:POSITION; float2 uv:TEXCOORD0; };
@@ -21,6 +22,7 @@ Shader "RoomDemo/Atelier/FourStageWash"
             V Vert(A i) { V o; o.world=TransformObjectToWorld(i.positionOS); o.positionCS=TransformWorldToHClip(o.world); o.uv=i.uv; return o; }
             half4 Frag(V i):SV_Target
             {
+                AtelierClip(i.world);
                 float2 p=(i.uv-.5)*2;
                 float r=length(p),a=atan2(p.y,p.x);
                 float front=smoothstep(0,.14,_ProbeProgress)*smoothstep(.98,.84,r);

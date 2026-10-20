@@ -27,5 +27,23 @@ namespace Game.Application
         /// <summary>主动封存当前层，不由颜料耗尽或计时器代按完成。</summary>
         public AtelierCanvasResult FinishAtelierLayer(string epoch, int revision)
             => CompleteCanvas(epoch, () => AtelierCanvasOperations.Finish(State,Rules,revision));
+        /// <summary>显式提交最终表面操作；旧世代和旧画面请求均不会写入当前会话。</summary>
+        public AtelierCanvasResult ApplyAtelierFinale(string epoch,int revision,AtelierFinaleAction action,
+            System.Collections.Generic.IReadOnlyList<AtelierContactSegment> path,int assistedTaps=0)
+            => CompleteCanvas(epoch,()=>AtelierFinaleOperations.Apply(State,Rules,revision,action,path,assistedTaps));
+        /// <summary>捕获点灯前的真实入口，不补发任何材料或玩家操作。</summary>
+        public AtelierPracticeSnapshot CaptureAtelierPractice() => AtelierPracticeSnapshot.Capture(State,Rules);
+        private GameSession(AtelierPracticeSnapshot snapshot)
+        {
+            Rules=snapshot.Rules;
+            State=snapshot.Restore(Rules);
+            engine=new RuleEngine(Rules);
+        }
+        /// <summary>生成新世代的练习会话，旧UI和接触回调不能污染恢复后的作品。</summary>
+        public static GameSession FromAtelierPractice(AtelierPracticeSnapshot snapshot)
+        {
+            if(snapshot==null) throw new ArgumentNullException(nameof(snapshot));
+            return new GameSession(snapshot);
+        }
     }
 }

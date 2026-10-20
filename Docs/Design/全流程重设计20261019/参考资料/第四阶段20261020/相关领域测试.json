@@ -1,0 +1,335 @@
+{
+  "相关用例": 40,
+  "全部通过": true,
+  "范围": "四阶段与灰词消费，不跑归档旧主线套件",
+  "结果": [
+    {
+      "记录": "前两阶段回归测试.json",
+      "汇总": {
+        "Total": 15,
+        "Passed": 15,
+        "Failed": 0,
+        "Skipped": 0,
+        "Inconclusive": 0
+      },
+      "用例": [
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.ActionsCannotAwardAnObjectAsAnObservation",
+          "Status": "Passed",
+          "Duration": 0.0017444,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.BoundaryAndMiddleChoicesKeepLastStrokeLegal(12)",
+          "Status": "Passed",
+          "Duration": 0.0046838,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.BoundaryAndMiddleChoicesKeepLastStrokeLegal(24)",
+          "Status": "Passed",
+          "Duration": 0.0009601,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.BoundaryAndMiddleChoicesKeepLastStrokeLegal(18)",
+          "Status": "Passed",
+          "Duration": 0.0010536,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.FirstBrushCanBeFormedWithoutReadingTheOptionalNote",
+          "Status": "Passed",
+          "Duration": 0.0011927,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.MirrorObservationRequiresOwnSourceAndNeverAwardsPlaster",
+          "Status": "Passed",
+          "Duration": 0.0016268,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.NoBrushAndOutOfBoundsInputCannotMutateArtwork",
+          "Status": "Passed",
+          "Duration": 0.0009008,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.OldEpochStaleRevisionAndDuplicateMutationAreRejectedWithoutCharges",
+          "Status": "Passed",
+          "Duration": 0.0010582,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.OptionalNoteNeverGivesCupAndOtherSourcesStillRequireTheirOwnClick",
+          "Status": "Passed",
+          "Duration": 0.0008056,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.SecondBrushRequiresFourPersonalSourcesAndPreservesFirstLayer",
+          "Status": "Passed",
+          "Duration": 0.0022749,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.StageTwoSourcesCannotBeInspectedBeforeFirstLayerFinishes",
+          "Status": "Passed",
+          "Duration": 0.0007015,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.ThreeRecipesDoNotLockOrAdvanceTheCanvas",
+          "Status": "Passed",
+          "Duration": 0.0007113,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.TwoStrokesCannotFinishAndThreeCanDiscardRemainder",
+          "Status": "Passed",
+          "Duration": 0.0008274,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.UndoRefundsExactStrokeAndCannotUndoSealedLayer",
+          "Status": "Passed",
+          "Duration": 0.0007762,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierOpeningFlowTests.WashRequiresBothSourcesAndCollectsResultsInSameBatch",
+          "Status": "Passed",
+          "Duration": 0.0010091,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    {
+      "记录": "灰词消费测试.json",
+      "汇总": {
+        "Total": 8,
+        "Passed": 8,
+        "Failed": 0,
+        "Skipped": 0,
+        "Inconclusive": 0
+      },
+      "用例": [
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.BlueConceptsRemainAvailableAfterFormingBrush",
+          "Status": "Passed",
+          "Duration": 0.0038719,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.ConsumedDefinitionsAreCopiedAndCannotReferToAnotherInput",
+          "Status": "Passed",
+          "Duration": 0.0021677,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.EveryGrayWordHasRecipeOrRoofContactPurposeAndPhysicalSourcesDoNotAwardItOnClick",
+          "Status": "Passed",
+          "Duration": 0.0027417,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.NewSessionDoesNotInheritThePreviousConsumption",
+          "Status": "Passed",
+          "Duration": 0.0015598,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.ReinspectionAndRepeatedSubmissionCannotRestoreConsumedWords",
+          "Status": "Passed",
+          "Duration": 0.0018806,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.SuccessConsumesOnlyDeclaredGrayInputsAndKeepsHistory",
+          "Status": "Passed",
+          "Duration": 0.0013113,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.SuccessSubscribersObserveConsumptionAndOutputTogether",
+          "Status": "Passed",
+          "Duration": 0.0009716,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierWordConsumptionTests.ThirdInputAndWrongPairCannotConsumeAnything",
+          "Status": "Passed",
+          "Duration": 0.0010787,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    {
+      "记录": "前三阶段回归测试.json",
+      "汇总": {
+        "Total": 6,
+        "Passed": 6,
+        "Failed": 0,
+        "Skipped": 0,
+        "Inconclusive": 0
+      },
+      "用例": [
+        {
+          "FullName": "Game.Tests.AtelierStageThreeTests.BothKnifeActionsRequirePersonallyKnownBoardToolAndStudy",
+          "Status": "Passed",
+          "Duration": 0.0053597,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageThreeTests.NightCityConsumesFourGrayWordsWhileConceptsAndSourceHistoryRemain",
+          "Status": "Passed",
+          "Duration": 0.0028895,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageThreeTests.StudyingCrustOnlyAwardsOneUsefulGrayWordAndNeverKnife",
+          "Status": "Passed",
+          "Duration": 0.0016617,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageThreeTests.ThirdLayerCanBePaintedBeforeKnifeButCannotFinishUntilBothContacts",
+          "Status": "Passed",
+          "Duration": 0.0032753,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageThreeTests.ThirdSourcesAndActionsStayClosedUntilSecondLayerFinishes",
+          "Status": "Passed",
+          "Duration": 0.0017375,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageThreeTests.WindowClickDoesNotAwardNearFarOrComparison",
+          "Status": "Passed",
+          "Duration": 0.0016959,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    },
+    {
+      "记录": "第四阶段领域测试.json",
+      "汇总": {
+        "Total": 11,
+        "Passed": 11,
+        "Failed": 0,
+        "Skipped": 0,
+        "Inconclusive": 0
+      },
+      "用例": [
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.BothRoutesRecheckThreeStrokesAndToolSource",
+          "Status": "Passed",
+          "Duration": 0.0187492,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.EmptyOutsideAndTooShortContactsCannotProduceFacts",
+          "Status": "Passed",
+          "Duration": 0.0007779,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.FirstProbeLeavesNormalEndingAvailableAndNeverAwardsSkyOrRoom",
+          "Status": "Passed",
+          "Duration": 0.0006157,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.FourthSourcesAndLampActionsStayClosedBeforeThirdLayer",
+          "Status": "Passed",
+          "Duration": 0.0004994,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.InvalidPracticeCaptureAndDifferentRulesAreRejected",
+          "Status": "Passed",
+          "Duration": 0.0021081,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.LookingAtLampDoesNotGiveWarmthAndStrikingRequiresPersonallyKnownMatches",
+          "Status": "Passed",
+          "Duration": 0.0007019,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.OpenRoofStillNeedsPersonalSkyMarkAndRoomBeforeFinalContact",
+          "Status": "Passed",
+          "Duration": 0.0008524,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.PracticeSnapshotRestoresExactEarlierKnowledgePaintAndNewEpoch",
+          "Status": "Passed",
+          "Duration": 0.0045938,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.SecondProbeMustStartAtNewEdgeAndImmediatelyLocksNormalEnding",
+          "Status": "Passed",
+          "Duration": 0.0006026,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.SpreadUsesCurrentVersionAndNewOrUndoneStrokesInvalidateIt",
+          "Status": "Passed",
+          "Duration": 0.0006181,
+          "Message": null,
+          "StackTrace": null
+        },
+        {
+          "FullName": "Game.Tests.AtelierStageFourTests.WarmStarsConsumeExactlyTheTwoGrayMaterials",
+          "Status": "Passed",
+          "Duration": 0.0004916,
+          "Message": null,
+          "StackTrace": null
+        }
+      ]
+    }
+  ]
+}

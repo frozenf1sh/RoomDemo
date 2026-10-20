@@ -52,6 +52,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
         public float OpeningDarkness { get; private set; }
         /// <summary>失焦归零后不再执行多点采样。</summary>
         public float OpeningBlur { get; private set; }
+        /// <summary>只有房间擦开事实后使用，不作为普通阶段的全景显色入口。</summary>
+        public void ReleaseForWorld(float erasure) => Density=1-Mathf.SmoothStep(0,1,Mathf.Clamp01(erasure*3));
         /// <summary>旁白整组完成后调用；保留此前显色，未配置的阶段不解除背景遮挡。</summary>
         public void RestoreStage(int stage, bool immediate)
         {

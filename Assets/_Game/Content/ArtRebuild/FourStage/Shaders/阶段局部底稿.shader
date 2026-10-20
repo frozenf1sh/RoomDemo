@@ -19,7 +19,7 @@ Shader "Hidden/RoomDemo/Atelier/LocalDraft"
             TEXTURE2D_X_FLOAT(_ProbeDepth);
             TEXTURE2D_X(_ProbeNormals);
             float4 _DraftAmounts, _Opening;
-            float4 _ClearCenters[32], _ClearExtents[32];
+            float4 _ClearCenters[64], _ClearExtents[64];
             int _ClearCount;
             float4 _ContactCenters[12], _ContactSizes[12];
             int _ContactCount;

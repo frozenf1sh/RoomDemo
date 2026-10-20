@@ -1,0 +1,24 @@
+{
+  "方式": "真实1024×640独立Player，正常1倍速度，显式InputSystem鼠标与正常会话入口回放",
+  "错误数": 0,
+  "结果": {
+    "width": 1024,
+    "height": 640,
+    "speed": 1.0,
+    "skyFlow": 1.0,
+    "layerCounts": [
+      3,
+      5,
+      5,
+      6
+    ],
+    "normalCompleted": true,
+    "practiceRestored": true,
+    "roofOpened": true,
+    "roomKnown": true,
+    "roomErased": true,
+    "skyShader": "RoomDemo/ArtRebuild/AtelierLivingSky"
+  },
+  "文字检查": "原稿N06/N07，结尾重试按钮完整显示，未发现缺字或截断",
+  "边界": "自动回放，不是真人操作、审美或首次玩家理解度验收"
+}

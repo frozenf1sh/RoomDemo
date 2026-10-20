@@ -84,6 +84,23 @@ namespace Game.Domain
         public bool HasFired(string id) => reactions.Contains(id);
         /// <summary>查询配方是否已经由玩家建立。</summary>
         public bool HasCompleted(string id) => recipes.Contains(id);
+        /// <summary>仅复制已验证的第四阶段入口，供内存练习恢复；不提供通用存档接口。</summary>
+        internal GameState CopyAtelierPractice(RuleSet rules)
+        {
+            var copy=new GameState(rules.Clues,rules.CanvasLockFact);
+            copy.clues.UnionWith(clues);
+            copy.consumedClues.UnionWith(consumedClues);
+            copy.facts.UnionWith(facts);
+            copy.recipes.UnionWith(recipes);
+            copy.reactions.UnionWith(reactions);
+            copy.consumedLogics.UnionWith(consumedLogics);
+            copy.CompliantCount=CompliantCount;
+            copy.DeviationCount=DeviationCount;
+            copy.ConsecutiveCompliance=ConsecutiveCompliance;
+            copy.DayIndex=DayIndex;
+            copy.AtelierCanvas.RestorePractice(AtelierCanvas);
+            return copy;
+        }
         // 只有领域程序集可以写状态；新增项的布尔返回值用于事件去重。
 
         /// <summary>领域内部添加已知碎片，返回是否第一次添加。</summary>

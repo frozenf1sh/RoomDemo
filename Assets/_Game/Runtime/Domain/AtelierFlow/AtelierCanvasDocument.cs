@@ -73,13 +73,33 @@ namespace Game.Domain
         public AtelierCanvasLayer Current => layers.FirstOrDefault(x => !x.Sealed) ?? layers[3];
         /// <summary>每次作品修改递增，过期预览必须重新建立。</summary>
         public int Revision { get; internal set; }
-        /// <summary>最后一次刀面收色对应版本，后续批次的明确动作才可设置。</summary>
+        /// <summary>最后一次刀面收色对应版本，新增和撤销笔触会使其失效。</summary>
         public int SpreadRevision { get; internal set; } = -1;
+        private AtelierContactSegment[] spreadPath = Array.Empty<AtelierContactSegment>();
+        private AtelierContactSegment[] roofProbe = Array.Empty<AtelierContactSegment>();
+        /// <summary>已接受的当前版本收色路径，表现和UI共读，不保留第二份正式画面。</summary>
+        public IReadOnlyList<AtelierContactSegment> SpreadPath => Array.AsReadOnly(spreadPath);
+        /// <summary>第一次试刮留下的有限路径，用来验证第二次接触位于开口边缘。</summary>
+        public IReadOnlyList<AtelierContactSegment> RoofProbe => Array.AsReadOnly(roofProbe);
+        internal void SetSpread(AtelierContactSegment[] path) { spreadPath=(AtelierContactSegment[])path.Clone();SpreadRevision=Revision; }
+        internal void SetRoofProbe(AtelierContactSegment[] path) => roofProbe=(AtelierContactSegment[])path.Clone();
+        internal void RestorePractice(AtelierCanvasDocument source)
+        {
+            // 练习快照只来自第四阶段入口，逐笔复制前三层的不可变记录，不复制RT或UI预览。
+            for(int n=0;n<3;n++)
+            {
+                foreach(var stroke in source.layers[n].Strokes) layers[n].Add(stroke);
+                layers[n].Sealed=source.layers[n].Sealed;
+                layers[n].DiscardedUnits=source.layers[n].DiscardedUnits;
+            }
+            Revision=source.Revision;
+        }
         internal AtelierStroke Find(string id) => layers.SelectMany(x => x.Strokes).FirstOrDefault(x => x.Id == id);
         internal void Changed()
         {
             Revision++;
             SpreadRevision = -1;
+            spreadPath=Array.Empty<AtelierContactSegment>();
         }
     }
     /// <summary>同一次用例的结果和事件，拒绝时账本与世界均不改变。</summary>

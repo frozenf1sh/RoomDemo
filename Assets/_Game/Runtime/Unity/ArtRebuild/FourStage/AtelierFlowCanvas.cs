@@ -12,14 +12,14 @@ namespace Game.Unity.ArtRebuild
     {
         public Renderer Surface;
         public Texture2D[] Brushes;
-        public Shader CanvasShader, StampShader;
+        public Shader CanvasShader, StampShader, SpreadShader;
         public int Resolution = 1024;
         public TextAsset BrushCalibration;
         [Serializable] private sealed class BrushShape { public Vector4 rect; public float aspect,defaultSpan; public byte[] alpha; }
         [Serializable] private sealed class Calibration { public BrushShape[] brushes; }
         private Calibration calibration;
         private GameSession session;
-        private Material original, owned, stamp;
+        private Material original, owned, stamp, spread;
         private RenderTexture artwork;
         private int renderedRevision = -1;
         private Vector2 previewUV;
@@ -41,6 +41,7 @@ namespace Game.Unity.ArtRebuild
             original = Surface.sharedMaterial;
             owned = new Material(CanvasShader) { name = "主流程_自有世界画布" };
             stamp = new Material(StampShader);
+            if(SpreadShader!=null) spread=new Material(SpreadShader);
             artwork = new RenderTexture(Resolution,Resolution,0,RenderTextureFormat.ARGB32) { name = "主流程_领域笔印作品" };
             artwork.Create();
             Surface.sharedMaterial = owned;
@@ -49,7 +50,7 @@ namespace Game.Unity.ArtRebuild
             session.EventRaised += OnEvent;
             Rebuild();
         }
-        private void OnEvent(DomainEvent e) { if (e is AtelierCanvasChanged) Rebuild(); }
+        private void OnEvent(DomainEvent e) { if (e is AtelierCanvasChanged change) Rebuild(change.Operation=="spread"); }
         /// <summary>选择可行区间内的默认量；正式UI可传入自己的合法大小选择。</summary>
         public int DefaultCost
         {
@@ -115,9 +116,9 @@ namespace Game.Unity.ArtRebuild
             }
             return total>0&&visible>=total*.35f;
         }
-        private void Rebuild()
+        private void Rebuild(bool force=false)
         {
-            if (Document.Revision == renderedRevision) return;
+            if (!force && Document.Revision == renderedRevision) return;
             var old = RenderTexture.active;
             bool matrixPushed = false;
             try
@@ -148,6 +149,19 @@ namespace Game.Unity.ArtRebuild
                 if (matrixPushed) GL.PopMatrix();
                 RenderTexture.active = old;
             }
+            if(spread!=null && Document.SpreadRevision==Document.Revision && Document.SpreadPath.Count>0)
+            {
+                var path=new Vector4[64];
+                for(int n=0;n<Document.SpreadPath.Count;n++)
+                {
+                    var p=Document.SpreadPath[n];path[n]=new Vector4(p.U0/10000f,p.V0/10000f,p.U1/10000f,p.V1/10000f);
+                }
+                spread.SetVectorArray("_SpreadPath",path);
+                spread.SetInt("_SpreadCount",Document.SpreadPath.Count);
+                var temporary=RenderTexture.GetTemporary(artwork.descriptor);
+                try { Graphics.Blit(artwork,temporary,spread);Graphics.Blit(temporary,artwork); }
+                finally { RenderTexture.ReleaseTemporary(temporary); }
+            }
             // 作品版本改变后取消旧预览，下一次由UI或世界输入根据新快照建立。
             Preview(Vector2.zero,false);
         }
@@ -158,6 +172,7 @@ namespace Game.Unity.ArtRebuild
             if (artwork != null) { artwork.Release();Destroy(artwork); }
             if (owned != null) Destroy(owned);
             if (stamp != null) Destroy(stamp);
+            if (spread != null) Destroy(spread);
         }
     }
 }

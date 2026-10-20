@@ -1,0 +1,24 @@
+{
+  "方式": "最终包，1024×640，4倍加速补检，InputSystem逐帧鼠标事件",
+  "错误数": 0,
+  "结果": {
+    "width": 1024,
+    "height": 640,
+    "speed": 4.0,
+    "skyFlow": 1.0,
+    "layerCounts": [
+      3,
+      5,
+      5,
+      6
+    ],
+    "normalCompleted": true,
+    "practiceRestored": true,
+    "roofOpened": true,
+    "roomKnown": true,
+    "roomErased": true,
+    "skyShader": "RoomDemo/ArtRebuild/AtelierLivingSky"
+  },
+  "视觉检查": "新增物件一同擦除，完整星空前无石膏、镜片或蜡笔画残留",
+  "边界": "与正常速度完整回放分别记录；不能视作真人验收"
+}

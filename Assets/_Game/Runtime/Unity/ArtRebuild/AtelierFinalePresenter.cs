@@ -15,7 +15,14 @@ namespace Game.Unity.ArtRebuild
     public sealed class AtelierFinalePresenter : MonoBehaviour
     {
         public Transform ArtRoot, GameplayRoot;
+        /// <summary>新流程沿用既有星空材质与参数，只改用明确的两次刮开事实门槛。</summary>
+        public bool FourStageFlow;
+        public Vector3 FlowRoofOrigin;
+        public Vector2 FlowRoofSize = new Vector2(1.35f,1.35f);
         public Renderer[] RoofSurfaces, FrameSurfaces;
+        /// <summary>新流程独立视觉Prefab的明确表面；不依赖它们刚好挂在历史美术根下。</summary>
+        public Renderer[] AdditionalSurfaces=System.Array.Empty<Renderer>();
+        public Shader ErasureUnlit;
         public LivingSkyController Sky;
         public Shader ErasureLit, ErasurePaper, ErasureWater, ErasurePainting, ErasureFlame, ErasureTerrain,
             FinaleSky;
@@ -45,13 +52,16 @@ namespace Game.Unity.ArtRebuild
                 intensities[i] = LocalLights[i].intensity;
             ResetGlobals();
             originalSky = Sky.Surface.sharedMaterial;
-            var skyMaterial =
-                new Material(originalSky) { name = "玩法全方向运行时程序化星夜", shader = FinaleSky };
-            owned.Add("sky", skyMaterial);
-            Sky.Surface.sharedMaterial = skyMaterial;
+            if (!FourStageFlow)
+            {
+                var skyMaterial=new Material(originalSky) { name="玩法全方向运行时程序化星夜",shader=FinaleSky };
+                owned.Add("sky",skyMaterial);
+                Sky.Surface.sharedMaterial=skyMaterial;
+            }
             // 只克隆玩法副本实际用到的材质，原正式资产不被改写。
             InstallMaterials(ArtRoot);
             InstallMaterials(GameplayRoot);
+            InstallMaterials(AdditionalSurfaces);
             Sky.SeparateLightAndFlow = true;
             // 新会话取消上一轮颜料历史；只恢复表现，不改变任何世界事实。
             Sky.ResetEffect();
@@ -59,11 +69,12 @@ namespace Game.Unity.ArtRebuild
             Sky.SetFlow(0);
             Sky.LightTo(0, 0);
         }
-        private void InstallMaterials(Transform root)
+        private void InstallMaterials(Transform root) => InstallMaterials(root.GetComponentsInChildren<Renderer>(true));
+        private void InstallMaterials(IEnumerable<Renderer> surfaces)
         {
-            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            foreach (var renderer in surfaces)
             {
-                if (renderer == Sky.Surface || originals.ContainsKey(renderer))
+                if (renderer == null || renderer == Sky.Surface || originals.ContainsKey(renderer))
                     continue;
                 var source = renderer.sharedMaterials;
                 var output = new Material[source.Length];
@@ -106,6 +117,8 @@ namespace Game.Unity.ArtRebuild
         {
             switch (name)
             {
+            case "Universal Render Pipeline/Unlit":
+                return ErasureUnlit;
             case "Universal Render Pipeline/Lit":
             case "RoomDemo/Atelier/AgedPigmentLit":
                 return ErasureLit;
@@ -139,19 +152,19 @@ namespace Game.Unity.ArtRebuild
                 roof = Mathf.MoveTowards(roof, 1, dt / 7.5f);
             if (state.HasFact(AtelierRules.FrameErased))
                 frame = Mathf.MoveTowards(frame, 1, dt / 5.5f);
-            if (state.HasFact(StudioRules.SkyLit) && !lit)
+            if ((state.HasFact(StudioRules.SkyLit) || FourStageFlow && state.HasFact(AtelierRules.RoofErased)) && !lit)
             {
                 lit = true;
                 Sky.RevealTo(1, 6);
                 Sky.LightTo(1, 6);
             }
-            if (state.HasFact(StudioRules.SkyFlow) && !flowing)
+            if ((state.HasFact(StudioRules.SkyFlow) || FourStageFlow && state.HasFact(AtelierRules.RoofErased)) && !flowing)
             {
                 flowing = true;
                 Sky.RevealTo(1, 6);
                 Sky.FlowTo(1, 6);
             }
-            if (state.HasFact(StudioRules.FullSky))
+            if (state.HasFact(StudioRules.FullSky) || FourStageFlow && state.HasFact(AtelierRules.RoofErased))
                 mark = Mathf.MoveTowards(mark, 1, dt / 5);
             if (state.HasFact(AtelierRules.RoomErased) && !wholeStarted)
             {
@@ -160,7 +173,17 @@ namespace Game.Unity.ArtRebuild
                     intensities[i] = LocalLights[i].intensity;
             }
             if (wholeStarted)
-                room = Mathf.MoveTowards(room, 1, dt / 16);
+                room = Mathf.MoveTowards(room, 1, dt / (FourStageFlow ? 12 : 16));
+            if(FourStageFlow && state.HasFact(AtelierFlowRules.RoofProbed) && state.AtelierCanvas.RoofProbe.Count>0)
+            {
+                var path=state.AtelierCanvas.RoofProbe;
+                var a=path[0];var b=path[path.Count-1];
+                Vector3 World(int u,int v)=>FlowRoofOrigin+new Vector3((u/10000f-.5f)*FlowRoofSize.x,0,(v/10000f-.5f)*FlowRoofSize.y);
+                Shader.SetGlobalFloat("_AtelierFlowProbeEnabled",1);
+                Shader.SetGlobalVector("_AtelierProbeFrom",World(a.U0,a.V0));
+                Shader.SetGlobalVector("_AtelierProbeTo",World(b.U1,b.V1));
+                Shader.SetGlobalFloat("_AtelierProbeRadius",.075f);
+            }
             Shader.SetGlobalFloat("_AtelierRoof", roof);
             Shader.SetGlobalFloat("_AtelierFrame", frame);
             Shader.SetGlobalFloat("_AtelierRoom", room);
@@ -190,15 +213,24 @@ namespace Game.Unity.ArtRebuild
                                  Mathf.Sin(p.x * 3.1f - p.z * .24f) * .028f + grain * .035f);
         }
         /// <summary>仅跳过中央已经完全显露的屋顶拾取表面；边缘保守保留。</summary>
-        public bool RoofClear(Vector3 point) => RoofSettled &&
-                                                new Vector2(point.x / 2.94f, (point.z + .3f) / 3.35f).magnitude <
-                                                    .87f;
+        public bool RoofClear(Vector3 point)
+        {
+            if(!RoofSettled)return false;
+            Vector2 q=new Vector2(point.x/2.94f,(point.z+.3f)/3.35f);
+            if(!FourStageFlow)return q.magnitude<.87f;
+            // 与共享裁剪场相同的边沿计算；已经擦去的实体遮挡必须同步让出点击天空的射线。
+            float grain=Mathf.Sin(point.x*11.3f+point.z*3.7f+Mathf.Sin(point.y*9.2f))*.10f
+                +Mathf.Sin(point.x*83+point.y*47+point.z*37)*.007f;
+            return q.magnitude+grain*.13f+Mathf.Sin(Mathf.Atan2(q.y,q.x)*7)*.027f<.998f;
+        }
         private static void ResetGlobals()
         {
             Shader.SetGlobalFloat("_AtelierRoof", 0);
             Shader.SetGlobalFloat("_AtelierRoom", 0);
             Shader.SetGlobalFloat("_AtelierFrame", 0);
             Shader.SetGlobalFloat("_AtelierMark", 0);
+            Shader.SetGlobalFloat("_AtelierFlowProbeEnabled",0);
+            Shader.SetGlobalFloat("_AtelierProbeRadius",0);
         }
         private void OnDestroy()
         {

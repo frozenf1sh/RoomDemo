@@ -2,6 +2,16 @@
 #ifndef ATELIER_ERASURE_FIELD
 #define ATELIER_ERASURE_FIELD
 float _AtelierRoof, _AtelierRoom, _AtelierFrame, _AtelierMark;
+// 新线第一次试刮保留有限小孔；旧线保持原来的中央擦开顺序。
+float _AtelierFlowProbeEnabled,_AtelierProbeRadius;
+float3 _AtelierProbeFrom,_AtelierProbeTo;
+float AtelierProbeDistance(float3 p)
+{
+    float2 a=_AtelierProbeFrom.xz,b=_AtelierProbeTo.xz;
+    float2 d=b-a;
+    float t=saturate(dot(p.xz-a,d)/max(.00001,dot(d,d)));
+    return length(p.xz-lerp(a,b,t))-_AtelierProbeRadius;
+}
 #ifndef ATELIER_GROUP_DEFINED
 float _AtelierEraseGroup;
 #endif
@@ -17,7 +27,9 @@ float AtelierRoomOrder(float3 p)
 }
 float AtelierRoofRadius(float3 p)
 {
-    float2 q=(p.xz-float2(0,-.3))/float2(2.94,3.35);
+    float2 centre=float2(0,-.3);
+    if(_AtelierFlowProbeEnabled>.5) centre=lerp((_AtelierProbeFrom.xz+_AtelierProbeTo.xz)*.5,centre,smoothstep(.1,.75,_AtelierRoof));
+    float2 q=(p.xz-centre)/float2(2.94,3.35);
     return length(q)+AtelierGrain(p)*.13+sin(atan2(q.y,q.x)*7)*.027;
 }
 float AtelierLift(float3 p)
@@ -38,6 +50,8 @@ void AtelierClip(float3 p)
         float bristle=sin(p.x*47+sin(p.z*17)*1.8)*.00065+sin(p.z*79+p.x*31)*.00035;
         clip(remaining+bristle*(1-smoothstep(.0,.04,remaining)));
     }
+    if(_AtelierEraseGroup>.5 && _AtelierEraseGroup<1.5 && _AtelierFlowProbeEnabled>.5 && _AtelierProbeRadius>.001)
+        clip(AtelierProbeDistance(p)+AtelierGrain(p)*.018);
     if(_AtelierEraseGroup>.5 && _AtelierEraseGroup<1.5 && _AtelierRoof>.0001)
         clip(AtelierRoofRadius(p)-_AtelierRoof);
     if(_AtelierEraseGroup>1.5 && _AtelierFrame>.0001)
@@ -53,6 +67,13 @@ float AtelierMark(float3 p)
     float centre=3.19+.115*p.x+.05*sin(p.x*1.8);
     float stripe=1-smoothstep(.018,.058,abs(p.y-centre)+AtelierGrain(p)*.035);
     float dry=.63+.37*smoothstep(-.5,.6,sin(p.x*183+p.z*51)+sin(p.y*397));
+    if(_AtelierFlowProbeEnabled>.5)
+    {
+        // 连续笔迹从高处跨过木框，延伸到窗下真正可接触的灰泥；不把交互盒放在窗洞里。
+        float wall=1-smoothstep(.020,.055,abs(p.x-(.52+.05*sin(p.y*4))));
+        wall*=smoothstep(.43,.57,p.y)*(1-smoothstep(3.25,3.4,p.y));
+        stripe=max(stripe,wall);
+    }
     return stripe*dry*_AtelierMark*smoothstep(1.6,2.0,p.z);
 }
 #endif

@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "command": "command eval",
+  "data": {
+    "command": "eval",
+    "parameters": {
+      "code": "var s=UnityEngine.SceneManagement.SceneManager.GetActiveScene();var f=UnityEngine.Object.FindAnyObjectByType<Game.Unity.ArtRebuild.AtelierFlowGameplay>();return new {scene=s.path,dirty=s.isDirty,playing=UnityEditor.EditorApplication.isPlaying,compiling=UnityEditor.EditorApplication.isCompiling,failed=UnityEditor.EditorUtility.scriptCompilationFailed,missing=s.GetRootGameObjects().Sum(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true).Sum(t=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject))),fourth=f.StageFour!=null,extraSurfaces=f.References.Finale.AdditionalSurfaces.Length,unlitErasure=f.References.Finale.ErasureUnlit.name,roofBlockers=f.StageFour.RoofOccluders.Length,sky=f.References.Finale.Sky.Surface.sharedMaterial.shader.name,bgIntercept=f.StageFour.Panel.GetComponent<UnityEngine.UI.Image>().raycastTarget};"
+    },
+    "result": {
+      "output": null,
+      "diagnostics": [],
+      "success": true,
+      "result": {
+        "scene": "Assets/_Game/Content/Scenes/AtelierPlayable.unity",
+        "dirty": false,
+        "playing": false,
+        "compiling": false,
+        "failed": false,
+        "missing": 0,
+        "fourth": true,
+        "extraSurfaces": 38,
+        "unlitErasure": "RoomDemo/Atelier/ErasureUnlit",
+        "roofBlockers": 2,
+        "sky": "RoomDemo/ArtRebuild/AtelierLivingSky",
+        "bgIntercept": false
+      }
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "/Users/frozenf1sh/unity/RoomDemo"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

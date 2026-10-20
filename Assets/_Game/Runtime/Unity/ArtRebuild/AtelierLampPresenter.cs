@@ -15,6 +15,8 @@ namespace Game.Unity.ArtRebuild
         public Transform Wick, Striker, MatchTip;
         public Renderer WickSurface, LampFlame, MatchFlame, MatchHead;
         public Light LampLight, MatchLight;
+        /// <summary>四阶段流程不把点灯变成倒计时；离开近景仍主动熄灭。</summary>
+        public bool KeepMatchBurning;
         public Vector3 PointerPlaneNormal = Vector3.forward;
         private GameSession session;
         private MaterialPropertyBlock flameProperties, wickProperties, matchProperties, headProperties;
@@ -24,7 +26,7 @@ namespace Game.Unity.ArtRebuild
         /// <summary>当前选中的手持火柴，仅是输入状态，不授予物体。</summary>
         public bool HasMatch => held;
         /// <summary>有限的火柴接触输入窗口；划亮历史由领域另行记录。</summary>
-        public bool HasBurningMatch => held && striking && strikeAge > .36f && strikeAge < 7.5f;
+        public bool HasBurningMatch => held && striking && strikeAge > .36f && (KeepMatchBurning || strikeAge < 7.5f);
         /// <summary>灯芯亮度正在稳定，只用于暂缓变化后的画面观察。</summary>
         public bool IgnitionPlaying => session != null && session.State.HasFact(StudioRules.LampTurned) && lampAge < 1.8f;
         /// <summary>真实火柴头已经靠近裸露灯芯，不能仅点远处灯座引燃。</summary>
@@ -120,7 +122,7 @@ namespace Game.Unity.ArtRebuild
                 if (touching && lampAge > 1.3f)
                 {
                     // 引燃后火柴退开并熄灭，炭化木杆仍在手持位置，不在画面中央凭空消失。
-                    touching = false; strikeAge = Mathf.Max(strikeAge,7.5f);
+                    touching = false; striking = false; strikeAge = Mathf.Max(strikeAge,7.5f);
                     desiredTip = Wick.position + new Vector3(.035f,-.025f,-.045f);
                 }
             }
@@ -141,7 +143,7 @@ namespace Game.Unity.ArtRebuild
             WickSurface.GetPropertyBlock(wickProperties);
             wickProperties.SetColor("_EmissionColor", new Color(.72f, .12f, .012f) * heat);
             WickSurface.SetPropertyBlock(wickProperties);
-            float matchBurn = held && striking ? Smooth(.28f, .45f, strikeAge) * (1 - Smooth(6.8f, 7.5f, strikeAge)) : 0;
+            float matchBurn = held && striking ? Smooth(.28f, .45f, strikeAge) * (KeepMatchBurning ? 1 : 1 - Smooth(6.8f, 7.5f, strikeAge)) : 0;
             MatchFlame.GetPropertyBlock(matchProperties);
             matchProperties.SetFloat("_Burn", matchBurn);
             matchProperties.SetFloat("_FlameClock", clock + 1.7f);

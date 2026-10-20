@@ -85,8 +85,8 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                 data.Amounts = new Vector4(Probe.LeftDraft, Probe.WindowDraft, Probe.Ghost, Probe.SurroundingsDraft);
                 data.Opening = new Vector4(Probe.OpeningDarkness,Probe.OpeningBlur,0,0);
                 // 每次记录冻结世界包围体；杯沿画笔移动时使用同一帧实际边界。
-                data.ClearCenters = new Vector4[32];
-                data.ClearExtents = new Vector4[32];
+                data.ClearCenters = new Vector4[64];
+                data.ClearExtents = new Vector4[64];
                 // RenderGraph复用Data，计数须逐帧归零，不能沿用上一帧已占满的槽位。
                 data.ClearCount = 0;
                 for (int stage = 0; stage <= 4; stage++)
@@ -95,7 +95,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                     if (weight <= 0) continue;
                     foreach (var target in Probe.ObjectsForStage(stage))
                     {
-                        if (target == null || !target.enabled || !target.gameObject.activeInHierarchy || data.ClearCount >= 32) continue;
+                        if (target == null || !target.enabled || !target.gameObject.activeInHierarchy || data.ClearCount >= 64) continue;
                         var bounds = target.bounds;
                         int index = data.ClearCount++;
                         // w保存每组的平滑显色量；屋顶仍有独立的第0组许可。
@@ -106,7 +106,7 @@ namespace Game.Unity.TechnicalArt.RealtimePainterly.Production
                 // 窗外连续村落用一个离房间足够远的显色体积，避免数百个Renderer占满物件槽。
                 foreach (var volume in Probe.RevealVolumes)
                 {
-                    if (volume == null || volume.Anchor == null || volume.Stage<1 || volume.Stage>4 || data.ClearCount>=32) continue;
+                    if (volume == null || volume.Anchor == null || volume.Stage<1 || volume.Stage>4 || data.ClearCount>=64) continue;
                     float weight = Probe.WeightForStage(volume.Stage);
                     if (weight<=0) continue;
                     int index = data.ClearCount++;

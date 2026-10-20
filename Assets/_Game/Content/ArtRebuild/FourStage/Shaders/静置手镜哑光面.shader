@@ -21,6 +21,7 @@ Shader "RoomDemo/Atelier/RestingMirror"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../../Shaders/AtelierErasureField.hlsl"
             struct A { float3 positionOS:POSITION; float3 normalOS:NORMAL; };
             struct V { float4 positionCS:SV_POSITION; float3 world:TEXCOORD0; float3 normal:TEXCOORD1; float2 local:TEXCOORD2; };
             V Vert(A i)
@@ -34,6 +35,7 @@ Shader "RoomDemo/Atelier/RestingMirror"
             }
             half4 Frag(V i):SV_Target
             {
+                AtelierClip(i.world);
                 float facing=abs(dot(normalize(i.normal),normalize(_WorldSpaceCameraPos-i.world)));
                 float sheen=pow(1-facing,3)*.045;
                 float broad=.022*cos(i.local.x*3+i.local.y*2);
@@ -43,7 +45,7 @@ Shader "RoomDemo/Atelier/RestingMirror"
             ENDHLSL
         }
         // 深度和法线也包含静置镜片，底稿遮罩才能以镜片自身位置恢复实色。
-        UsePass "Universal Render Pipeline/Unlit/DepthOnly"
-        UsePass "Universal Render Pipeline/Unlit/DepthNormalsOnly"
+        UsePass "RoomDemo/Atelier/ErasureUnlit/DepthOnly"
+        UsePass "RoomDemo/Atelier/ErasureUnlit/DepthNormalsOnly"
     }
 }

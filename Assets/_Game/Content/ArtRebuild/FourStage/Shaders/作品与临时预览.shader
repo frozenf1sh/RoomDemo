@@ -13,14 +13,16 @@ Shader "RoomDemo/Atelier/CanvasWorkspace"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "../../Shaders/AtelierErasureField.hlsl"
             TEXTURE2D(_BaseMap);SAMPLER(sampler_BaseMap);
             TEXTURE2D(_Brush);SAMPLER(sampler_Brush);
             float _Preview,_PreviewValid;float4 _Placement,_StampScale,_AlphaRect;
             struct A {float3 positionOS:POSITION;float2 uv:TEXCOORD0;};
-            struct V {float4 positionCS:SV_POSITION;float2 uv:TEXCOORD0;};
-            V Vert(A i){V o;o.positionCS=TransformObjectToHClip(i.positionOS);o.uv=i.uv;return o;}
+            struct V {float4 positionCS:SV_POSITION;float2 uv:TEXCOORD0;float3 world:TEXCOORD1;};
+            V Vert(A i){V o;o.positionCS=TransformObjectToHClip(i.positionOS);o.uv=i.uv;o.world=TransformObjectToWorld(i.positionOS);return o;}
             half4 Frag(V i):SV_Target
             {
+                AtelierClip(i.world);
                 half3 colour=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).rgb;
                 float2 p=i.uv-_Placement.xy;
                 float c=cos(_Placement.w),s=sin(_Placement.w);

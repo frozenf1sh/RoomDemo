@@ -1,6 +1,6 @@
 // 文件：AtelierFlowRules.cs
-// 职责：定义四阶段新流程的稳定身份、前三阶段观察、动作与笔刷配方。
-// 边界：旧AtelierRules保持原样；当前开放P00至P17，不用旧静物计数推进新阶段。
+// 职责：定义四阶段新流程的稳定身份、四阶段观察、动作与笔刷配方。
+// 边界：旧AtelierRules保持原样；当前开放P00至P26，不用旧静物计数推进新阶段。
 using System;
 using System.Collections.Generic;
 namespace Game.Domain
@@ -27,7 +27,7 @@ namespace Game.Domain
         /// <summary>已完成第一层以后开放左侧；后续阶段由对应收层事实恢复。</summary>
         public static int Stage(GameState state) => state.HasFact(Finished(3)) ? 4 : state.HasFact(Finished(2)) ? 3 : state.HasFact(Finished(1)) ? 2 : 1;
 
-        /// <summary>建立前三阶段真实闭环；未接入的第四层不会获得凭空笔刷。</summary>
+        /// <summary>建立四阶段真实闭环；终局只由玩家主动命令成立。</summary>
         public static RuleSet CreateOpening()
         {
             var clues = new List<ClueDefinition>();
@@ -81,10 +81,12 @@ namespace Game.Domain
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.rough", new[] { C("black"), C("sharp") }, new[] { Finished(1) }, new[] { rough }, empty, consumedInputs: new[] { C("black"), C("sharp") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.2", new[] { twisted, rough }, new[] { Finished(1) }, new[] { Brush(2) }, empty));
             AppendStageThree(clues,objects,actions,recipes);
+            AppendStageFour(clues,objects,actions,recipes);
             // 新线明确等待主动完成；配方次数不能触发旧的自动锁画布。
             return new RuleSet(clues.ToArray(), objects.ToArray(), recipes.ToArray(), Array.Empty<ReactionRule>(),
                 declaredFacts: new[] { Enabled, MirrorCompared, Finished(1), Finished(2), Finished(3), Finished(4), DryLearned, WetLearned, WorldCommitted,
-                    WindowNearSeen, WindowFarSeen, WindowCompared, PaletteStudied },
+                    WindowNearSeen, WindowFarSeen, WindowCompared, PaletteStudied, StudioRules.LampTurned, AtelierRules.MatchStruck,
+                    RoofProbed, AtelierRules.RoofErased, AtelierRules.SharedMarkSeen, AtelierRules.RoomErased, AtelierRules.CanvasDelivered },
                 sceneActions: actions.ToArray(), canvasLockFact: AtelierRules.CanvasDelivered, maximumCombinationInputs: 2);
         }
     }
