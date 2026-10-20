@@ -67,8 +67,8 @@ namespace Game.Editor.ArtRebuild
                 brushGo.transform.SetParent(paper,false);brush=brushGo.transform;
             }
             brush.gameObject.SetActive(true);
-            LayoutScroll(noun,new Vector2(-382.5f,80));LayoutScroll(adjective,new Vector2(-157.5f,80));
-            LayoutScroll(other,new Vector2(-382.5f,-125));LayoutScroll(brush,new Vector2(-157.5f,-125));
+            LayoutScroll(noun,new Vector2(-345,80));LayoutScroll(adjective,new Vector2(-145,80));
+            LayoutScroll(other,new Vector2(-345,-125));LayoutScroll(brush,new Vector2(-145,-125));
             LayoutBrush(brush);
             // 旧“名词标题”是Prefab子物体，兄弟顺序和显示状态无法在实例里稳定改；用它的字体新建普通标题并停用旧件。
             var legacyHeading=paper.Find("旧物件标题")??paper.Find("名词标题");
@@ -80,10 +80,10 @@ namespace Game.Editor.ArtRebuild
             var headingTemplate=legacyHeading??paper.Find("物件标题");
             if(headingTemplate==null)throw new InvalidOperationException("缺少物件标题。");
             if(legacyHeading!=null){legacyHeading.name="旧物件标题";legacyHeading.gameObject.SetActive(false);}
-            var nounHeading=EnsureHeading(paper,headingTemplate,"物件标题","物件",new Vector2(-382.5f,200));
-            EnsureHeading(paper,nounHeading,"观察标题","观察",new Vector2(-157.5f,200));
-            EnsureHeading(paper,nounHeading,"概念标题","概念",new Vector2(-382.5f,-20));
-            EnsureHeading(paper,nounHeading,"笔刷标题","笔刷",new Vector2(-157.5f,-20));
+            var nounHeading=EnsureHeading(paper,headingTemplate,"物件标题","物件",new Vector2(-345,200));
+            EnsureHeading(paper,nounHeading,"观察标题","观察",new Vector2(-145,200));
+            EnsureHeading(paper,nounHeading,"概念标题","概念",new Vector2(-345,-20));
+            EnsureHeading(paper,nounHeading,"笔刷标题","笔刷",new Vector2(-145,-20));
             var note=paper.Find("结果字幕")?.GetComponent<Text>();
             if(note==null)
             {
@@ -122,7 +122,7 @@ namespace Game.Editor.ArtRebuild
         {
             var rect=(RectTransform)scroll;
             rect.anchorMin=rect.anchorMax=new Vector2(.5f,.5f);rect.pivot=new Vector2(.5f,.5f);
-            rect.anchoredPosition=position;rect.sizeDelta=new Vector2(215,180);
+            rect.anchoredPosition=position;rect.sizeDelta=new Vector2(190,180);
             scroll.gameObject.SetActive(true);
         }
 
@@ -156,7 +156,7 @@ namespace Game.Editor.ArtRebuild
             heading.name=name;
             var rect=(RectTransform)heading;
             rect.anchorMin=rect.anchorMax=new Vector2(.5f,.5f);rect.pivot=new Vector2(.5f,.5f);
-            rect.anchoredPosition=position;rect.sizeDelta=new Vector2(215,26);
+            rect.anchoredPosition=position;rect.sizeDelta=new Vector2(190,26);
             var label=heading.GetComponent<Text>();
             label.text=text;label.fontSize=20;label.alignment=TextAnchor.MiddleLeft;label.raycastTarget=false;
             label.color=new Color(.30f,.25f,.18f,1);
