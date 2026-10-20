@@ -171,7 +171,8 @@ namespace Game.Unity.ArtRebuild
                 Sky.RevealTo(1, 6);
                 Sky.LightTo(1, 6);
             }
-            if ((state.HasFact(StudioRules.SkyFlow) || FourStageFlow && state.HasFact(AtelierFlowRules.SkyFinished)&&finalErase>.999f) && !flowing)
+            // 云笔完成的同一帧就开始缓慢流动；房间余景仍按原时长退场，不再让星空等最后一块外景。
+            if ((state.HasFact(StudioRules.SkyFlow) || FourStageFlow && state.HasFact(AtelierFlowRules.SkyFinished)) && !flowing)
             {
                 flowing = true;
                 Sky.RevealTo(1, 6);
