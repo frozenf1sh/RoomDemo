@@ -12,21 +12,27 @@ namespace Game.Editor.ArtRebuild
     [InitializeOnLoad]
     public static class AtelierStageThreeQuickStart
     {
-        private const string Key="Atelier.StageThreeQuickStart";
+        private const string Key="Atelier.StageQuickStart";
         private const string Main="Assets/_Game/Content/Scenes/AtelierPlayable.unity";
         static AtelierStageThreeQuickStart(){EditorApplication.update+=Tick;}
 
-        /// <summary>打开可玩场景并进入Play，等会话建立后快进；在Play中则立即尝试。</summary>
+        /// <summary>快进到第三阶段开始：窗景、板、刀可见，第三阶段观察尚未取得。</summary>
         [MenuItem("游戏/新四阶段流程/快进到第三阶段")]
-        public static void Jump()
+        public static void JumpThird()=>JumpTo(3);
+
+        /// <summary>快进到第三阶段完成、准备进第四阶段：前三层已收笔，灯和屋顶未动。</summary>
+        [MenuItem("游戏/新四阶段流程/快进到第四阶段（第三阶段已完成）")]
+        public static void JumpFourth()=>JumpTo(4);
+
+        private static void JumpTo(int stage)
         {
             if(EditorApplication.isPlaying)
             {
-                if(TryJump())return;
-                SessionState.SetBool(Key,true);
+                if(TryJump(stage))return;
+                SessionState.SetInt(Key,stage);
                 return;
             }
-            if(EditorApplication.isPlayingOrWillChangePlaymode){SessionState.SetBool(Key,true);return;}
+            if(EditorApplication.isPlayingOrWillChangePlaymode){SessionState.SetInt(Key,stage);return;}
             var active=SceneManager.GetActiveScene();
             if(active.path!=Main)
             {
@@ -38,23 +44,26 @@ namespace Game.Editor.ArtRebuild
                 EditorSceneManager.OpenScene(Main);
             }
             // 域重载会清空编辑器静态字段；SessionState在Play启动后仍保留本次快进请求。
-            SessionState.SetBool(Key,true);
+            SessionState.SetInt(Key,stage);
             EditorApplication.EnterPlaymode();
         }
 
         private static void Tick()
         {
-            if(!EditorApplication.isPlaying||!SessionState.GetBool(Key,false))return;
-            if(!TryJump())return;
-            SessionState.SetBool(Key,false);
-            Debug.Log("[四阶段] 已快进到第三阶段开始。");
+            if(!EditorApplication.isPlaying)return;
+            int stage=SessionState.GetInt(Key,0);
+            if(stage!=3&&stage!=4)return;
+            if(!TryJump(stage))return;
+            SessionState.SetInt(Key,0);
+            Debug.Log(stage==4?"[四阶段] 已快进到第三阶段完成、准备进第四阶段。":"[四阶段] 已快进到第三阶段开始。");
         }
 
-        private static bool TryJump()
+        private static bool TryJump(int stage)
         {
             var flow=UnityEngine.Object.FindAnyObjectByType<AtelierFlowGameplay>();
             if(flow==null||flow.Session==null)return false;
-            flow.FastForwardToThirdStage();
+            if(stage==4)flow.FastForwardToFourthStage();
+            else flow.FastForwardToThirdStage();
             return true;
         }
     }

@@ -46,8 +46,41 @@ namespace Game.Unity.ArtRebuild
                 PaintFirstLayer();
             }
             if (!Session.State.HasFact(AtelierFlowRules.Finished(2))) PaintSecondLayer();
-            SetThirdStageEntry();
+            SetStageEntry(3);
         }
+
+        /// <summary>快进到第三阶段完成、准备进第四阶段：前三层已收笔，N05已跳过，点灯与屋顶尚未发生。</summary>
+        /// <remarks>显式开发入口；第三层仍走正常画布收层，Finished(3)会建立真实练习快照。</remarks>
+        public void FastForwardToFourthStage()
+        {
+            if (Session == null || IsEnding) return;
+            FastForwardToThirdStage();
+            if (!Session.State.HasFact(AtelierFlowRules.Finished(3)))
+            {
+                Session.DebugGrantClues(StageThreeClues);
+                Session.DebugAddFact(AtelierFlowRules.WindowNearSeen);
+                Session.DebugAddFact(AtelierFlowRules.WindowFarSeen);
+                Session.DebugAddFact(AtelierFlowRules.PaletteStudied);
+                Session.DebugAddFact(AtelierFlowRules.DryLearned);
+                Session.DebugAddFact(AtelierFlowRules.WetLearned);
+                PaintThirdLayer();
+            }
+            SetStageEntry(4);
+        }
+
+        /// <summary>第三阶段来源、干湿观察、灯火与夜城笔刷；灯与屋顶不在其中。</summary>
+        private static readonly ClueId[] StageThreeClues =
+        {
+            new ClueId(StudioRules.Window.Value),
+            new ClueId(AtelierFlowRules.NearWindowLight.Value),
+            new ClueId(AtelierFlowRules.FarWindowLight.Value),
+            new ClueId(AtelierFlowRules.DryPalette.Value),
+            new ClueId(AtelierFlowRules.PaletteKnife.Value),
+            AtelierFlowRules.C("window_lights"),
+            AtelierFlowRules.C("dry_paint"),
+            AtelierFlowRules.C("wet_paint"),
+            AtelierFlowRules.Brush(3)
+        };
 
         /// <summary>第一层按正常三笔与收层完成；Finished(1)仍由画布命令发布。</summary>
         private void PaintFirstLayer()
@@ -70,8 +103,21 @@ namespace Game.Unity.ArtRebuild
             CanvasPort.Finish();
         }
 
-        /// <summary>收掉快进过程中触发的N03/N04与镜头过渡，恢复到第三阶段固定主镜头。</summary>
-        private void SetThirdStageEntry()
+        /// <summary>第三层按正常五笔用尽夜城颜料，保留前两层并推进Finished(3)。</summary>
+        private void PaintThirdLayer()
+        {
+            if (CanvasPort == null || CanvasPort.Document == null || CanvasPort.Document.Current.Id != 3) return;
+            foreach (var point in new[]
+                     {
+                         new Vector2(.24f,.24f),new Vector2(.49f,.28f),new Vector2(.74f,.32f),
+                         new Vector2(.35f,.40f),new Vector2(.65f,.40f)
+                     })
+                CanvasPort.Commit(point,CanvasPort.DefaultCost,0);
+            CanvasPort.Finish();
+        }
+
+        /// <summary>收掉快进过程中触发的旧阶段旁白与镜头过渡，恢复到指定阶段的固定主镜头。</summary>
+        private void SetStageEntry(int stage)
         {
             // 先清旁白队列，再覆盖阶段显示，避免Finished事件排入的旧过场继续播放。
             if (Voice != null)
@@ -83,7 +129,7 @@ namespace Game.Unity.ArtRebuild
             if (observationPaging != null) { StopCoroutine(observationPaging); observationPaging = null; }
             transitioning = false; paused = false; captured = false; focus = "";
             IsOpening = false; IsStageTransition = false;
-            pendingNarration = ""; pendingStage = 3; waitingForReveal = false;
+            pendingNarration = ""; pendingStage = stage; waitingForReveal = false;
             blockedThroughFrame = Time.frameCount + 1;
             Time.timeScale = 1;
 
@@ -107,7 +153,7 @@ namespace Game.Unity.ArtRebuild
             References.Notebook.SetOpen(false);
             References.Notebook.ExternalInputBlocked = false;
 
-            Draft.RestoreStage(3,true);
+            Draft.RestoreStage(stage,true);
             Draft.SkipOpening();
         }
     }
