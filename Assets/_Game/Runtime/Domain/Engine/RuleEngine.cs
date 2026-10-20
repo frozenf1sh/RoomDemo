@@ -187,7 +187,9 @@ namespace Game.Domain
         {
             // RuleSet 构造时已拒绝歧义输入，因此最多只能命中一个配方。
             var recipe = rules.Recipes.SingleOrDefault(x => x.Matches(clues));
-            string reason = clues.Any(x => !state.Knows(x)) ? "请先观察房间，收集这些碎片。"
+            string reason = clues.Count > rules.MaximumCombinationInputs ? (rules.MaximumCombinationInputs == 2 ? "组合区一次只能放两个词语。" : "组合区一次最多放三个词语。")
+                : clues.Any(x => !state.Knows(x)) ? "请先观察房间，收集这些碎片。"
+                : clues.Any(x => !state.CanUseClue(x)) ? "这些词语已经用于形成新的联系。"
                 : recipe == null ? "没有形成新的解释。"
                 : !recipe.Requires.All(state.HasFact) ? "所需的世界事实尚未成立。"
                 : !state.Allows(recipe.Disposition) ? "先把画中最后的天空补完。"
@@ -198,9 +200,10 @@ namespace Game.Domain
                 return false;
             }
 
-            // 碎片不会被消耗；灵感是一次性许可，成功落笔后必须从当前事实中移除并留下不可恢复记录。
+            // 内容显式声明哪些输入会消费；只在成功分支写入，来源知识不会因此丢失。
             state.Complete(recipe.Id, recipe.Disposition);
-            events.Add(new CombinationSucceeded(recipe.Id, recipe.ProducesClues));
+            foreach (var clue in recipe.ConsumedInputs) state.ConsumeClue(clue);
+            events.Add(new CombinationSucceeded(recipe.Id, recipe.ProducesClues, recipe.ConsumedInputs));
             ConsumeRequiredLogics(state, recipe, events);
             // 两类输出都由数据驱动；线索先发布，随后事实进入同一个反应闭包。
             GrantClues(state, recipe.ProducesClues, events);

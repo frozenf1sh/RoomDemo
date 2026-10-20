@@ -39,6 +39,8 @@ namespace Game.Unity
         [SerializeField] private NotebookCanvasView semanticCanvas;
         /// <summary>安装有限语义画布；旧灰盒仍可使用三个槽。</summary>
         public void ConfigureCanvas(NotebookCanvasView canvas) { semanticCanvas = canvas; }
+        /// <summary>当前组合纸面适配器；只管理临时卡片，正式材料仍读取会话。</summary>
+        public NotebookCanvasView CombinationCanvas => semanticCanvas;
         [SerializeField] private Transform objectList;
         [SerializeField] private Transform conceptList;
         [SerializeField] private Transform observationList;
@@ -212,10 +214,10 @@ namespace Game.Unity
         /// <param name="clue">已收集的稳定碎片身份；未知碎片会被忽略。</param>
         public void SelectClue(ClueId clue)
         {
-            if (!session.State.Knows(clue)) return;
+            if (!session.State.CanUseClue(clue)) return;
             if (semanticCanvas != null && quietStudio)
             {
-                // 默认点击只阅读；独立玩法可选择后点击右页放下，保留拖动与最多三个输入。
+                // 默认点击只阅读；独立玩法保留拖动和点放，容量由当前规则决定。
                 if (clueDescription != null) clueDescription.text = StudioNarration.Description(clue, session.Rules);
                 if (semanticCanvas.ClickPlacement)
                 {
@@ -231,7 +233,13 @@ namespace Game.Unity
             // 同一碎片只能占一个槽，再次点击会取消；这只是输入组织。
             int existing = System.Array.FindIndex(selected, x => x.HasValue && x.Value == clue);
             if (existing >= 0) selected[existing] = null;
-            else { int empty = System.Array.FindIndex(selected, x => !x.HasValue); selected[empty >= 0 ? empty : 2] = clue; }
+            else
+            {
+                int capacity = session.Rules.MaximumCombinationInputs;
+                int empty = System.Array.FindIndex(selected,0,capacity,x => !x.HasValue);
+                if (empty < 0 && capacity == 2) return;
+                selected[empty >= 0 ? empty : 2] = clue;
+            }
             RenderSelection();
         }
         // 输入足够后直接提交；配方是否匹配由 RuleEngine 决定。
@@ -272,6 +280,17 @@ namespace Game.Unity
             // 成功时世界已经开始响应；界面强调后短暂延时收起。
             if (e is CombinationSucceeded success)
             {
+                if (semanticCanvas != null && session.Rules.MaximumCombinationInputs == 2)
+                {
+                    // 领域已完成消费和产出。立即隐藏旧卡，取消旧延迟清理，再显示真实结果。
+                    PrepareCanvasInput();
+                    ClearSelection();
+                    semanticCanvas.ShowResult(success.ProducedClues);
+                    feedbackText.text = "";
+                    selectionText.text = "";
+                    Render();
+                    return;
+                }
                 if (semanticCanvas != null) semanticCanvas.ShowSuccess();
                 feedbackText.text = "笔迹落下，房间开始回应。";
                 connectedAt = Time.unscaledTime; relationLine.enabled = true; if (semanticCanvas == null) inkAudio.Play();
@@ -356,8 +375,8 @@ namespace Game.Unity
             if (logicList != null) ClearRows(logicList);
             if (unifiedWords != null) ClearRows(unifiedWords);
             // 依获得顺序排列，不把思想材料重新分成物品栏和技能栏。
-            var definitions = unifiedWords != null ? session.State.KnownClues.Select(id => session.Rules.Clues.Single(x=>x.Id==id))
-                : session.Rules.Clues.Where(x => session.State.Knows(x.Id));
+            var definitions = unifiedWords != null ? session.State.AvailableClues.Select(id => session.Rules.Clues.Single(x=>x.Id==id))
+                : session.Rules.Clues.Where(x => session.State.CanUseClue(x.Id));
             foreach (var definition in definitions)
             {
                 // 捕获本条碎片的 ID，生成的按钮仅提交选择。
@@ -426,7 +445,9 @@ namespace Game.Unity
             if (logicHint != null)
             {
                 bool pending = session.Rules.Logics.Any(x => !session.State.HasFact(x.UnlockFact) && x.RequiresClues.Any(session.State.Knows));
-                logicHint.text = pending ? "还有灵感可观察回忆。" : "继续把词条放到右页，试着落下一笔。";
+                logicHint.text = session.Rules.MaximumCombinationInputs == 2
+                    ? "在右页放两个词语，再点‘合成’。"
+                    : pending ? "还有灵感可观察回忆。" : "继续把词条放到右页，试着落下一笔。";
             }
         }
         /// <summary>从模板创建中文条目，并绑定本条碎片的选择回调。</summary>
@@ -441,7 +462,7 @@ namespace Game.Unity
             bool concept = category == ClueCategory.Concept;
             bool observation = category == ClueCategory.Observation;
             text.fontSize = quietStudio ? 22 : concept ? 26 : observation ? 17 : 21;
-            text.color = quietStudio ? (concept ? new Color(.25f,.39f,.63f) : observation ? new Color(.48f,.39f,.29f) : new Color(.20f,.30f,.26f)) : observation ? new Color(.40f, .38f, .32f) : new Color(.25f, .25f, .21f);
+            text.color = quietStudio ? (concept ? new Color(.25f,.39f,.63f) : observation ? new Color(.40f,.42f,.44f) : new Color(.20f,.30f,.26f)) : observation ? new Color(.40f, .38f, .32f) : new Color(.25f, .25f, .21f);
             row.GetComponent<LayoutElement>().preferredHeight = quietStudio ? 40 : concept ? 44 : observation ? 32 : 36;
             row.targetGraphic = text;
             if (quietStudio) row.transition = Selectable.Transition.None;
@@ -454,7 +475,11 @@ namespace Game.Unity
             if (formedWord != null) return;
             relationLine.enabled = false;
             selectionText.text = quietStudio ? "" : "让这些细节靠近一些"; selectionText.color = new Color(.40f, .38f, .33f);
-            for (int i = 0; i < slotButtons.Length; i++) slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) : i == 2 ? "···" : "放下碎片";
+            for (int i = 0; i < slotButtons.Length; i++)
+            {
+                slotButtons[i].gameObject.SetActive(semanticCanvas == null && i < session.Rules.MaximumCombinationInputs);
+                slotButtons[i].GetComponentInChildren<Text>().text = selected[i].HasValue ? Label(selected[i].Value) : i == 2 ? "···" : "放下碎片";
+            }
             interpretButton.interactable = SelectedClues.Count >= 2;
             var submit = interpretButton.GetComponentInChildren<Text>();
             // 深色纸签上的禁用态仍须保留可读的“解释”，只降低透明度而不改成同色深墨。

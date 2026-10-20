@@ -50,6 +50,8 @@ namespace Game.Domain
         public IReadOnlyList<FactId> ProducesFacts { get; }
         /// <summary>组合后形成的线索；概念与世界解释共用同一求值路径。</summary>
         public IReadOnlyList<ClueId> ProducesClues { get; }
+        /// <summary>成功时退出可用材料的输入；失败不消费，发现历史保持不变。</summary>
+        public IReadOnlyList<ClueId> ConsumedInputs { get; }
         /// <summary>旧内容代码的事实输出兼容视图，不保存第二份数据。</summary>
         public IReadOnlyList<FactId> Produces => ProducesFacts;
         /// <summary>校验输入规模并复制规则数组，避免外部修改已装载内容。</summary>
@@ -58,14 +60,14 @@ namespace Game.Domain
         /// <param name="requires">必须全部成立的前置事实，可以为空。</param>
         /// <param name="produces">命中后添加的事实，可被后续反应继续消费。</param>
         /// <exception cref="ArgumentException">配方 ID 为空、输入数量越界或输入重复。</exception>
-        public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires, IReadOnlyList<FactId> produces, NarrativeDisposition disposition = NarrativeDisposition.Neutral)
-            : this(id, inputs, requires, Array.Empty<ClueId>(), produces, disposition) { }
+        public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires, IReadOnlyList<FactId> produces, NarrativeDisposition disposition = NarrativeDisposition.Neutral, IReadOnlyList<ClueId> consumedInputs = null)
+            : this(id, inputs, requires, Array.Empty<ClueId>(), produces, disposition, consumedInputs) { }
 
         /// <summary>创建可以产生线索和事实的统一配方；不按“灵感／解释”分支执行。</summary>
         /// <param name="producesClues">形成的新线索，通常为概念；可以为空。</param>
         /// <param name="producesFacts">世界事实输出；可以为空。</param>
         public SemanticRecipe(string id, IReadOnlyList<ClueId> inputs, IReadOnlyList<FactId> requires,
-            IReadOnlyList<ClueId> producesClues, IReadOnlyList<FactId> producesFacts, NarrativeDisposition disposition = NarrativeDisposition.Neutral)
+            IReadOnlyList<ClueId> producesClues, IReadOnlyList<FactId> producesFacts, NarrativeDisposition disposition = NarrativeDisposition.Neutral, IReadOnlyList<ClueId> consumedInputs = null)
         {
             if (inputs == null || requires == null || producesClues == null || producesFacts == null)
                 throw new ArgumentNullException("配方集合不能为 null；没有输出时使用空数组。");
@@ -79,6 +81,10 @@ namespace Game.Domain
             Requires = Array.AsReadOnly(requires.ToArray());
             ProducesClues = Array.AsReadOnly(producesClues.ToArray());
             ProducesFacts = Array.AsReadOnly(producesFacts.ToArray());
+            consumedInputs = consumedInputs ?? Array.Empty<ClueId>();
+            if (consumedInputs.Distinct().Count() != consumedInputs.Count || consumedInputs.Any(c => !inputs.Contains(c) || producesClues.Contains(c)))
+                throw new ArgumentException("被消费的材料必须是不同的配方输入，且不能同时作为产出。");
+            ConsumedInputs = Array.AsReadOnly(consumedInputs.ToArray());
         }
         /// <summary>无序精确匹配：数量相等、无重复输入且所有碎片一致。</summary>
         /// <param name="inputs">玩家提交的完整输入集合；多余碎片不能忽略。</param>
@@ -154,6 +160,8 @@ namespace Game.Domain
         public IReadOnlyList<LogicDefinition> Logics { get; }
         /// <summary>可选的主动收束事实；为空时保留历史内容的连续服从规则。</summary>
         public FactId? CanvasLockFact { get; }
+        /// <summary>当前内容允许的活动词条数；四阶段为二，历史内容保留三元兼容。</summary>
+        public int MaximumCombinationInputs { get; }
         // 第一版的兼容查询视图；实际匹配始终只使用 ClueId 配方。
         /// <summary>由统一内容定义派生的第一版物体视图。</summary>
         public IReadOnlyList<ObjectDefinition> Objects { get; }
@@ -162,8 +170,11 @@ namespace Game.Domain
         /// <summary>从兼容二元配方派生的旧解释视图。</summary>
         public IReadOnlyList<InterpretationRule> Interpretations { get; }
         /// <summary>装载规则并校验唯一性、引用与歧义；旧构造入口会转换成新数据。</summary>
-        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null, SceneActionRule[] sceneActions = null, FactId? canvasLockFact = null, LogicDefinition[] logics = null)
+        public RuleSet(ClueDefinition[] clues, DiscoveryRule[] discoveries, SemanticRecipe[] recipes, ReactionRule[] reactions, ObservationDiscovery[] observations = null, FactId[] declaredFacts = null, SceneActionRule[] sceneActions = null, FactId? canvasLockFact = null, LogicDefinition[] logics = null, int maximumCombinationInputs = 3)
         {
+            if (maximumCombinationInputs < 2 || maximumCombinationInputs > 3 || recipes.Any(x => x.Inputs.Count > maximumCombinationInputs))
+                throw new ArgumentException("组合容量必须为二或三，且不能小于内容配方所需数量。");
+            MaximumCombinationInputs = maximumCombinationInputs;
             // 新内容可以等待玩家亲自交稿，旧内容仍采用既有的三次服从收束。
             CanvasLockFact = canvasLockFact;
             observations = observations ?? Array.Empty<ObservationDiscovery>();
@@ -190,6 +201,8 @@ namespace Game.Domain
             if (recipes.Any(x => x.ProducesClues.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object)) ||
                 discoveries.Any(x => x.Grants.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object && c.Value != x.Source.Value)))
                 throw new ArgumentException("物体碎片必须来自玩家观察该物体，配方或其他来源不得代替授予。");
+            if (recipes.Any(x => x.ConsumedInputs.Any(c => clues.Single(d => d.Id == c).Category == ClueCategory.Object)))
+                throw new ArgumentException("配方不能消费物体来源。");
             // 细节只能来自已定义的物体，不允许用观察产出偷偷认识另一个物体。
             if (observations.Select(x => x.Source.Value + "/" + x.DetailId).Distinct().Count() != observations.Length ||
                 observations.Any(x => !discoveries.Any(d => d.Source == x.Source) || x.Grants.Any(c => !clues.Any(d => d.Id == c) || clues.Single(d => d.Id == c).Category == ClueCategory.Object)))
@@ -231,6 +244,6 @@ namespace Game.Domain
         /// <summary>查询已经获得的灵感，不向 UI 暴露可写状态。</summary>
         public IEnumerable<LogicDefinition> KnownLogics(GameState state) => Logics.Where(x => state.HasFact(x.UnlockFact));
         /// <summary>查询输入与条件已满足但未完成的配方，仅供调试显示。</summary>
-        public IEnumerable<SemanticRecipe> AvailableRecipes(GameState state) => Recipes.Where(x => !state.HasCompleted(x.Id) && x.Inputs.All(state.Knows) && x.Requires.All(state.HasFact) && state.Allows(x.Disposition));
+        public IEnumerable<SemanticRecipe> AvailableRecipes(GameState state) => Recipes.Where(x => !state.HasCompleted(x.Id) && x.Inputs.All(state.CanUseClue) && x.Requires.All(state.HasFact) && state.Allows(x.Disposition));
     }
 }

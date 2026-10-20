@@ -47,10 +47,14 @@ namespace Game.Tests
         [Test] public void WashRequiresBothSourcesAndCollectsResultsInSameBatch()
         {
             Read();game.Inspect(StudioRules.Cup);
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("transparent")));
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("blue")));
+            Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("flow")));
             game.PerformAction(StudioRules.Cup,"wash_release_pigment");Assert.IsFalse(game.State.HasFact(AtelierFlowRules.Washed));
             game.Inspect(AtelierRules.Brush);
             var events=game.PerformAction(StudioRules.Cup,"wash_release_pigment");
             Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("blue")));
+            Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("transparent")));
             Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("flow")));
             Assert.IsTrue(events.OfType<ClueDiscovered>().Any(x=>x.Clue==AtelierFlowRules.C("flow")));
             Assert.IsFalse(game.State.Knows(AtelierFlowRules.Brush(1)));
@@ -126,6 +130,8 @@ namespace Game.Tests
             Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("flip")));
             game.Inspect(AtelierFlowRules.HandMirror);
             Assert.IsFalse(game.State.Knows(AtelierFlowRules.C("flip")));
+            Assert.IsFalse(game.Rules.Discoveries.Single(x=>x.Source==AtelierFlowRules.HandMirror).Grants
+                .Any(id=>game.Rules.Clues.Single(c=>c.Id==id).Category==ClueCategory.Observation));
             game.PerformAction(AtelierFlowRules.HandMirror,"mirror_compare");
             Assert.IsTrue(game.State.Knows(AtelierFlowRules.C("flip")));
             Assert.IsFalse(game.State.Knows(AtelierFlowRules.Plaster));

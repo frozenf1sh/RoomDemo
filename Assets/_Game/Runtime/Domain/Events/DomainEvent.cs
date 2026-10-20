@@ -38,8 +38,15 @@ namespace Game.Domain
         public string RecipeId { get; }
         /// <summary>本次配方实际输出的线索快照；UI 可据类别呈现灵感，不能用它判定输入。</summary>
         public System.Collections.Generic.IReadOnlyList<ClueId> ProducedClues { get; }
-        public CombinationSucceeded(string id, System.Collections.Generic.IReadOnlyList<ClueId> producedClues = null)
-        { RecipeId = id; ProducedClues = System.Array.AsReadOnly(System.Linq.Enumerable.ToArray(producedClues ?? System.Array.Empty<ClueId>())); }
+        /// <summary>本次成功实际消费的输入快照，供UI在同一次刷新中撤去旧材料。</summary>
+        public System.Collections.Generic.IReadOnlyList<ClueId> ConsumedClues { get; }
+        public CombinationSucceeded(string id, System.Collections.Generic.IReadOnlyList<ClueId> producedClues = null,
+            System.Collections.Generic.IReadOnlyList<ClueId> consumedClues = null)
+        {
+            RecipeId = id;
+            ProducedClues = System.Array.AsReadOnly(System.Linq.Enumerable.ToArray(producedClues ?? System.Array.Empty<ClueId>()));
+            ConsumedClues = System.Array.AsReadOnly(System.Linq.Enumerable.ToArray(consumedClues ?? System.Array.Empty<ClueId>()));
+        }
         public override string ToString() => $"[配方] 成功，配方={RecipeId}";
     }
     /// <summary>玩家组合失败，不消费碎片、不产生事实。</summary>

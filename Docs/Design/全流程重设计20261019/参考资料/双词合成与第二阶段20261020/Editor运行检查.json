@@ -1,0 +1,14 @@
+{
+  "GroundTruth": {
+    "sampledUtc": "2026-10-20T03:46:19.052726Z",
+    "ageMs": 39,
+    "compilationFailed": false,
+    "compiling": false,
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "consoleLogs": 1,
+    "seeded": true
+  },
+  "回放结论": "前两阶段与旁白后逐物件显色自动构建回放完成。\n错误数：0\n\n边界：自动命令及按钮回调，不是真人鼠标操作。第三、四阶段玩法尚待下一批接入。",
+  "边界": "显式命令与现有UI按钮回调，自动检查，不是真人鼠标验收。"
+}

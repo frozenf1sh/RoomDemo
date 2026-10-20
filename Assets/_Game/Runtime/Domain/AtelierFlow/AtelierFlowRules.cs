@@ -36,11 +36,11 @@ namespace Game.Domain
             var recipes = new List<SemanticRecipe>();
             var empty = Array.Empty<FactId>();
             void Observe(string id, string name) => clues.Add(new ClueDefinition(C(id), name, ClueCategory.Observation));
-            Observe("transparent", "透明"); Observe("mapping", "映射"); Observe("blue", "蓝色");
-            Observe("flow", "流动"); Observe("free", "奔放"); Observe("messy", "杂乱");
-            Observe("fixed", "固定"); Observe("pale", "苍白"); Observe("regular", "规整");
-            Observe("flip", "翻转"); Observe("illusory", "虚幻"); Observe("black", "黑色");
-            Observe("dry", "干涸"); Observe("sharp", "锋利"); Observe("fragile", "脆弱"); Observe("disordered", "错乱");
+            // 只收录当前流程真正用于配方的灰色观察，描述性用语留在原稿介绍中。
+            Observe("transparent", "透明"); Observe("blue", "蓝色");
+            Observe("flow", "流动"); Observe("free", "奔放");
+            Observe("fixed", "固定"); Observe("flip", "翻转");
+            Observe("black", "黑色"); Observe("sharp", "锋利");
             var twisted = new ClueId("atelier.flow.twisted");
             var rough = new ClueId("atelier.flow.rough");
             clues.Add(new ClueDefinition(twisted, "扭曲", ClueCategory.Concept));
@@ -60,30 +60,30 @@ namespace Game.Domain
             }
             // 便条是可选动机说明；开场UI输入锁不伪装成“已读便条”的领域事实。
             Object(AtelierRules.Manuscript, "催稿便条", "快交稿了，我还是一点想法都没有。");
-            Object(StudioRules.Cup, "洗笔杯", "杯子上靠着一个沾着蓝色颜料的笔，洗一下比较好", C("transparent"), C("mapping"));
+            Object(StudioRules.Cup, "洗笔杯", "杯子上靠着一个沾着蓝色颜料的笔，洗一下比较好");
             Object(AtelierRules.Brush, "洗笔画笔", "把笔尖浸到水里洗一下吧");
-            Object(Crayon, "蜡笔画", "真怀念那时候奔放又杂乱的笔触。", C("free"), C("messy"));
+            Object(Crayon, "蜡笔画", "真怀念那时候奔放又杂乱的笔触。", C("free"));
             Object(AtelierRules.Painting, "画布", "");
-            Object(Plaster, "石膏像", "很枯燥。是的，但不去钻研它们，就无法表达出更多的事物。是这样没错……", C("fixed"), C("pale"), C("regular"));
-            Object(HandMirror, "手镜", "这个小玩意儿是怎么买到的来着……哦，当时研究自画像入了迷。还能转啊转的。自我也有两面性……呵呵。那时候的我肯定会这么说。", C("illusory"));
-            Object(DryBrush, "干画笔", "黑色。对，闭塞和笃定，这是我无论如何都想达到的事情。", C("black"), C("dry"));
-            Object(MirrorShards, "碎镜片", "去他的自我。但是碎成一片片了，一样的还是自我。当心，别在拼凑自我的时候划伤了自己。", C("sharp"), C("fragile"), C("disordered"));
+            Object(Plaster, "石膏像", "很枯燥。是的，但不去钻研它们，就无法表达出更多的事物。是这样没错……", C("fixed"));
+            Object(HandMirror, "手镜", "这个小玩意儿是怎么买到的来着……哦，当时研究自画像入了迷。还能转啊转的。自我也有两面性……呵呵。那时候的我肯定会这么说。");
+            Object(DryBrush, "黑色干画笔", "黑色。对，闭塞和笃定，这是我无论如何都想达到的事情。", C("black"));
+            Object(MirrorShards, "碎镜片", "去他的自我。但是碎成一片片了，一样的还是自我。当心，别在拼凑自我的时候划伤了自己。", C("sharp"));
             actions.Add(new SceneActionRule("mirror_compare", HandMirror, new[] { Finished(1) }, new[] { MirrorCompared },
                 "再规矩的形，翻过来就不压我了。", "先亲点手镜，再转动镜面。", observations: new[] { C("flip") }));
             actions.Add(new SceneActionRule("read_note", AtelierRules.Manuscript, empty, new[] { IntroRead }, "", "先看看便条。"));
             actions.Add(new SceneActionRule("wash_release_pigment", StudioRules.Cup, empty, new[] { Washed },
                 "到处都是蓝色。我刚刚在干什么来着……？", "先亲点杯水和洗笔画笔。",
-                observations: new[] { C("blue"), C("flow") }, additionalSources: new[] { AtelierRules.Brush }));
-            recipes.Add(new SemanticRecipe("atelier.flow.recipe.ice_blue", new[] { C("transparent"), C("blue") }, empty, new[] { ice }, empty));
-            recipes.Add(new SemanticRecipe("atelier.flow.recipe.swirl", new[] { C("flow"), C("free") }, empty, new[] { swirl }, empty));
+                observations: new[] { C("transparent"), C("blue"), C("flow") }, additionalSources: new[] { AtelierRules.Brush }));
+            recipes.Add(new SemanticRecipe("atelier.flow.recipe.ice_blue", new[] { C("transparent"), C("blue") }, empty, new[] { ice }, empty, consumedInputs: new[] { C("transparent"), C("blue") }));
+            recipes.Add(new SemanticRecipe("atelier.flow.recipe.swirl", new[] { C("flow"), C("free") }, empty, new[] { swirl }, empty, consumedInputs: new[] { C("flow"), C("free") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.1", new[] { ice, swirl }, empty, new[] { Brush(1) }, empty));
-            recipes.Add(new SemanticRecipe("atelier.flow.recipe.twisted", new[] { C("fixed"), C("flip") }, new[] { Finished(1) }, new[] { twisted }, empty));
-            recipes.Add(new SemanticRecipe("atelier.flow.recipe.rough", new[] { C("black"), C("sharp") }, new[] { Finished(1) }, new[] { rough }, empty));
+            recipes.Add(new SemanticRecipe("atelier.flow.recipe.twisted", new[] { C("fixed"), C("flip") }, new[] { Finished(1) }, new[] { twisted }, empty, consumedInputs: new[] { C("fixed"), C("flip") }));
+            recipes.Add(new SemanticRecipe("atelier.flow.recipe.rough", new[] { C("black"), C("sharp") }, new[] { Finished(1) }, new[] { rough }, empty, consumedInputs: new[] { C("black"), C("sharp") }));
             recipes.Add(new SemanticRecipe("atelier.flow.recipe.brush.2", new[] { twisted, rough }, new[] { Finished(1) }, new[] { Brush(2) }, empty));
             // 新线明确等待主动完成；配方次数不能触发旧的自动锁画布。
             return new RuleSet(clues.ToArray(), objects.ToArray(), recipes.ToArray(), Array.Empty<ReactionRule>(),
                 declaredFacts: new[] { Enabled, MirrorCompared, Finished(1), Finished(2), Finished(3), Finished(4), DryLearned, WetLearned, WorldCommitted },
-                sceneActions: actions.ToArray(), canvasLockFact: AtelierRules.CanvasDelivered);
+                sceneActions: actions.ToArray(), canvasLockFact: AtelierRules.CanvasDelivered, maximumCombinationInputs: 2);
         }
     }
 }

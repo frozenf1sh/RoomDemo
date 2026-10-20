@@ -1,0 +1,20 @@
+{
+  "brushBounds": "Center: (-2.1002, 0.7966, -0.2897), Extents: (0.1653, 0.0158, 0.0624)",
+  "tableBounds": "Center: (-3.1494, 0.3900, -0.1227), Extents: (1.2805, 0.3900, 0.5706)",
+  "supportGapMeters": 0.000846207142,
+  "footprintSupported": true,
+  "viewport": "(0.1408, 0.1100, 2.5430)",
+  "correctFirstHit": true,
+  "stage": 3,
+  "consumed": [
+    "atelier.flow.observation.transparent",
+    "atelier.flow.observation.blue",
+    "atelier.flow.observation.flow",
+    "atelier.flow.observation.free",
+    "atelier.flow.observation.fixed",
+    "atelier.flow.observation.flip",
+    "atelier.flow.observation.black",
+    "atelier.flow.observation.sharp"
+  ],
+  "remainingGray": []
+}

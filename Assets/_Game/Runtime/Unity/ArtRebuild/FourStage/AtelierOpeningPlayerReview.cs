@@ -56,6 +56,39 @@ namespace Game.Unity.ArtRebuild
             AtelierInteractionTarget Target(AtelierTargetKind kind) => kind == AtelierTargetKind.Painting
                 ? flow.CanvasPort.Surface.GetComponentsInChildren<AtelierInteractionTarget>(true).First(x => x.Kind == kind)
                 : refs.GetComponentsInChildren<AtelierInteractionTarget>(true).First(x => x.Kind == kind);
+            IEnumerator Compose(ClueId first,ClueId second,ClueId result,string capture = "")
+            {
+                if (!refs.Notebook.IsOpen)
+                {
+                    refs.Notebook.SetOpen(true);
+                    yield return null;
+                    yield return null;
+                    yield return null;
+                    // 高帧率Player三帧短于纸页0.22秒展开；等纸页打开再提交，截图才对应实际读词状态。
+                    yield return new WaitForSecondsRealtime(.3f);
+                }
+                var paper = refs.Notebook.CombinationCanvas;
+                // 通过现有纸面入口取回上次结果、放两词、点击提交，不绕开UI直接合成。
+                foreach (var old in paper.CombinationInput.ToArray()) paper.Remove(old);
+                Check(paper.Add(first,new Vector2(-90,20)) != null,"第一张材料无法放入组合区。");
+                Check(paper.Add(second,new Vector2(90,20)) != null,"第二张材料无法放入组合区。");
+                Check(paper.Add(new ClueId(AtelierRules.Brush.Value),Vector2.zero) == null && paper.ActiveCardCount == 2,
+                    "组合区仍可放第三个词条。");
+                refs.Notebook.InterpretSelected();
+                Check(paper.ActiveCardCount == 1 && paper.CombinationInput.Single() == result,
+                    "成功同帧没有清空旧卡并放入结果。");
+                foreach (var input in new[] { first,second })
+                    if (flow.Session.Rules.Clues.Single(x=>x.Id==input).Category == ClueCategory.Observation)
+                        Check(!flow.Session.State.CanUseClue(input) && flow.Session.State.Knows(input),
+                            "已用灰词未消费或发现历史被删除。");
+                if (capture != "")
+                {
+                    yield return Shot(capture);
+                    paper.Add(new ClueId(AtelierRules.Brush.Value),new Vector2(100,20));
+                    yield return new WaitForSecondsRealtime(1.9f);
+                    Check(paper.ActiveCardCount == 2,"旧延迟清理误删了结果或下一张卡。");
+                }
+            }
             yield return Shot("00_黑场旁白");
             Check(flow.IsOpening,"进场没有立即锁定开场输入。");
             Check(flow.Draft.SurroundingsDraft > .99f,"第一帧未建立外围草稿。");
@@ -97,6 +130,8 @@ namespace Game.Unity.ArtRebuild
             Check(Mathf.Abs(ceilingPixel.b-ceilingPixel.r)<.05f,"天花板没有进入外围草稿。");
             Destroy(frame);
             flow.Observe(Target(AtelierTargetKind.WashWater));yield return new WaitForSeconds(1.4f);
+            Check(new[] { "transparent","blue","flow" }.All(id=>!flow.Session.State.Knows(AtelierFlowRules.C(id))),
+                "仅点洗笔杯就提前收录了洗笔结果。");
             Check(flow.WaterObservation != null && flow.WaterObservation.gameObject.activeSelf
                 && flow.WaterObservation.text == "杯子上靠着一个沾着蓝色颜料的笔，洗一下比较好", "洗笔杯左上角说明未更新。");
             yield return Shot("03b_洗笔杯说明与桌面接触显色");
@@ -112,12 +147,15 @@ namespace Game.Unity.ArtRebuild
             Check(flow.WaterObservation.gameObject.activeSelf,"笔记关闭后洗笔说明未恢复。");
             flow.Observe(Target(AtelierTargetKind.Brush));
             Check(flow.WaterObservation.text == "把笔尖浸到水里洗一下吧", "画笔左上角说明未更新。");
+            Check(new[] { "transparent","blue","flow" }.All(id=>!flow.Session.State.Knows(AtelierFlowRules.C(id))),
+                "仅拿起画笔就提前收录了洗笔结果。");
             yield return Shot("03c_画笔说明与杯沿间距");
             flow.Observe(Target(AtelierTargetKind.WashWater));
             Check(!flow.Session.State.HasFact(AtelierFlowRules.Washed),"开始靠近就错误提交了洗笔事实。");
             yield return new WaitForSeconds(1.7f);
             Check(flow.Session.State.HasFact(AtelierFlowRules.Washed),"真实笔尖接触未提交动作。");
-            Check(flow.Session.State.Knows(AtelierFlowRules.C("blue"))&&flow.Session.State.Knows(AtelierFlowRules.C("flow")),"洗笔结果没有同次收录。");
+            Check(new[] { "transparent","blue","flow" }.All(id=>flow.Session.State.Knows(AtelierFlowRules.C(id))),
+                "真实接触后没有同次收录三个洗笔结果。");
             yield return Shot("04_接触与散色");
             flow.ReturnToRoom();yield return new WaitForSeconds(1.4f);
             var screen=refs.ViewCamera.WorldToScreenPoint(flow.CrayonPicking.bounds.center);
@@ -126,9 +164,13 @@ namespace Game.Unity.ArtRebuild
             Check(hits.Length>0&&hits[0].collider==flow.CrayonPicking,"小画主视角射线被其他Collider挡住。");
             flow.ObserveCrayon();yield return new WaitForSeconds(1.4f);
             yield return Shot("04b_正式蜡笔画贴图");
-            flow.Session.Combine(new[]{AtelierFlowRules.C("transparent"),AtelierFlowRules.C("blue")});
-            flow.Session.Combine(new[]{AtelierFlowRules.C("flow"),AtelierFlowRules.C("free")});
-            flow.Session.Combine(new[]{new ClueId("atelier.flow.ice_blue"),new ClueId("atelier.flow.swirl")});
+            yield return Compose(AtelierFlowRules.C("transparent"),AtelierFlowRules.C("blue"),new ClueId("atelier.flow.ice_blue"),"04c_双词即时合成冰蓝");
+            yield return Compose(AtelierFlowRules.C("flow"),AtelierFlowRules.C("free"),new ClueId("atelier.flow.swirl"));
+            yield return Compose(new ClueId("atelier.flow.ice_blue"),new ClueId("atelier.flow.swirl"),AtelierFlowRules.Brush(1));
+            refs.Notebook.SetOpen(false);
+            yield return null;
+            yield return null;
+            yield return null;
             Check(flow.Session.State.Knows(AtelierFlowRules.Brush(1)),"正常配方未形成第一笔刷。");
             Check(!flow.Session.State.CanvasLocked,"第三次概念配方错误触发了旧收束。");
             flow.ReturnToRoom();yield return new WaitForSeconds(1.4f);
@@ -181,6 +223,30 @@ namespace Game.Unity.ArtRebuild
             {
                 var source = Second(kind);
                 var sourceCollider = source.GetComponent<Collider>();
+                if (kind == AtelierTargetKind.DryBrush || kind == AtelierTargetKind.MirrorShards)
+                {
+                    var bounds = sourceCollider.bounds;
+                    for (int corner = 0; corner < 8; corner++)
+                    {
+                        var cornerPoint = bounds.center+Vector3.Scale(bounds.extents,new Vector3((corner&1)==0?-1:1,(corner&2)==0?-1:1,(corner&4)==0?-1:1));
+                        var view = refs.ViewCamera.WorldToViewportPoint(cornerPoint);
+                        Check(view.z>0 && view.x>.03f && view.x<.97f && view.y>.06f && view.y<.94f,
+                            "必要物件没有完整落在主视角安全范围："+kind);
+                    }
+                }
+                if (kind == AtelierTargetKind.DryBrush)
+                {
+                    // 投影在画内仍可能悬空；另外检查真正承托它的左桌几何边界。
+                    var brushBounds = source.HoverVisual.Surfaces.Single().bounds;
+                    var tableBounds = FindObjectsByType<Renderer>().Single(x=>x.name=="painted_wooden_table_2k").bounds;
+                    float gap = brushBounds.min.y-tableBounds.max.y;
+                    Check(gap>=-.001f && gap<.003f,"干画笔没有贴在石膏像前桌面上。");
+                    Check(brushBounds.min.x>=tableBounds.min.x && brushBounds.max.x<=tableBounds.max.x
+                        && brushBounds.min.z>=tableBounds.min.z && brushBounds.max.z<=tableBounds.max.z,
+                        "干画笔的几何体伸出了实际桌面。");
+                    Check(!RectTransformUtility.RectangleContainsScreenPoint(refs.Reminder.GetComponent<RectTransform>(),
+                        refs.ViewCamera.WorldToScreenPoint(brushBounds.center)),"干画笔被笔记入口挡住。");
+                }
                 var sourceRay = refs.ViewCamera.ScreenPointToRay(refs.ViewCamera.WorldToScreenPoint(sourceCollider.bounds.center));
                 var sourceHits = Physics.RaycastAll(sourceRay,40,refs.PickingMask,QueryTriggerInteraction.Collide).OrderBy(x=>x.distance).ToArray();
                 Check(sourceHits.Length>0 && sourceHits[0].collider==sourceCollider,"第二阶段来源拾取被挡："+kind);
@@ -221,9 +287,13 @@ namespace Game.Unity.ArtRebuild
                 flow.ReturnToRoom();
                 yield return new WaitForSeconds(1.5f);
             }
-            flow.Session.Combine(new[]{AtelierFlowRules.C("fixed"),AtelierFlowRules.C("flip")});
-            flow.Session.Combine(new[]{AtelierFlowRules.C("black"),AtelierFlowRules.C("sharp")});
-            flow.Session.Combine(new[]{new ClueId("atelier.flow.twisted"),new ClueId("atelier.flow.rough")});
+            yield return Compose(AtelierFlowRules.C("fixed"),AtelierFlowRules.C("flip"),new ClueId("atelier.flow.twisted"));
+            yield return Compose(AtelierFlowRules.C("black"),AtelierFlowRules.C("sharp"),new ClueId("atelier.flow.rough"),"12b_粗犷即时替换灰词");
+            yield return Compose(new ClueId("atelier.flow.twisted"),new ClueId("atelier.flow.rough"),AtelierFlowRules.Brush(2));
+            refs.Notebook.SetOpen(false);
+            yield return null;
+            yield return null;
+            yield return null;
             Check(flow.Session.State.Knows(AtelierFlowRules.Brush(2)),"第二阶段正常配方未形成柏影笔刷。");
             flow.Observe(Target(AtelierTargetKind.Painting));
             yield return new WaitForSeconds(1.5f);

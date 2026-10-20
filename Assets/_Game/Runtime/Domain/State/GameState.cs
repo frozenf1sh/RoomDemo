@@ -14,6 +14,7 @@ namespace Game.Domain
         public AtelierCanvasDocument AtelierCanvas { get; } = new AtelierCanvasDocument();
         // 线索、事实、反应、历史分别去重；外部不得得到集合的可写引用。
         private readonly HashSet<ClueId> clues = new HashSet<ClueId>();
+        private readonly HashSet<ClueId> consumedClues = new HashSet<ClueId>();
         private readonly HashSet<FactId> facts = new HashSet<FactId>();
         // 灵感是一次性的组合许可；已用记录不能从当前事实反推，否则下一次发现会错误恢复它。
         private readonly HashSet<string> consumedLogics = new HashSet<string>();
@@ -52,6 +53,12 @@ namespace Game.Domain
         // 每次查询返回只读快照，避免外部强制转换后修改内部 HashSet。
         /// <summary>当前已知碎片的只读快照，无法改写内部集合。</summary>
         public IReadOnlyCollection<ClueId> KnownClues => clues.ToList().AsReadOnly();
+        /// <summary>仍可放入组合区的材料；消费不抹除发现历史与来源知识。</summary>
+        public IReadOnlyCollection<ClueId> AvailableClues => clues.Where(CanUseClue).ToList().AsReadOnly();
+        /// <summary>本局已用于成功配方的材料快照；重复调查不会恢复。</summary>
+        public IReadOnlyCollection<ClueId> ConsumedClues => consumedClues.ToList().AsReadOnly();
+        /// <summary>查询材料是否已发现且尚未被配方消费。</summary>
+        public bool CanUseClue(ClueId id) => clues.Contains(id) && !consumedClues.Contains(id);
         // 旧 Objects/Concepts 视图由统一线索派生，不独立存储。
         /// <summary>根据碎片类别派生的已知物体兼容快照。</summary>
         public IReadOnlyCollection<ObjectId> KnownObjects => clues.Where(x => categories[x] == ClueCategory.Object).Select(x => new ObjectId(x.Value)).ToList().AsReadOnly();
@@ -81,6 +88,8 @@ namespace Game.Domain
 
         /// <summary>领域内部添加已知碎片，返回是否第一次添加。</summary>
         internal bool Discover(ClueId id) => clues.Add(id);
+        /// <summary>仅由成功配方消费已知材料，知识与原配方历史继续保留。</summary>
+        internal bool ConsumeClue(ClueId id) => clues.Contains(id) && consumedClues.Add(id);
         /// <summary>领域内部添加事实，以集合去重保证事件唯一。</summary>
         internal bool AddFact(FactId id) => facts.Add(id);
         /// <summary>领域内部移除一次性事实，返回是否确实从当前状态消耗。</summary>
