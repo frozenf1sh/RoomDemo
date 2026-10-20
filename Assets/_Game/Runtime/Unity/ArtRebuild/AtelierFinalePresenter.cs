@@ -37,7 +37,7 @@ namespace Game.Unity.ArtRebuild
         private GameSession session;
         private readonly Dictionary<Renderer, Material[]> originals = new Dictionary<Renderer, Material[]>();
         private readonly Dictionary<string, Material> owned = new Dictionary<string, Material>();
-        private float roof, room, frame, mark;
+        private float roof, roofRaw, room, frame, mark;
         private bool lit, flowing, roofStarted, wholeStarted;
         private float[] intensities;
         /// <summary>仅用于输入屏蔽尚未落稳的表面；不是事实门槛。</summary>
@@ -52,7 +52,7 @@ namespace Game.Unity.ArtRebuild
         public void Bind(GameSession game)
         {
             session = game;
-            roof = room = frame = mark = finalErase = 0;
+            roof = roofRaw = room = frame = mark = finalErase = 0;
             cloudShown=false;
             lit = flowing = roofStarted = wholeStarted = false;
             intensities = new float[LocalLights.Length];
@@ -158,7 +158,11 @@ namespace Game.Unity.ArtRebuild
                 Sky.SetCoverage(0);
             }
             if (roofStarted)
-                roof = Mathf.MoveTowards(roof, 1, dt / 7.5f);
+            {
+                // 屋顶开口先慢后快再收住；线性扩张会让大块木板像被匀速拽开。
+                roofRaw = Mathf.MoveTowards(roofRaw, 1, dt / 7.5f);
+                roof = Mathf.SmoothStep(0, 1, roofRaw);
+            }
             if (state.HasFact(AtelierRules.FrameErased))
                 frame = Mathf.MoveTowards(frame, 1, dt / 5.5f);
             if ((state.HasFact(StudioRules.SkyLit) || FourStageFlow && state.HasFact(AtelierFlowRules.SkyStarsPainted)) && !lit)

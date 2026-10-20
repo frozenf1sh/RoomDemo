@@ -47,6 +47,11 @@ namespace Game.Editor.ArtRebuild
             var floor=camera.ViewportPointToRay(new Vector3(.76f,.12f,0)).GetPoint(floorDistance);
             floor=new Vector3(Mathf.Clamp(floor.x,-2.9f,2.9f),.025f,Mathf.Clamp(floor.z,-2.6f,1.8f));
             stage.LandingPoints=new[] {new Vector3(1.35f,1.13f,2.05f),new Vector3(.70f,.951f,-1.25f),floor};
+            // 桌面湿色近景：落定后自动看一眼，玩家仍要亲点这团湿颜料才会移近地板。
+            var wetFocus=Node(root,"湿色桌面近景");var wetTarget=stage.LandingPoints[1];
+            wetFocus.position=wetTarget+new Vector3(-.05f,.55f,-.95f);
+            wetFocus.rotation=Quaternion.LookRotation(wetTarget-wetFocus.position);
+            stage.WetDeskFocus=wetFocus;
             var wet=Material("屋顶落下的湿色",Shader.Find("RoomDemo/Atelier/WetDeposit"));
             stage.WetPuddles=new Renderer[3];stage.FallingDrops=new Renderer[3];
             for(int i=0;i<3;i++)
@@ -123,7 +128,7 @@ namespace Game.Editor.ArtRebuild
                     &&c.GetComponent<AtelierInteractionTarget>()?.Kind!=AtelierTargetKind.Painting
                     &&!c.transform.IsChildOf(flow.CanvasPort.Surface.transform.parent)
                     &&c.transform.parent!=null&&c.transform.parent.name!="细木作画架").ToArray();
-            flow.References.Notebook.ConfigureFourStageLayout();
+            AtelierNotebookLayoutPolish.Apply(flow.References.Notebook);
             EditorUtility.SetDirty(flow.References.Notebook);
             EditorUtility.SetDirty(flow.References.Notebook.CombinationCanvas);
             // 历史试色小板不参与四阶段；它的拾取盒不能挡住新的可见湿色入口。

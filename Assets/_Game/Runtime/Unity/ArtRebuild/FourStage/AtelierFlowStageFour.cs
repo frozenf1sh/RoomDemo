@@ -16,6 +16,8 @@ namespace Game.Unity.ArtRebuild
         public AtelierFlowGameplay Flow;
         public AtelierFinaleTool Tool;
         public Transform RoofFocus,RoomFocus,SkyFocus;
+        /// <summary>湿色落定后的桌面近景；自动只看一眼，仍需玩家亲点湿色确认观察。</summary>
+        public Transform WetDeskFocus;
         public Vector3 RoofOrigin;
         public Vector2 RoofSize=new Vector2(1.35f,1.35f);
         public LineRenderer RoofTrace;
@@ -35,7 +37,9 @@ namespace Game.Unity.ArtRebuild
         private GameSession session;
         private Coroutine ending;
         private bool n06Completed,n07Completed,roofThought,restPlayed,lampPrompt,collidersCleared;
-        private float roofThoughtAge,wetAge,coatAmount;
+        private bool wetStarted,wetSettleFocused;
+        private float roofThoughtAge,wetAge,coatAmount,coatRaw;
+        private Coroutine roofReturn;
         private MaterialPropertyBlock coatBlock;
         private MaterialPropertyBlock wetBlock;
         /// <summary>目标解释已存在；笔记阅读不再设置工具目标。</summary>
@@ -94,11 +98,20 @@ namespace Game.Unity.ArtRebuild
             if(!(raised is FactAdded fact))return;
             if(fact.Fact==StudioRules.LampTurned){Flow.ReturnFromToolForWorld();Flow.Voice.Play("N06");}
             if(fact.Fact==AtelierFlowRules.RoofProbed)Flow.Voice.Play("G_ROOF_WARN");
-            if(fact.Fact==AtelierRules.RoofErased){Flow.ReturnFromToolForWorld();Flow.Voice.Play("G_ROOM_ANGRY");}
+            if(fact.Fact==AtelierRules.RoofErased&&roofReturn==null)
+                roofReturn=StartCoroutine(LeaveRoofAfterOpening());
             if(fact.Fact==AtelierRules.RoomErased){Tool.Cancel();Flow.ReturnFromToolForWorld();}
             if(fact.Fact==AtelierFlowRules.SkyCloudPainted)Flow.ShowWorldObservation(AtelierFlowNarration.TextFor("V_STAR"));
             if(fact.Fact==AtelierRules.CanvasDelivered&&ending==null)ending=StartCoroutine(EndCanvas());
             if(fact.Fact==AtelierFlowRules.SkyFinished&&ending==null)ending=StartCoroutine(EndWorld());
+        }
+        /// <summary>先停一小拍看完屋顶开口，再回主构图并播台词；湿色等镜头回稳后才落下。</summary>
+        private IEnumerator LeaveRoofAfterOpening()
+        {
+            yield return new WaitForSeconds(1.05f);
+            Flow.ReturnFromToolForWorld();
+            Flow.Voice.Play("G_ROOM_ANGRY");
+            roofReturn=null;
         }
         /// <summary>已擦去的屋顶不再挡住后面的真实天空拾取。</summary>
         public bool SkipPicking(RaycastHit hit)
@@ -201,7 +214,8 @@ namespace Game.Unity.ArtRebuild
             if(RoofCoat!=null)
             {
                 RoofCoat.gameObject.SetActive(state.HasFact(AtelierFlowRules.RoofAsPaint));
-                coatAmount=Mathf.MoveTowards(coatAmount,state.HasFact(AtelierFlowRules.RoofAsPaint)?1:0,Time.deltaTime/1.2f);
+                coatRaw=Mathf.MoveTowards(coatRaw,state.HasFact(AtelierFlowRules.RoofAsPaint)?1:0,Time.deltaTime/1.2f);
+                coatAmount=Mathf.SmoothStep(0,1,coatRaw);
                 coatBlock??=new MaterialPropertyBlock();RoofCoat.GetPropertyBlock(coatBlock);
                 // 非Properties参数必须由当前表现组件绑定，不能依赖编辑器材质中的临时值。
                 coatBlock.SetFloat("_CoatReveal",coatAmount);
@@ -210,7 +224,20 @@ namespace Game.Unity.ArtRebuild
                 coatBlock.SetVector("_ProbeScale",new Vector4(RoofSize.x,RoofSize.y,0,0));
                 RoofCoat.SetPropertyBlock(coatBlock);
             }
-            if(state.HasFact(AtelierRules.RoofErased))UpdateWetPaint();
+            if(state.HasFact(AtelierRules.RoofErased))
+            {
+                // 镜头回到主构图后才开始落湿色，玩家能看到屋顶开口与下落过程。
+                if(!wetStarted&&!Flow.CameraMoving&&Flow.IsRoomView)wetStarted=true;
+                if(wetStarted)UpdateWetPaint();
+                if(wetStarted&&!wetSettleFocused&&wetAge>4.6f&&Flow.IsRoomView&&!Flow.CameraMoving
+                   &&!Flow.References.Notebook.IsOpen&&!Flow.IsPaused&&WetDeskFocus!=null)
+                {
+                    // 自动把桌面湿色放进画面，玩家仍要点一下才会移近地板；桌子不再挡住落点和点击。
+                    wetSettleFocused=true;
+                    Flow.FocusStageFour("wet_settle",WetDeskFocus,44);
+                    Flow.ShowWorldObservation("桌上这团湿颜料还在流。点一下看看。");
+                }
+            }
             if(state.HasFact(AtelierRules.RoomErased)&&Flow.References.Finale.InteriorSettled&&!collidersCleared)
             {
                 // 只让被擦去的实体让出拾取；画布暂留以表达主角的拒绝。
@@ -225,14 +252,31 @@ namespace Game.Unity.ArtRebuild
                 float impact=1.8f+i*.45f;float progress=Mathf.Clamp01(wetAge/impact);
                 if(i<FallingDrops.Length&&FallingDrops[i]!=null)
                 {
-                    var drop=FallingDrops[i];drop.gameObject.SetActive(progress<1);
-                    drop.transform.position=Vector3.Lerp(RoofOrigin+new Vector3((i-1)*.18f,-.05f,0),LandingPoints[i],progress*progress);
+                    var drop=FallingDrops[i];bool falling=progress<1;drop.gameObject.SetActive(falling);
+                    if(falling)
+                    {
+                        // 重力加速＋轻微横向摆动；下落时拉长，接近落点时收窄。
+                        float fall=progress*progress;
+                        var start=RoofOrigin+new Vector3((i-1)*.18f,-.05f,0);
+                        var position=Vector3.Lerp(start,LandingPoints[i],fall);
+                        position.x+=Mathf.Sin(progress*Mathf.PI)*(i-1)*.012f;
+                        drop.transform.position=position;
+                        float stretch=Mathf.Lerp(1.35f,.82f,progress);
+                        float width=Mathf.Lerp(.046f,.030f,progress);
+                        drop.transform.localScale=new Vector3(width,.22f*stretch,width);
+                    }
                 }
                 if(i<WetPuddles.Length&&WetPuddles[i]!=null)
                 {
-                    var puddle=WetPuddles[i];puddle.gameObject.SetActive(wetAge>=impact);
-                    float growth=Mathf.SmoothStep(.12f,1,Mathf.Clamp01((wetAge-impact)/1.3f));
-                    puddle.transform.localScale=new Vector3(growth,1,growth);
+                    var puddle=WetPuddles[i];bool landed=wetAge>=impact;puddle.gameObject.SetActive(landed);
+                    if(landed)
+                    {
+                        // 阻尼回弹代替匀速缩放：落点先摊开、略微过冲，再收回。
+                        float t=Mathf.Clamp01((wetAge-impact)/1.55f);
+                        float grow=1-Mathf.Exp(-4.2f*t)*Mathf.Cos(7.5f*t);
+                        float scale=Mathf.Lerp(.08f,1f,Mathf.Clamp01(grow));
+                        puddle.transform.localScale=new Vector3(scale,1,scale);
+                    }
                 }
             }
             Flow.Draft.ReleaseForWorld(Mathf.Clamp01((wetAge-1.8f)/7.5f));
@@ -263,6 +307,7 @@ namespace Game.Unity.ArtRebuild
         {
             if(session!=null)session.EventRaised-=OnEvent;
             if(Flow!=null&&Flow.Voice!=null)Flow.Voice.LineCompleted-=NarrationCompleted;
+            if(roofReturn!=null)StopCoroutine(roofReturn);
         }
     }
 }

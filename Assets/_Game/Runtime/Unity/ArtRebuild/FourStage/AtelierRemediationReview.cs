@@ -100,6 +100,7 @@ namespace Game.Unity.ArtRebuild
             {
                 flow.Observe(flow.StageFour.RoofTarget);yield return Ready();
                 yield return Compose(AtelierFlowRules.C("dry_paint"),new ClueId(StudioRules.Ceiling.Value));
+                yield return Shot("09a_屋顶解释字幕");
                 yield return CloseNotebook();yield return new WaitForSeconds(1.4f);yield return Shot("09_中央屋顶结壳");
                 Check(Tool(AtelierFinaleAction.ProbeRoof).Accepted,"首次屋顶试刮失败。");
                 yield return Shot("10_首次刮开普通夜空");
@@ -164,7 +165,7 @@ namespace Game.Unity.ArtRebuild
             Check(paper.Add(second,new Vector2(100,20))!=null,"无法放入材料："+second.Value);
             Check(paper.SubmitButton.GetComponentInChildren<Text>().color==Color.white,"合成按钮没有纯白文字。");
             if(shot=="04_合成按钮白字与结果")yield return Shot("04a_纯白合成按钮");
-            notebook.InterpretSelected();Check(paper.ActiveCardCount==0&&paper.HasResultPreview,"成功结果仍占参与词位置。");
+            notebook.InterpretSelected();Check(paper.ActiveCardCount==0,"成功结果仍占参与词位置。");
             if(shot!="")yield return Shot(shot);
         }
         private IEnumerator CloseNotebook(){flow.References.Notebook.SetOpen(false);yield return Ready();}

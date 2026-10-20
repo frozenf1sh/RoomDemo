@@ -12,10 +12,16 @@ namespace Game.Unity
         public static Color For(ClueId id,ClueCategory category)
         {
             // 四张原始笔刷的身份固定，未来物体尚未认识也不会改变显示类别。
-            for(int layer=1;layer<=4;layer++)
-                if(id==AtelierFlowRules.Brush(layer))return new Color(.42f,.29f,.51f,1);
+            if(IsBrush(id))return new Color(.42f,.29f,.51f,1);
             return category==ClueCategory.Concept?new Color(.25f,.39f,.63f,1):
-                category==ClueCategory.Observation?new Color(.40f,.42f,.44f,1):new Color(.20f,.30f,.26f,1);
+                category==ClueCategory.Observation?new Color(.76f,.39f,.12f,1):new Color(.20f,.30f,.26f,1);
+        }
+        /// <summary>按稳定身份判断四张笔刷，供左页笔刷分区使用；不按中文名猜测。</summary>
+        public static bool IsBrush(ClueId id)
+        {
+            for(int layer=1;layer<=4;layer++)
+                if(id==AtelierFlowRules.Brush(layer))return true;
+            return false;
         }
     }
 }

@@ -70,7 +70,7 @@ namespace Game.Unity
             next=Button(paper,"下一步","下一步",new Vector2(.28f,.04f),new Vector2(.48f,.28f),()=>{if(page==3)overlay.SetActive(false);else{page++;Render();}});
             Button(paper,"关闭帮助","关闭帮助",new Vector2(.70f,.04f),new Vector2(.96f,.28f),()=>overlay.SetActive(false));
             var entry=notebook.transform.Find("笔记纸面/藏品入口便签");
-            if(entry!=null){var label=entry.GetComponentInChildren<Text>();if(label!=null){label.text="笔刷收藏";label.color=Color.white;}}
+            if(entry!=null){var label=entry.GetComponentInChildren<Text>();if(label!=null){label.text="笔\n刷\n收\n藏";label.color=Color.white;label.rectTransform.sizeDelta=new Vector2(24,142);label.horizontalOverflow=HorizontalWrapMode.Wrap;label.verticalOverflow=VerticalWrapMode.Overflow;}}
         }
         private void Render()
         {

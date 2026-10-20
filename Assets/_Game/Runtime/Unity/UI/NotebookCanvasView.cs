@@ -179,22 +179,19 @@ namespace Game.Unity
         public void ShowResult(IReadOnlyList<ClueId> produced,string worldResult="解释已经记下。")
         {
             Clear();
-            int count=Mathf.Max(1,produced.Count);
-            for(int index=0;index<count;index++)
+            // 纯事实解释没有产物词条；不生成会被卡片宽度截断的结果卡，由笔记本宽字幕说明。
+            if(produced.Count==0){notebook.NotifyCanvasChanged();return;}
+            for(int index=0;index<produced.Count;index++)
             {
                 var card=Instantiate(cardTemplate,workspace);
                 card.name="结果预览";card.gameObject.SetActive(true);card.interactable=false;
                 foreach(var graphic in card.GetComponentsInChildren<Graphic>())graphic.raycastTarget=false;
                 var rect=(RectTransform)card.transform;
                 rect.anchorMin=rect.anchorMax=new Vector2(.5f,.5f);
-                rect.anchoredPosition=new Vector2((index-(count-1)*.5f)*150,20);
+                rect.anchoredPosition=new Vector2((index-(produced.Count-1)*.5f)*150,20);
                 var label=card.GetComponentInChildren<Text>();
-                if(produced.Count>0)
-                {
-                    var definition=session.Rules.Clues.Single(x=>x.Id==produced[index]);
-                    label.text=definition.DisplayName;label.color=AtelierNotebookInk.For(definition.Id,definition.Category);
-                }
-                else {label.text=worldResult;label.color=new Color(.25f,.30f,.26f);}
+                var definition=session.Rules.Clues.Single(x=>x.Id==produced[index]);
+                label.text=definition.DisplayName;label.color=AtelierNotebookInk.For(definition.Id,definition.Category);
                 resultPreviews.Add(card.gameObject);
             }
             resultAge=0;
